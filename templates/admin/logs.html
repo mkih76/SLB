@@ -113,13 +113,13 @@
 
     tbody.innerHTML = data.logs.map(log => `
       <tr>
-        <td>${log.log_id?.substring(0, 8) || '-'}...</td>
+        <td>${log.id || '-'}</td>
         <td>${formatDate(log.created_at)}</td>
-        <td>${log.admin_nickname || log.admin_uid?.substring(0, 8) || '-'}</td>
+        <td>${log.admin_uid || '-'}</td>
         <td>${actionMap[log.action] || log.action}</td>
-        <td>${log.target_type || '-'} / ${log.target_id?.substring(0, 8) || '-'}</td>
-        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${log.details || ''}">${log.details || '-'}</td>
-        <td>${log.ip || '-'}</td>
+        <td>${log.target_type || '-'} / ${log.target_id || '-'}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title='${log.detail || ''}'>${log.detail || '-'}</td>
+        <td>-</td>
       </tr>
     `).join('');
 

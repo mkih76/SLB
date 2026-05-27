@@ -46,6 +46,9 @@ def get_dashboard_stats():
     today_users = db.execute(
         "SELECT COUNT(*) FROM users WHERE date(created_at) = date('now')"
     ).fetchone()[0]
+    vip_users = db.execute(
+        "SELECT COUNT(*) FROM users WHERE role = 'vip' OR vip_expire > datetime('now')"
+    ).fetchone()[0]
 
     # Submission stats
     total_submissions = db.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
@@ -66,14 +69,57 @@ def get_dashboard_stats():
         "SELECT COUNT(*) FROM good_phrases WHERE status = 'pending'"
     ).fetchone()[0]
 
+    # User growth (last 7 days)
+    user_growth = []
+    rows = db.execute(
+        """SELECT date(created_at) as date, COUNT(*) as count
+           FROM users WHERE created_at >= date('now', '-6 days')
+           GROUP BY date(created_at) ORDER BY date"""
+    ).fetchall()
+    growth_map = {r['date']: r['count'] for r in rows}
+    for i in range(6, -1, -1):
+        d = db.execute(f"SELECT date('now', '-{i} days') as d").fetchone()['d']
+        user_growth.append({'date': d, 'count': growth_map.get(d, 0)})
+
+    # Score distribution
+    low = db.execute("SELECT COUNT(*) FROM submissions WHERE score IS NOT NULL AND score < 60").fetchone()[0]
+    medium = db.execute("SELECT COUNT(*) FROM submissions WHERE score >= 60 AND score < 75").fetchone()[0]
+    high = db.execute("SELECT COUNT(*) FROM submissions WHERE score >= 75 AND score < 90").fetchone()[0]
+    excellent = db.execute("SELECT COUNT(*) FROM submissions WHERE score >= 90").fetchone()[0]
+    score_distribution = {'low': low, 'medium': medium, 'high': high, 'excellent': excellent}
+
+    # Daily stats (last 7 days)
+    daily_stats = []
+    for i in range(6, -1, -1):
+        d = db.execute(f"SELECT date('now', '-{i} days') as d").fetchone()['d']
+        new_u = db.execute("SELECT COUNT(*) FROM users WHERE date(created_at) = ?", (d,)).fetchone()[0]
+        active_u = db.execute("SELECT COUNT(*) FROM users WHERE date(last_login) = ?", (d,)).fetchone()[0]
+        new_s = db.execute("SELECT COUNT(*) FROM submissions WHERE date(created_at) = ?", (d,)).fetchone()[0]
+        new_v = db.execute("SELECT COUNT(*) FROM users WHERE date(created_at) = ? AND (role = 'vip' OR vip_expire IS NOT NULL)", (d,)).fetchone()[0]
+        daily_stats.append({'date': d, 'new_users': new_u, 'active_users': active_u, 'new_submissions': new_s, 'new_vip': new_v})
+
+    # Hot papers (top 10)
+    hot_papers = [dict(r) for r in db.execute(
+        """SELECT p.title, p.exam_type, p.year, COUNT(s.sid) as submission_count,
+                  AVG(s.score) as avg_score
+           FROM papers p
+           LEFT JOIN submissions s ON p.pid = s.pid
+           GROUP BY p.pid ORDER BY submission_count DESC LIMIT 10"""
+    ).fetchall()]
+
     return {
         'total_users': total_users,
         'today_users': today_users,
+        'vip_users': vip_users,
         'total_submissions': total_submissions,
         'today_submissions': today_submissions,
         'pending_reviews': pending_reviews,
         'total_papers': total_papers,
-        'pending_phrases': pending_phrases
+        'pending_phrases': pending_phrases,
+        'user_growth': user_growth,
+        'score_distribution': score_distribution,
+        'daily_stats': daily_stats,
+        'hot_papers': hot_papers
     }
 
 
@@ -414,6 +460,9 @@ def get_logs():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 50, type=int)
     action = request.args.get('action')
+    admin = request.args.get('admin')
+    start = request.args.get('start')
+    end = request.args.get('end')
 
     db = get_db()
     query = "SELECT * FROM admin_logs WHERE 1=1"
@@ -422,9 +471,24 @@ def get_logs():
     if action:
         query += " AND action LIKE ?"
         params.append(f'%{action}%')
+    if admin:
+        query += " AND (admin_uid LIKE ? OR admin_uid = ?)"
+        params.append(f'%{admin}%')
+        params.append(admin)
+    if start:
+        query += " AND date(created_at) >= ?"
+        params.append(start)
+    if end:
+        query += " AND date(created_at) <= ?"
+        params.append(end)
 
     total = db.execute(
-        query.replace("SELECT *", "SELECT COUNT(*)"), params
+        "SELECT COUNT(*) FROM admin_logs WHERE 1=1" +
+        (" AND action LIKE ?" if action else "") +
+        (" AND (admin_uid LIKE ? OR admin_uid = ?)" if admin else "") +
+        (" AND date(created_at) >= ?" if start else "") +
+        (" AND date(created_at) <= ?" if end else ""),
+        params
     ).fetchone()[0]
 
     offset = (page - 1) * per_page
