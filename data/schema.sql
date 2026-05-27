@@ -297,6 +297,42 @@ CREATE INDEX IF NOT EXISTS idx_sim_uid ON simulation_records(uid);
 CREATE INDEX IF NOT EXISTS idx_sim_pid ON simulation_records(pid);
 
 -- ============================================================
+-- 素材学习记录表（板块三）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_phrase_learning (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid             TEXT NOT NULL,
+    phrase_id       INTEGER NOT NULL,
+    mastery_level   INT DEFAULT 0,              -- 0新学/1认识/2熟悉/3掌握
+    next_review_at  DATETIME,                   -- 下次复习时间（间隔重复）
+    review_count    INT DEFAULT 0,
+    last_reviewed_at DATETIME,
+    applied_count   INT DEFAULT 0,              -- 在作答中使用过的次数
+    created_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    FOREIGN KEY (phrase_id) REFERENCES good_phrases(id),
+    UNIQUE(uid, phrase_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_phrase_learn_uid ON user_phrase_learning(uid);
+CREATE INDEX IF NOT EXISTS idx_phrase_learn_next ON user_phrase_learning(next_review_at);
+
+-- ============================================================
+-- 素材包表（板块三）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS phrase_packs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT NOT NULL,              -- e.g. "乡村振兴素材包"
+    description     TEXT,
+    theme           TEXT NOT NULL,              -- 主题标签
+    phrase_ids      TEXT NOT NULL,              -- JSON: [1, 5, 12, 23]
+    difficulty      INT DEFAULT 1,              -- 1基础/2进阶/3高级
+    sort_order      INT DEFAULT 0,
+    status          TEXT DEFAULT 'published',
+    created_at      DATETIME DEFAULT (datetime('now'))
+);
+
+-- ============================================================
 -- 系统设置表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS settings (

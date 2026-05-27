@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI造段 - 申论帮</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .gen-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .gen-header { text-align: center; margin-bottom: 30px; }
+        .gen-header h1 { font-size: 24px; color: #1A3A6B; }
+        .section-title { font-size: 18px; font-weight: 600; color: #1A3A6B; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #1A3A6B; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 6px; }
+        .input-field {
+            width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 10px 14px;
+            font-size: 15px; font-family: inherit; transition: border-color 0.2s;
+        }
+        .input-field:focus { outline: none; border-color: #1A3A6B; box-shadow: 0 0 0 2px rgba(26,58,107,0.1); }
+        textarea.input-field { min-height: 80px; resize: vertical; line-height: 1.6; }
+        select.input-field { cursor: pointer; }
+        .btn-gen {
+            background: #1A3A6B; color: #fff; border: none; padding: 12px 32px;
+            border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;
+            width: 100%; transition: background 0.2s;
+        }
+        .btn-gen:hover { background: #2a5298; }
+        .btn-gen:disabled { background: #ccc; cursor: not-allowed; }
+
+        .result-area {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 12px;
+            padding: 28px; margin-top: 24px; display: none;
+        }
+        .result-paragraph { font-size: 16px; line-height: 2; color: #333; margin-bottom: 16px; white-space: pre-wrap; }
+        .result-meta { font-size: 13px; color: #999; margin-bottom: 16px; }
+        .result-actions { display: flex; gap: 12px; }
+        .btn-copy {
+            background: #f0f0f0; color: #333; border: none; padding: 8px 20px;
+            border-radius: 6px; cursor: pointer; font-size: 14px;
+        }
+        .btn-copy:hover { background: #e0e0e0; }
+        .btn-regen {
+            background: #C9A84C; color: #fff; border: none; padding: 8px 20px;
+            border-radius: 6px; cursor: pointer; font-size: 14px;
+        }
+        .btn-regen:hover { background: #b8972e; }
+
+        .used-phrases { margin-top: 16px; padding: 12px; background: #f8f8f8; border-radius: 6px; }
+        .used-phrases .label { font-size: 13px; color: #666; margin-bottom: 6px; }
+        .phrase-tag { display: inline-block; background: #e6f7ff; color: #1890ff; padding: 2px 10px; border-radius: 4px; font-size: 13px; margin: 2px 4px 2px 0; }
+
+        .loading-spinner { text-align: center; padding: 40px; color: #999; display: none; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #e8e8e8; border-top-color: #1A3A6B; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="gen-container">
+        <div class="gen-header">
+            <h1>AI 造段</h1>
+            <p style="color:#666;">输入论点，AI 自动匹配素材生成示范段落</p>
+        </div>
+
+        <div class="section-title">输入信息</div>
+        <div class="form-group">
+            <label class="form-label">你的论点</label>
+            <textarea class="input-field" id="pointInput" placeholder="例如：科技创新是推动高质量发展的第一动力"></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">主题</label>
+            <select class="input-field" id="themeSelect">
+                <option value="科技创新">科技创新</option>
+                <option value="乡村振兴">乡村振兴</option>
+                <option value="基层治理">基层治理</option>
+                <option value="民生保障">民生保障</option>
+                <option value="生态文明">生态文明</option>
+                <option value="文化建设">文化建设</option>
+                <option value="经济发展">经济发展</option>
+                <option value="法治建设">法治建设</option>
+                <option value="人才发展">人才发展</option>
+                <option value="通用">通用</option>
+            </select>
+        </div>
+        <button class="btn-gen" id="btnGen" onclick="generate()">生成示范段落</button>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>AI 正在生成中，请稍候...</p>
+        </div>
+
+        <div class="result-area" id="resultArea">
+            <div class="section-title">生成结果</div>
+            <div class="result-paragraph" id="resultParagraph"></div>
+            <div class="result-meta" id="resultMeta"></div>
+            <div class="used-phrases" id="usedPhrases" style="display:none;">
+                <div class="label">使用了以下素材：</div>
+                <div id="phraseTags"></div>
+            </div>
+            <div class="result-actions">
+                <button class="btn-copy" onclick="copyText()">复制段落</button>
+                <button class="btn-regen" onclick="generate()">换一批素材重新生成</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api/phrases';
+    const token = localStorage.getItem('token');
+    const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+
+    async function generate() {
+        const point = document.getElementById('pointInput').value.trim();
+        if (!point) { alert('请输入论点'); return; }
+
+        const theme = document.getElementById('themeSelect').value;
+        const btn = document.getElementById('btnGen');
+        btn.disabled = true;
+
+        document.getElementById('loadingSpinner').style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+
+        try {
+            const res = await fetch(API + '/generate', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({point, theme})
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            renderResult(data.data);
+        } catch (e) {
+            alert('生成失败：' + e.message);
+        } finally {
+            btn.disabled = false;
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+    }
+
+    function renderResult(r) {
+        document.getElementById('resultArea').style.display = 'block';
+        document.getElementById('resultParagraph').textContent = r.paragraph || '';
+        document.getElementById('resultMeta').textContent =
+            '主题：' + (r.theme||'') + ' | 素材池：' + (r.phrases_pool_count||0) + ' 条';
+
+        const used = r.used_phrases || [];
+        const upDiv = document.getElementById('usedPhrases');
+        if (used.length) {
+            upDiv.style.display = 'block';
+            document.getElementById('phraseTags').innerHTML =
+                used.map(p => '<span class="phrase-tag">' + escapeHtml(p) + '</span>').join('');
+        } else {
+            upDiv.style.display = 'none';
+        }
+    }
+
+    function copyText() {
+        const text = document.getElementById('resultParagraph').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('已复制到剪贴板');
+        }).catch(() => {
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('已复制到剪贴板');
+        });
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    if (!token) { window.location.href = '/'; }
+    </script>
+</body>
+</html>

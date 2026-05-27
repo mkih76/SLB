@@ -74,6 +74,14 @@ def create_app():
     def simulate(pid):
         return render_template('simulate.html', pid=pid)
 
+    @app.route('/phrases/study')
+    def phrases_study():
+        return render_template('phrases_study.html')
+
+    @app.route('/phrases/generate')
+    def phrases_generate():
+        return render_template('phrases_generate.html')
+
     # Admin routes
     @app.route('/admin')
     def admin_index():

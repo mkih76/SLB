@@ -54,3 +54,82 @@ def get_favorites(current_user):
         current_user['uid'], page, per_page
     )
     return api_success(result)
+
+
+# ============================================================
+# 板块三：素材智能应用
+# ============================================================
+
+@phrases_bp.route('/study/stats', methods=['GET'])
+@token_required
+def get_study_stats(current_user):
+    """获取素材学习统计"""
+    result = phrase_service.get_study_stats(current_user['uid'])
+    return api_success(result)
+
+
+@phrases_bp.route('/study/cards', methods=['GET'])
+@token_required
+def get_study_cards(current_user):
+    """获取今日待复习素材卡片"""
+    limit = request.args.get('limit', 5, type=int)
+    result = phrase_service.get_study_cards(current_user['uid'], limit=min(limit, 20))
+    return api_success({'cards': result})
+
+
+@phrases_bp.route('/study/record', methods=['POST'])
+@token_required
+def record_study(current_user):
+    """记录学习反馈"""
+    data = request.get_json()
+    if not data or not data.get('phrase_id') or data.get('mastery_level') is None:
+        return api_error("缺少必要参数", 400)
+
+    result = phrase_service.record_study(
+        current_user['uid'], data['phrase_id'], data['mastery_level']
+    )
+    return api_success(result)
+
+
+@phrases_bp.route('/study/history', methods=['GET'])
+@token_required
+def get_study_history(current_user):
+    """获取学习历史"""
+    page = request.args.get('page', 1, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
+    result = phrase_service.get_study_history(current_user['uid'], page, per_page)
+    return api_success(result)
+
+
+@phrases_bp.route('/packs', methods=['GET'])
+def list_packs():
+    """获取素材包列表"""
+    page = request.args.get('page', 1, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
+    result = phrase_service.get_phrase_packs(page, per_page)
+    return api_success(result)
+
+
+@phrases_bp.route('/packs/<int:pack_id>', methods=['GET'])
+def get_pack(pack_id):
+    """获取素材包详情"""
+    result = phrase_service.get_phrase_pack_detail(pack_id)
+    if not result:
+        return api_error("素材包不存在", 404)
+    return api_success(result)
+
+
+@phrases_bp.route('/generate', methods=['POST'])
+@token_required
+def generate_paragraph(current_user):
+    """AI 造段"""
+    data = request.get_json()
+    if not data or not data.get('point'):
+        return api_error("请提供论点", 400)
+
+    point = data['point']
+    theme = data.get('theme', '通用')
+    phrase_ids = data.get('phrase_ids')
+
+    result = phrase_service.generate_paragraph(point, theme, phrase_ids)
+    return api_success(result)
