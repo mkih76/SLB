@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全真模拟 - 申论帮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: #f5f5f5; color: #333; }
+
+        /* 顶部计时栏 */
+        .sim-topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: #1A3A6B; color: #fff; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .sim-topbar .paper-title { font-size: 16px; font-weight: 600; }
+        .timer-section { display: flex; align-items: center; gap: 16px; }
+        .timer-display {
+            font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums;
+            background: rgba(255,255,255,0.15); padding: 4px 16px; border-radius: 6px;
+        }
+        .timer-display.warning { color: #faad14; }
+        .timer-display.danger { color: #ff4d4f; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.7; } }
+        .btn-submit-sim {
+            background: #C9A84C; color: #fff; border: none; padding: 8px 24px;
+            border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer;
+        }
+        .btn-submit-sim:hover { background: #b8972e; }
+
+        /* 主布局 */
+        .sim-body { margin-top: 56px; display: flex; height: calc(100vh - 56px); }
+
+        /* 左侧材料区 */
+        .material-panel {
+            width: 45%; overflow-y: auto; padding: 20px 24px;
+            background: #fff; border-right: 1px solid #e8e8e8;
+        }
+        .material-panel h3 { font-size: 16px; color: #1A3A6B; margin-bottom: 16px; border-bottom: 2px solid #1A3A6B; padding-bottom: 8px; }
+        .material-block { margin-bottom: 20px; }
+        .material-block .mat-label { font-size: 13px; font-weight: 600; color: #C9A84C; margin-bottom: 6px; }
+        .material-block .mat-text { font-size: 15px; line-height: 1.9; color: #333; white-space: pre-wrap; }
+
+        /* 右侧作答区 */
+        .answer-panel {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+        }
+        .question-card {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+            padding: 20px; margin-bottom: 16px; scroll-margin-top: 16px;
+        }
+        .question-card.active { border-color: #1A3A6B; box-shadow: 0 0 0 2px rgba(26,58,107,0.15); }
+        .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .q-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 4px;
+            font-size: 12px; font-weight: 600; color: #fff; background: #1A3A6B;
+        }
+        .q-score { font-size: 13px; color: #999; }
+        .q-stem { font-size: 15px; line-height: 1.8; margin-bottom: 8px; color: #333; }
+        .q-requirement { font-size: 13px; color: #666; margin-bottom: 4px; }
+        .q-word-limit { font-size: 13px; color: #C9A84C; margin-bottom: 12px; }
+        .q-textarea {
+            width: 100%; min-height: 200px; border: 1px solid #d9d9d9; border-radius: 6px;
+            padding: 12px; font-size: 15px; line-height: 1.8; resize: vertical;
+            font-family: inherit; transition: border-color 0.2s;
+        }
+        .q-textarea:focus { outline: none; border-color: #1A3A6B; box-shadow: 0 0 0 2px rgba(26,58,107,0.1); }
+        .q-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .word-count { font-size: 13px; color: #999; }
+        .word-count.ok { color: #52c41a; }
+        .word-count.warn { color: #fa8c16; }
+
+        /* 题号导航 */
+        .q-nav {
+            position: fixed; right: 16px; top: 72px; z-index: 50;
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+            padding: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .q-nav-title { font-size: 12px; color: #999; margin-bottom: 8px; text-align: center; }
+        .q-nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .q-nav-btn {
+            width: 36px; height: 36px; border: 1px solid #d9d9d9; border-radius: 6px;
+            background: #fff; font-size: 14px; font-weight: 600; color: #333;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .q-nav-btn:hover { border-color: #1A3A6B; color: #1A3A6B; }
+        .q-nav-btn.active { background: #1A3A6B; color: #fff; border-color: #1A3A6B; }
+        .q-nav-btn.answered { background: #e6f7e6; border-color: #52c41a; color: #52c41a; }
+
+        /* 加载 / 结果 */
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+            display: flex; align-items: center; justify-content: center; z-index: 200;
+            flex-direction: column; gap: 16px;
+        }
+        .spinner { width: 40px; height: 40px; border: 3px solid #e8e8e8; border-top-color: #1A3A6B; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 确认弹窗 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 300;
+        }
+        .modal-box {
+            background: #fff; border-radius: 12px; padding: 32px; max-width: 480px; width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 { font-size: 18px; margin-bottom: 12px; }
+        .modal-box p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-actions button { padding: 8px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; }
+        .btn-cancel { background: #f0f0f0; color: #333; }
+        .btn-confirm { background: #1A3A6B; color: #fff; }
+
+        /* 结果页 */
+        .result-panel {
+            max-width: 800px; margin: 80px auto 40px; padding: 0 24px;
+        }
+        .result-card {
+            background: #fff; border-radius: 12px; padding: 32px; margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .result-header { text-align: center; margin-bottom: 24px; }
+        .result-score { font-size: 64px; font-weight: 700; color: #1A3A6B; }
+        .result-max { font-size: 18px; color: #999; }
+        .result-meta { display: flex; justify-content: center; gap: 32px; margin-top: 12px; font-size: 14px; color: #666; }
+        .result-table { width: 100%; border-collapse: collapse; }
+        .result-table th, .result-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .result-table th { background: #f8f8f8; color: #666; font-weight: 500; }
+        .score-bar { display: inline-block; height: 6px; border-radius: 3px; background: #e8e8e8; width: 80px; vertical-align: middle; margin-left: 8px; }
+        .score-bar-fill { height: 100%; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <!-- 顶部计时栏 -->
+    <div class="sim-topbar" id="topbar">
+        <div class="paper-title" id="paperTitle">加载中...</div>
+        <div class="timer-section">
+            <div class="timer-display" id="timerDisplay">--:--:--</div>
+            <button class="btn-submit-sim" onclick="confirmSubmit()">交卷</button>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="color:#666;">正在加载试卷...</p>
+    </div>
+
+    <!-- 主体 -->
+    <div class="sim-body" id="simBody" style="display:none;">
+        <!-- 左：材料 -->
+        <div class="material-panel" id="materialPanel">
+            <h3>给定材料</h3>
+            <div id="materialContent"></div>
+        </div>
+
+        <!-- 右：题目 -->
+        <div class="answer-panel" id="answerPanel"></div>
+    </div>
+
+    <!-- 题号导航 -->
+    <div class="q-nav" id="qNav" style="display:none;">
+        <div class="q-nav-title">题目导航</div>
+        <div class="q-nav-grid" id="qNavGrid"></div>
+    </div>
+
+    <!-- 提交确认弹窗 -->
+    <div class="modal-overlay" id="submitModal" style="display:none;">
+        <div class="modal-box">
+            <h3>确认交卷？</h3>
+            <p id="submitSummary">你还有 X 题未作答，确定要交卷吗？交卷后无法修改。</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">继续作答</button>
+                <button class="btn-confirm" onclick="submitExam()">确认交卷</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果页 -->
+    <div class="result-panel" id="resultPanel" style="display:none;"></div>
+
+    <script>
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/'; }
+
+    const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+    const pid = '{{ pid }}';
+    let simId = null;
+    let questions = [];
+    let timeLimit = 150 * 60; // 秒
+    let remainSeconds = 0;
+    let timerInterval = null;
+    let submitted = false;
+
+    async function startSimulation() {
+        try {
+            const res = await fetch('/api/simulation/start', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({ pid: pid })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                window.location.href = '/papers';
+                return;
+            }
+            const sim = data.data;
+            simId = sim.sim_id;
+            questions = sim.questions || [];
+            timeLimit = (sim.time_limit || 150) * 60;
+            remainSeconds = timeLimit;
+
+            document.getElementById('paperTitle').textContent = sim.paper_title || '模拟考试';
+
+            // 渲染材料
+            renderMaterial(sim.material || []);
+
+            // 渲染题目
+            renderQuestions(questions);
+
+            // 题号导航
+            renderNav(questions);
+
+            // 启动计时
+            startTimer();
+
+            // 隐藏加载
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('simBody').style.display = 'flex';
+            document.getElementById('qNav').style.display = 'block';
+        } catch (e) {
+            alert('加载失败：' + e.message);
+        }
+    }
+
+    function renderMaterial(materials) {
+        const container = document.getElementById('materialContent');
+        if (!materials || !materials.length) {
+            container.innerHTML = '<p style="color:#999;">本试卷无材料</p>';
+            return;
+        }
+        container.innerHTML = materials.map((m, i) => {
+            const label = m.label || ('材料' + (i + 1));
+            const text = typeof m === 'string' ? m : (m.text || m.content || '');
+            return '<div class="material-block">' +
+                '<div class="mat-label">' + label + '</div>' +
+                '<div class="mat-text">' + escapeHtml(text) + '</div></div>';
+        }).join('');
+    }
+
+    function renderQuestions(qs) {
+        const panel = document.getElementById('answerPanel');
+        panel.innerHTML = '';
+        const typeNames = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+
+        qs.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = 'qcard-' + idx;
+            card.innerHTML =
+                '<div class="q-header">' +
+                    '<span class="q-badge">' + (typeNames[q.type] || q.type_name || '未知') + '</span>' +
+                    '<span class="q-score">满分 ' + (q.score || 0) + ' 分</span>' +
+                '</div>' +
+                '<div class="q-stem">' + escapeHtml(q.stem || '') + '</div>' +
+                (q.requirement ? '<div class="q-requirement">' + escapeHtml(q.requirement) + '</div>' : '') +
+                (q.word_limit ? '<div class="q-word-limit">字数要求：' + escapeHtml(q.word_limit) + '</div>' : '') +
+                '<textarea class="q-textarea" id="ans-' + idx + '" placeholder="请在此输入你的答案..." oninput="onInput(' + idx + ')"></textarea>' +
+                '<div class="q-footer">' +
+                    '<span class="word-count" id="wc-' + idx + '">0 字</span>' +
+                '</div>';
+            panel.appendChild(card);
+        });
+    }
+
+    function renderNav(qs) {
+        const grid = document.getElementById('qNavGrid');
+        grid.innerHTML = '';
+        qs.forEach((q, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'q-nav-btn';
+            btn.id = 'nav-' + idx;
+            btn.textContent = idx + 1;
+            btn.onclick = () => scrollToQ(idx);
+            grid.appendChild(btn);
+        });
+    }
+
+    function scrollToQ(idx) {
+        const card = document.getElementById('qcard-' + idx);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+        if (card) card.classList.add('active');
+    }
+
+    function onInput(idx) {
+        const ta = document.getElementById('ans-' + idx);
+        const len = ta.value.length;
+        const wc = document.getElementById('wc-' + idx);
+        wc.textContent = len + ' 字';
+        wc.className = 'word-count' + (len > 0 ? ' ok' : '');
+
+        // 更新导航状态
+        const nav = document.getElementById('nav-' + idx);
+        if (nav && len > 0) nav.classList.add('answered');
+        else if (nav) nav.classList.remove('answered');
+    }
+
+    function startTimer() {
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            remainSeconds--;
+            updateTimerDisplay();
+            if (remainSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert('考试时间到，系统将自动交卷！');
+                submitExam();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const h = Math.floor(remainSeconds / 3600);
+        const m = Math.floor((remainSeconds % 3600) / 60);
+        const s = remainSeconds % 60;
+        const display = document.getElementById('timerDisplay');
+        display.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+
+        display.className = 'timer-display';
+        if (remainSeconds <= 300) display.classList.add('danger');
+        else if (remainSeconds <= 1800) display.classList.add('warning');
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function confirmSubmit() {
+        let unanswered = 0;
+        questions.forEach((q, idx) => {
+            const ta = document.getElementById('ans-' + idx);
+            if (!ta || !ta.value.trim()) unanswered++;
+        });
+        const summary = document.getElementById('submitSummary');
+        if (unanswered > 0) {
+            summary.innerHTML = '你还有 <b>' + unanswered + '</b> 题未作答，确定要交卷吗？交卷后无法修改。';
+        } else {
+            summary.innerHTML = '所有题目均已作答。确定交卷吗？交卷后无法修改。';
+        }
+        document.getElementById('submitModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('submitModal').style.display = 'none';
+    }
+
+    async function submitExam() {
+        if (submitted) return;
+        submitted = true;
+        closeModal();
+        clearInterval(timerInterval);
+
+        const answers = {};
+        questions.forEach((q, idx) => {
+            const ta = document.getElementById('ans-' + idx);
+            if (ta && ta.value.trim()) {
+                answers[q.qid] = ta.value.trim();
+            }
+        });
+
+        // 显示加载
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'flex';
+        overlay.querySelector('p').textContent = '正在交卷并批改中，请稍候...';
+
+        try {
+            const res = await fetch('/api/simulation/submit', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({ sim_id: simId, answers: answers })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                submitted = false;
+                overlay.style.display = 'none';
+                return;
+            }
+            renderResult(data.data);
+        } catch (e) {
+            alert('提交失败：' + e.message);
+            submitted = false;
+            overlay.style.display = 'none';
+        }
+    }
+
+    function renderResult(result) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('simBody').style.display = 'none';
+        document.getElementById('qNav').style.display = 'none';
+        document.getElementById('topbar').style.display = 'none';
+
+        const panel = document.getElementById('resultPanel');
+        panel.style.display = 'block';
+
+        const timeMin = Math.floor((result.time_spent || 0) / 60);
+        const timeSec = (result.time_spent || 0) % 60;
+        const rankText = result.rank_percentile != null ? '超过 ' + result.rank_percentile + '% 的考生' : '暂无排名';
+
+        let html = '<div class="result-card"><div class="result-header">' +
+            '<div class="result-score">' + (result.total_score || 0) + '</div>' +
+            '<div class="result-max">/ ' + (result.total_max || 0) + ' 分</div>' +
+            '<div class="result-meta">' +
+                '<span>用时：' + timeMin + '分' + timeSec + '秒</span>' +
+                '<span>' + rankText + '</span>' +
+            '</div></div></div>';
+
+        // 各题得分
+        html += '<div class="result-card"><h3 style="margin-bottom:16px;font-size:16px;color:#1A3A6B;">各题得分</h3>';
+        html += '<table class="result-table"><thead><tr><th>题号</th><th>得分</th><th>满分</th><th>得分率</th></tr></thead><tbody>';
+        (result.results || []).forEach((r, idx) => {
+            const pct = r.max_score > 0 ? Math.round(r.score / r.max_score * 100) : 0;
+            const color = pct >= 75 ? '#52c41a' : pct >= 50 ? '#fa8c16' : '#f5222d';
+            html += '<tr><td>第' + (idx+1) + '题</td>' +
+                '<td>' + r.score + '</td>' +
+                '<td>' + r.max_score + '</td>' +
+                '<td><span style="color:' + color + ';font-weight:600;">' + pct + '%</span>' +
+                '<span class="score-bar"><span class="score-bar-fill" style="width:' + pct + '%;background:' + color + '"></span></span></td></tr>';
+        });
+        html += '</tbody></table></div>';
+
+        // 操作按钮
+        html += '<div style="text-align:center;margin-top:24px;">' +
+            '<a href="/papers" style="display:inline-block;padding:10px 28px;background:#1A3A6B;color:#fff;border-radius:6px;text-decoration:none;font-size:15px;margin-right:12px;">返回卷库</a>' +
+            '<a href="/diagnosis" style="display:inline-block;padding:10px 28px;background:#C9A84C;color:#fff;border-radius:6px;text-decoration:none;font-size:15px;">查看诊断报告</a>' +
+            '</div>';
+
+        panel.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // 页面离开提醒
+    window.addEventListener('beforeunload', function(e) {
+        if (!submitted && simId) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    startSimulation();
+    </script>
+</body>
+</html>
