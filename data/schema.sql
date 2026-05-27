@@ -420,6 +420,62 @@ CREATE TABLE IF NOT EXISTS user_topic_learning (
 CREATE INDEX IF NOT EXISTS idx_topic_learn_uid ON user_topic_learning(uid);
 
 -- ============================================================
+-- 社区帖子表（板块七）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_posts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid             TEXT NOT NULL,
+    post_type       TEXT NOT NULL,              -- answer_share/question/discussion/tips
+    title           TEXT,
+    content         TEXT NOT NULL,
+    related_sid     TEXT,                       -- 如果是晒答案，关联 submission
+    related_pid     TEXT,
+    related_qid     TEXT,
+    view_count      INT DEFAULT 0,
+    like_count      INT DEFAULT 0,
+    comment_count   INT DEFAULT 0,
+    is_featured     INTEGER DEFAULT 0,          -- 精选
+    is_pinned       INTEGER DEFAULT 0,          -- 置顶
+    status          TEXT DEFAULT 'published',
+    created_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_post_uid ON community_posts(uid);
+CREATE INDEX IF NOT EXISTS idx_post_type ON community_posts(post_type);
+CREATE INDEX IF NOT EXISTS idx_post_status ON community_posts(status);
+
+-- ============================================================
+-- 社区评论表（板块七）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_comments (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id         INTEGER NOT NULL,
+    uid             TEXT NOT NULL,
+    content         TEXT NOT NULL,
+    parent_comment_id INTEGER,                  -- 回复某条评论
+    like_count      INT DEFAULT 0,
+    status          TEXT DEFAULT 'published',
+    created_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (post_id) REFERENCES community_posts(id),
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_comment_post ON community_comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comment_uid ON community_comments(uid);
+
+-- ============================================================
+-- 社区点赞表（板块七）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS community_likes (
+    uid             TEXT NOT NULL,
+    target_type     TEXT NOT NULL,              -- post/comment
+    target_id       INTEGER NOT NULL,
+    created_at      DATETIME DEFAULT (datetime('now')),
+    PRIMARY KEY (uid, target_type, target_id)
+);
+
+-- ============================================================
 -- 系统设置表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS settings (

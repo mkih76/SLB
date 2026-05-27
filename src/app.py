@@ -19,6 +19,7 @@ from src.api.diagnosis import diagnosis_bp
 from src.api.simulation import simulation_bp
 from src.api.plan import plan_bp
 from src.api.topic import topic_bp
+from src.api.community import community_bp
 
 
 def create_app():
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(simulation_bp)
     app.register_blueprint(plan_bp)
     app.register_blueprint(topic_bp)
+    app.register_blueprint(community_bp)
 
     # Initialize database
     with app.app_context():
@@ -93,6 +95,10 @@ def create_app():
     @app.route('/topics')
     def topics():
         return render_template('topics.html')
+
+    @app.route('/community')
+    def community():
+        return render_template('community.html')
 
     # Admin routes
     @app.route('/admin')
