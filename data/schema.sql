@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone         TEXT,                      -- 手机号（可选）
     email         TEXT,                      -- 邮箱（可选）
     vip_expire    DATETIME,                  -- VIP过期时间
+    free_trial_used INT DEFAULT 0,           -- 免费试用是否已使用
     created_at    DATETIME DEFAULT (datetime('now')),
     last_login    DATETIME,
     status        TEXT DEFAULT 'active',     -- active / banned
@@ -82,6 +83,8 @@ CREATE TABLE IF NOT EXISTS submissions (
     improving_suggestions TEXT,              -- AI改进建议
     graded_at          DATETIME,
     is_reviewed        INT DEFAULT 0,         -- 用户是否查看
+    needs_review       INT DEFAULT 0,         -- 是否需要人工复核
+    reviewer_uid       TEXT,                  -- 复核人uid
     created_at         DATETIME DEFAULT (datetime('now')),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (pid) REFERENCES papers(pid)

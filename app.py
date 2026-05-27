@@ -12,6 +12,7 @@ from src.api.papers import papers_bp
 from src.api.submissions import submissions_bp
 from src.api.phrases import phrases_bp
 from src.api.admin import admin_bp
+from src.api.weak import weak_bp
 from src.api.utils import api_error
 
 
@@ -34,6 +35,7 @@ def create_app():
     app.register_blueprint(submissions_bp, url_prefix='/api/submissions')
     app.register_blueprint(phrases_bp, url_prefix='/api/phrases')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(weak_bp, url_prefix='/api/weak')
 
     # 页面路由
     @app.route('/')

@@ -129,27 +129,56 @@
       return;
     }
 
-    // Mock grading for demo
-    const mockScore = Math.round(60 + Math.random() * 30);
-    const dimensions = {
-      '踩点命中': Math.round(mockScore * 0.4),
-      '逻辑结构': Math.round(mockScore * 0.25),
-      '语言规范': Math.round(mockScore * 0.2),
-      '字数控制': Math.round(mockScore * 0.1),
-      '卷面整洁': Math.round(mockScore * 0.05)
-    };
+    if (!selectedPaper || !selectedQuestion) {
+      alert('请先选择试卷');
+      return;
+    }
 
-    document.getElementById('demo-score').textContent = mockScore;
-    document.getElementById('demo-feedback').innerHTML = `
-      <p><strong>各维度得分：</strong></p>
-      <ul>
-        ${Object.entries(dimensions).map(([k, v]) => `<li>${k}：${v}分</li>`).join('')}
-      </ul>
-      <p style="margin-top: var(--space-2);"><strong>评语：</strong>答案基本完整，建议加强对采分点的把握，注意语言规范性。</p>
-    `;
+    const btn = document.querySelector('#demo-exam-section .btn-primary');
+    btn.classList.add('btn-loading');
+    btn.textContent = '批改中...';
 
-    document.getElementById('demo-exam-section').style.display = 'none';
-    document.getElementById('demo-result').style.display = 'block';
+    try {
+      const res = await fetch('/api/papers/demo/grade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pid: selectedPaper.pid,
+          qid: selectedQuestion.qid,
+          user_answer: answer
+        })
+      });
+
+      const { data, error } = await res.json();
+
+      if (!res.ok) {
+        alert(error || '批改失败，请稍后重试');
+        return;
+      }
+
+      const score = Math.round(data.score || 0);
+      const dims = data.dimension_scores || {};
+
+      document.getElementById('demo-score').textContent = score;
+      document.getElementById('demo-feedback').innerHTML = `
+        <p><strong>各维度得分：</strong></p>
+        <ul>
+          ${Object.entries(dims).map(([k, v]) => `<li>${k}：${v}分</li>`).join('')}
+        </ul>
+        ${data.hit_points && data.hit_points.length > 0 ? `<p style="margin-top: var(--space-2);"><strong>命中要点：</strong>${data.hit_points.join('、')}</p>` : ''}
+        ${data.missing_points && data.missing_points.length > 0 ? `<p><strong>遗漏要点：</strong>${data.missing_points.join('、')}</p>` : ''}
+        <p style="margin-top: var(--space-2);"><strong>AI评语：</strong>${data.ai_feedback || '暂无评语'}</p>
+        ${data.improving_suggestions ? `<p><strong>改进建议：</strong>${data.improving_suggestions}</p>` : ''}
+      `;
+
+      document.getElementById('demo-exam-section').style.display = 'none';
+      document.getElementById('demo-result').style.display = 'block';
+    } catch (e) {
+      alert('网络错误，请稍后重试');
+    } finally {
+      btn.classList.remove('btn-loading');
+      btn.textContent = '提交批改';
+    }
   }
 
   function parseQuestions(questionsJson) {

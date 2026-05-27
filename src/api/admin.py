@@ -1,10 +1,41 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 
 from src.api.utils import api_success, api_error, admin_required, get_db
 from src.services import paper_service, phrase_service
-from src.services.auth import get_user_profile, is_vip_user
+from src.services.auth import get_user_profile, is_vip_user, login_user
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
+
+
+@admin_bp.route('/auth/login', methods=['POST'])
+def admin_login():
+    """管理员登录"""
+    data = request.get_json()
+    if not data:
+        return api_error("请提供登录信息", 400)
+
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    if not username or not password:
+        return api_error("请输入用户名和密码", 400)
+
+    result, error = login_user(username, password)
+    if error:
+        return api_error(error, 401)
+
+    if result.get('role') not in ('super_admin', 'admin', 'reviewer', 'operator'):
+        return api_error("无管理权限", 403)
+
+    session['admin_user'] = result
+    return api_success({
+        'token': result['token'],
+        'user': {
+            'uid': result['uid'],
+            'username': result['username'],
+            'nickname': result['nickname'],
+            'role': result['role']
+        }
+    })
 
 
 def get_dashboard_stats():

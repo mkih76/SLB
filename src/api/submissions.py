@@ -42,6 +42,13 @@ def create_submission(current_user):
     try:
         grading_result = grade_answer(pid, qid, question, user_answer, material)
 
+        # Mark free trial as used for non-VIP users
+        if current_user.get('role') not in ('admin', 'super_admin', 'vip'):
+            if not current_user.get('free_trial_used'):
+                db = get_db()
+                db.execute("UPDATE users SET free_trial_used = 1 WHERE uid = ?", (current_user['uid'],))
+                db.commit()
+
         # Update submission with grading result
         submission_service.update_submission_grading(
             sid=sid,
@@ -102,16 +109,21 @@ def get_submission(current_user, sid):
         'user_answer': submission['user_answer'],
         'score': submission['score'],
         'graded_at': submission['graded_at'],
-        'created_at': submission['created_at']
+        'created_at': submission['created_at'],
+        'is_vip': is_vip
     }
 
-    # Full details for VIP, basic for free
-    if is_vip or submission['score'] is not None:
+    # Full details for VIP or free trial not yet used
+    free_trial_used = current_user.get('free_trial_used', 0)
+    if is_vip or not free_trial_used:
         result['dimension_scores'] = json.loads(submission['dimension_scores']) if submission['dimension_scores'] else None
         result['ai_feedback'] = submission['ai_feedback']
         result['hit_points'] = json.loads(submission['hit_points']) if submission['hit_points'] else []
         result['missing_points'] = json.loads(submission['missing_points']) if submission['missing_points'] else []
         result['improving_suggestions'] = submission['improving_suggestions']
+    else:
+        result['upgrade_required'] = True
+        result['upgrade_message'] = '免费试用已结束，开通VIP查看详细批改结果'
 
     return api_success(result)
 

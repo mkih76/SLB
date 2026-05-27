@@ -1,49 +1,54 @@
 -- 申论帮 - 示例好词好句数据
+-- 列名与 schema.sql 一致: phrase, source, tag, heat, status
 
 -- 开头类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_001', '当前，我国正处于实现中华民族伟大复兴的关键时期，...', '开头', '家国情怀,时代主题', 0, 'approved', datetime('now')),
-('phrase_002', '基层治理是国家治理的基石。完善基层治理体系，对于...', '开头', '基层治理,治理体系', 0, 'approved', datetime('now')),
-('phrase_003', '营商环境是企业生存发展的土壤。优化营商环境，就是...', '开头', '营商环境,企业发展', 0, 'approved', datetime('now')),
-('phrase_004', '乡村振兴战略是新时代'三农'工作的总抓手。推进乡村全面振兴，必须...', '开头', '乡村振兴,三农', 0, 'approved', datetime('now')),
-('phrase_005', '绿色发展是高质量发展的底色。坚持绿水青山就是金山银山理念，要...', '开头', '绿色发展,生态文明', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('当前，我国正处于实现中华民族伟大复兴的关键时期，改革发展稳定任务艰巨繁重，对基层治理提出了更高要求。', '人民日报', '["开头","家国情怀"]', 0, 'approved', datetime('now')),
+('基层治理是国家治理的基石。完善基层治理体系，提升基层治理能力，是推进国家治理体系和治理能力现代化的重要内容。', '求是网', '["开头","基层治理"]', 0, 'approved', datetime('now')),
+('营商环境是企业生存发展的土壤。优化营商环境，就是解放生产力、提升竞争力。', '新华网', '["开头","营商环境"]', 0, 'approved', datetime('now')),
+('乡村振兴战略是新时代"三农"工作的总抓手。推进乡村全面振兴，必须坚持农业农村优先发展。', '人民日报', '["开头","乡村振兴"]', 0, 'approved', datetime('now')),
+('绿色发展是高质量发展的底色。坚持绿水青山就是金山银山理念，推动经济社会发展全面绿色转型。', '求是网', '["开头","绿色发展"]', 0, 'approved', datetime('now')),
+('数字经济是把握新一轮科技革命和产业变革新机遇的战略选择，正在成为重组全球要素资源、重塑全球经济结构的关键力量。', '新华网', '["开头","数字经济"]', 0, 'approved', datetime('now')),
+('民生无小事，枝叶总关情。保障和改善民生没有终点，只有连续不断的新起点。', '人民日报', '["开头","民生"]', 0, 'approved', datetime('now'));
 
 -- 过渡类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_006', '然而，我们也要清醒认识到，...仍然存在不少问题。', '过渡', '问题导向', 0, 'approved', datetime('now')),
-('phrase_007', '一方面，...；另一方面，...。二者相互交织，增添了问题的复杂性。', '过渡', '辩证分析', 0, 'approved', datetime('now')),
-('phrase_008', '造成上述问题的原因是多方面的，既有客观因素，也有主观原因。', '过渡', '原因分析', 0, 'approved', datetime('now')),
-('phrase_009', '综上所述，...。要解决这些问题，需要多方协同、久久为功。', '过渡', '总结过渡', 0, 'approved', datetime('now')),
-('phrase_010', '对此，我们必须坚持问题导向，找准突破口，以点带面推动整体提升。', '过渡', '对策引出', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('然而，我们也要清醒认识到，基层治理中仍然存在不少问题和短板。', '人民日报', '["过渡","问题导向"]', 0, 'approved', datetime('now')),
+('一方面，...；另一方面，...。二者相互交织，增添了问题的复杂性。', '求是网', '["过渡","辩证分析"]', 0, 'approved', datetime('now')),
+('造成上述问题的原因是多方面的，既有体制机制不健全的客观因素，也有思想认识不到位的主观原因。', '人民日报', '["过渡","原因分析"]', 0, 'approved', datetime('now')),
+('综上所述，解决这些问题需要多方协同、久久为功，既要有紧迫感，也要有耐心。', '新华网', '["过渡","总结过渡"]', 0, 'approved', datetime('now')),
+('对此，我们必须坚持问题导向，找准突破口，以点带面推动整体提升。', '人民日报', '["过渡","对策引出"]', 0, 'approved', datetime('now')),
+('从更深层次看，这些问题折射出的是发展理念、治理方式、工作方法等方面的深层矛盾。', '求是网', '["过渡","深层分析"]', 0, 'approved', datetime('now'));
 
 -- 论证类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_011', '实践证明，...是实现...的根本途径。', '论证', '实践验证', 0, 'approved', datetime('now')),
-('phrase_012', '从调研情况看，...已经取得了阶段性成效，但距离目标还有差距。', '论证', '调研分析', 0, 'approved', datetime('now')),
-('phrase_013', '以某地为例，该地通过...，实现了...的良性循环，其经验值得借鉴。', '论证', '案例论证', 0, 'approved', datetime('now')),
-('phrase_014', '数据显示，...，充分说明了...的重要性和必要性。', '论证', '数据支撑', 0, 'approved', datetime('now')),
-('phrase_015', '正如某专家所言：'...'。这深刻揭示了...的内在规律。', '论证', '专家观点', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('实践证明，坚持党建引领是提升基层治理效能的根本保证。', '人民日报', '["论证","实践验证"]', 0, 'approved', datetime('now')),
+('从调研情况看，各地在推进基层治理现代化方面已经取得了阶段性成效，但距离人民群众的期盼还有差距。', '求是网', '["论证","调研分析"]', 0, 'approved', datetime('now')),
+('以浙江省为例，该地通过"最多跑一次"改革，实现了政务服务效率的大幅提升，其经验值得各地借鉴。', '新华网', '["论证","案例论证"]', 0, 'approved', datetime('now')),
+('数据显示，全国已建成城乡社区综合服务设施50余万个，覆盖率达到90%以上，充分说明了基层服务体系建设的成效。', '人民日报', '["论证","数据支撑"]', 0, 'approved', datetime('now')),
+('正如习近平总书记指出："社区是基层基础，只有基础坚固，国家大厦才能稳固。"这深刻揭示了基层治理的重要地位。', '人民日报', '["论证","引经据典"]', 0, 'approved', datetime('now'));
 
 -- 对策类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_016', '一是加强顶层设计，完善...制度体系。', '对策', '制度建设', 0, 'approved', datetime('now')),
-('phrase_017', '二是强化要素保障，加大...投入力度。', '对策', '资源保障', 0, 'approved', datetime('now')),
-('phrase_018', '三是创新工作方式，推动...数字化转型。', '对策', '数字赋能', 0, 'approved', datetime('now')),
-('phrase_019', '四是注重人才培养，打造...专业队伍。', '对策', '人才建设', 0, 'approved', datetime('now')),
-('phrase_020', '五是加强监督考核，确保...落地见效。', '对策', '监督考核', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('一是加强顶层设计，完善基层治理制度体系，确保各项工作有章可循、有据可依。', '求是网', '["对策","制度建设"]', 0, 'approved', datetime('now')),
+('二是强化要素保障，加大对基层治理的人力、物力、财力投入力度。', '人民日报', '["对策","资源保障"]', 0, 'approved', datetime('now')),
+('三是创新工作方式，推动基层治理数字化转型，让数据多跑路、群众少跑腿。', '新华网', '["对策","数字赋能"]', 0, 'approved', datetime('now')),
+('四是注重人才培养，打造一支懂治理、能治理、善治理的基层干部队伍。', '人民日报', '["对策","人才建设"]', 0, 'approved', datetime('now')),
+('五是加强监督考核，建立健全基层治理评价体系，确保各项政策落地见效。', '求是网', '["对策","监督考核"]', 0, 'approved', datetime('now')),
+('六是坚持共建共治共享，充分调动社会各方力量参与基层治理的积极性。', '人民日报', '["对策","多元共治"]', 0, 'approved', datetime('now'));
 
 -- 结尾类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_021', '总之，...需要我们以更加坚定的信心、更加务实的作风、更加有力的举措，持续发力、久久为功。', '结尾', '总括收尾', 0, 'approved', datetime('now')),
-('phrase_022', '站在新的历史起点上，我们要...，奋力谱写...新篇章。', '结尾', '展望未来', 0, 'approved', datetime('now')),
-('phrase_023', '只要我们坚持...，就一定能够...，为实现...作出更大贡献。', '结尾', '信心表达', 0, 'approved', datetime('now')),
-('phrase_024', '展望未来，...前景光明、使命光荣。我们要以...为契机，...。', '结尾', '使命担当', 0, 'approved', datetime('now')),
-('phrase_025', '让我们以更加昂扬的斗志、更加扎实的作风，推动...迈上新台阶！', '结尾', '号召动员', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('总之，推进基层治理体系和治理能力现代化，需要我们以更加坚定的信心、更加务实的作风、更加有力的举措，持续发力、久久为功。', '人民日报', '["结尾","总括收尾"]', 0, 'approved', datetime('now')),
+('站在新的历史起点上，我们要以更大的决心和力度推进改革创新，奋力谱写基层治理现代化新篇章。', '新华网', '["结尾","展望未来"]', 0, 'approved', datetime('now')),
+('只要我们坚持以人民为中心的发展思想，就一定能够不断提升人民群众的获得感、幸福感、安全感。', '求是网', '["结尾","信心表达"]', 0, 'approved', datetime('now')),
+('让我们以更加昂扬的斗志、更加扎实的作风，推动基层治理迈上新台阶，为实现中华民族伟大复兴贡献力量！', '人民日报', '["结尾","号召动员"]', 0, 'approved', datetime('now'));
 
 -- 名言类
-INSERT INTO good_phrases (gid, content, category, tags, use_count, status, created_at) VALUES
-('phrase_026', '大道至简，实干为要。', '名言', '实干精神', 0, 'approved', datetime('now')),
-('phrase_027', '民惟邦本，本固邦宁。', '名言', '以民为本', 0, 'approved', datetime('now')),
-('phrase_028', '上下同欲者胜，风雨同舟者兴。', '名言', '团结奋进', 0, 'approved', datetime('now')),
-('phrase_029', '不谋全局者，不足谋一域。', '名言', '全局观念', 0, 'approved', datetime('now')),
-('phrase_030', '知行合一，止于至善。', '名言', '知行统一', 0, 'approved', datetime('now'));
+INSERT INTO good_phrases (phrase, source, tag, heat, status, created_at) VALUES
+('大道至简，实干为要。空谈误国，实干兴邦。', '人民日报', '["名言","实干精神"]', 0, 'approved', datetime('now')),
+('民惟邦本，本固邦宁。治国有常，利民为本。', '求是网', '["名言","以民为本"]', 0, 'approved', datetime('now')),
+('上下同欲者胜，风雨同舟者兴。同舟共济、众志成城，就没有干不成的事。', '人民日报', '["名言","团结奋进"]', 0, 'approved', datetime('now')),
+('不谋全局者，不足谋一域。不谋万世者，不足谋一时。', '新华网', '["名言","全局观念"]', 0, 'approved', datetime('now')),
+('知行合一，止于至善。道不可坐论，德不能空谈。', '人民日报', '["名言","知行统一"]', 0, 'approved', datetime('now')),
+('些小吾曹州县吏，一枝一叶总关情。', '人民日报', '["名言","为民情怀"]', 0, 'approved', datetime('now'));

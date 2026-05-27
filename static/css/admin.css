@@ -227,7 +227,7 @@
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: var(--text-xs);
   font-weight: 500;
 }

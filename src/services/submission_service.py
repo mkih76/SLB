@@ -34,7 +34,7 @@ def update_submission_grading(sid: str, score: float, dimension_scores: dict,
         """UPDATE submissions SET
            score = ?, dimension_scores = ?, ai_feedback = ?,
            hit_points = ?, missing_points = ?, improving_suggestions = ?,
-           graded_at = ?, is_reviewed = 0
+           graded_at = ?, is_reviewed = 0, needs_review = ?
            WHERE sid = ?""",
         (
             score,
@@ -44,6 +44,7 @@ def update_submission_grading(sid: str, score: float, dimension_scores: dict,
             json.dumps(missing_points, ensure_ascii=False),
             improving_suggestions,
             datetime.now().isoformat(),
+            1 if score is not None and score < 60 else 0,
             sid
         )
     )

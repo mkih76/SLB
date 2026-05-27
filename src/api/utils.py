@@ -73,6 +73,40 @@ def token_required(f):
     return decorated
 
 
+ROLE_PERMISSIONS = {
+    'super_admin': ['*'],
+    'admin': [
+        'users.view', 'users.edit', 'users.ban',
+        'papers.view', 'papers.add', 'papers.edit', 'papers.delete',
+        'phrases.view', 'phrases.approve',
+        'submissions.view', 'submissions.review',
+        'stats.view', 'logs.view'
+    ],
+    'reviewer': [
+        'submissions.view', 'submissions.review',
+        'phrases.view', 'phrases.approve'
+    ],
+    'operator': [
+        'papers.view', 'papers.add', 'papers.edit', 'papers.delete',
+        'phrases.view', 'phrases.add'
+    ]
+}
+
+
+def has_permission(role: str, permission: str) -> bool:
+    """Check if a role has a specific permission"""
+    if not permission:
+        return True
+    perms = ROLE_PERMISSIONS.get(role, [])
+    if '*' in perms:
+        return True
+    # Check wildcard match (e.g., 'papers.*' matches 'papers.view')
+    resource = permission.split('.')[0] if '.' in permission else ''
+    if f'{resource}.*' in perms:
+        return True
+    return permission in perms
+
+
 def admin_required(permission=None):
     """Admin permission decorator"""
     def decorator(f):
@@ -83,6 +117,8 @@ def admin_required(permission=None):
             role = current_user.get('role', 'user')
             if role not in ('super_admin', 'admin', 'reviewer', 'operator'):
                 return api_error("Admin access required", 403)
+            if not has_permission(role, permission):
+                return api_error("Permission denied", 403)
             return f(*args, **kwargs)
         return decorated
     return decorator

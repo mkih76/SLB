@@ -176,7 +176,7 @@ h1, h2, h3, h4, h5, h6 {
 .badge {
   display: inline-block;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: var(--text-xs);
   font-weight: 500;
 }
@@ -226,7 +226,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 英雄区 */
 .hero {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: var(--color-primary);
   color: white;
   padding: var(--space-8) 0;
   text-align: center;
@@ -255,7 +255,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .feature-card {
-  text-align: center;
+  text-align: left;
   padding: var(--space-4);
 }
 

@@ -13,6 +13,7 @@ from src.api.papers import papers_bp
 from src.api.submissions import submissions_bp
 from src.api.phrases import phrases_bp
 from src.api.admin import admin_bp
+from src.api.weak import weak_bp
 
 
 def create_app():
@@ -28,6 +29,7 @@ def create_app():
     app.register_blueprint(submissions_bp)
     app.register_blueprint(phrases_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(weak_bp)
 
     # Initialize database
     with app.app_context():
