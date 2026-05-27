@@ -114,8 +114,8 @@
       document.getElementById('word-limit').textContent = question.word_limit || '未指定';
 
       document.getElementById('question-info').innerHTML = `
-        <p>题型：${question.type || '未知'}</p>
-        <p>满分：${question.score_max || 100}分</p>
+        <p>题型：${escapeHtml(question.type || '未知')}</p>
+        <p>满分：${escapeHtml(question.score_max || 100)}分</p>
       `;
 
       lucide.createIcons();

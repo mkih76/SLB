@@ -91,18 +91,25 @@
 
     container.innerHTML = papers.map(paper => {
       const questions = parseQuestions(paper.questions);
+      const safePid = escapeHtml(paper.pid);
+      const safeQid = escapeHtml(questions[0]?.qid || 'q1');
+      const safeExamType = escapeHtml(paper.exam_type);
+      const safeYear = escapeHtml(paper.year);
+      const safeProvince = escapeHtml(paper.province || '');
+      const safeTitle = escapeHtml(paper.title);
+      const safeHeat = escapeHtml(paper.heat);
       return `
-        <a href="/exam/${paper.pid}/${questions[0]?.qid || 'q1'}" class="card" style="text-decoration: none; color: inherit; display: block;">
+        <a href="/exam/${safePid}/${safeQid}" class="card" style="text-decoration: none; color: inherit; display: block;">
           <div style="display: flex; justify-content: space-between; align-items: start;">
             <div>
               <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span class="badge badge-info">${paper.exam_type}</span>
-                <span class="badge badge-warning">${paper.year}</span>
-                ${paper.province ? `<span class="badge">${paper.province}</span>` : ''}
+                <span class="badge badge-info">${safeExamType}</span>
+                <span class="badge badge-warning">${safeYear}</span>
+                ${safeProvince ? `<span class="badge">${safeProvince}</span>` : ''}
               </div>
-              <h3 class="card-title">${paper.title}</h3>
+              <h3 class="card-title">${safeTitle}</h3>
               <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
-                题目数量：${questions.length} | 难度：${'★'.repeat(paper.difficulty)}${'☆'.repeat(5-paper.difficulty)} | 热度：${paper.heat}
+                题目数量：${questions.length} | 难度：${'★'.repeat(paper.difficulty)}${'☆'.repeat(5-paper.difficulty)} | 热度：${safeHeat}
               </p>
             </div>
             <button class="btn btn-primary">
