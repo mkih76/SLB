@@ -18,6 +18,7 @@ from src.api.drill import drill_bp
 from src.api.diagnosis import diagnosis_bp
 from src.api.simulation import simulation_bp
 from src.api.plan import plan_bp
+from src.api.topic import topic_bp
 
 
 def create_app():
@@ -38,6 +39,7 @@ def create_app():
     app.register_blueprint(diagnosis_bp)
     app.register_blueprint(simulation_bp)
     app.register_blueprint(plan_bp)
+    app.register_blueprint(topic_bp)
 
     # Initialize database
     with app.app_context():
@@ -87,6 +89,10 @@ def create_app():
     @app.route('/plan')
     def plan():
         return render_template('plan.html')
+
+    @app.route('/topics')
+    def topics():
+        return render_template('topics.html')
 
     # Admin routes
     @app.route('/admin')

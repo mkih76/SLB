@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时政热点 - 申论帮</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .topics-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .topics-header { text-align: center; margin-bottom: 30px; }
+        .topics-header h1 { font-size: 24px; color: #1A3A6B; }
+        .section-title { font-size: 18px; font-weight: 600; color: #1A3A6B; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #1A3A6B; }
+
+        /* 统计栏 */
+        .stats-bar { display: flex; justify-content: center; gap: 32px; margin-bottom: 30px; }
+        .stat-item { text-align: center; }
+        .stat-num { font-size: 28px; font-weight: 700; color: #1A3A6B; }
+        .stat-label { font-size: 13px; color: #999; margin-top: 4px; }
+
+        /* 分类筛选 */
+        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .filter-btn {
+            padding: 6px 16px; border: 1px solid #d9d9d9; border-radius: 20px;
+            background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active { border-color: #1A3A6B; color: #1A3A6B; background: #f0f5ff; }
+
+        /* 本周热点 */
+        .week-card {
+            background: linear-gradient(135deg, #1A3A6B, #2a5298);
+            color: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px;
+        }
+        .week-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.9; }
+        .week-topics { display: flex; flex-direction: column; gap: 10px; }
+        .week-topic-item {
+            background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .week-topic-item:hover { background: rgba(255,255,255,0.2); }
+        .week-topic-title { font-size: 15px; font-weight: 600; }
+        .week-topic-meta { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+        /* 热点列表 */
+        .topic-list { margin-bottom: 24px; }
+        .topic-card {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+            padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .topic-card:hover { border-color: #1A3A6B; box-shadow: 0 2px 8px rgba(26,58,107,0.08); }
+        .topic-card .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .topic-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 4px;
+            font-size: 12px; font-weight: 600; color: #fff;
+        }
+        .badge-jingji { background: #1890ff; }
+        .badge-shehui { background: #52c41a; }
+        .badge-wenhua { background: #722ed1; }
+        .badge-shengtai { background: #13c2c2; }
+        .badge-minsheng { background: #fa8c16; }
+        .badge-zhili { background: #1A3A6B; }
+        .badge-keji { background: #eb2f96; }
+        .topic-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 6px; }
+        .topic-summary { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 8px; }
+        .topic-footer { display: flex; gap: 16px; font-size: 12px; color: #999; }
+        .prob-high { color: #f5222d; font-weight: 600; }
+        .prob-medium { color: #fa8c16; font-weight: 600; }
+        .prob-low { color: #52c41a; }
+
+        /* 详情弹窗 */
+        .detail-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 200;
+        }
+        .detail-box {
+            background: #fff; border-radius: 12px; max-width: 700px; width: 90%;
+            max-height: 85vh; overflow-y: auto; padding: 32px;
+        }
+        .detail-close { float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .detail-close:hover { color: #333; }
+        .detail-title { font-size: 20px; font-weight: 700; color: #1A3A6B; margin-bottom: 16px; }
+        .detail-section { margin-bottom: 20px; }
+        .detail-section h4 { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .detail-text { font-size: 15px; line-height: 1.8; color: #444; }
+        .view-card { background: #f8f8f8; border-radius: 6px; padding: 12px; margin-bottom: 8px; }
+        .view-perspective { font-size: 13px; font-weight: 600; color: #1A3A6B; margin-bottom: 4px; }
+        .view-text { font-size: 14px; color: #555; line-height: 1.6; }
+        .prediction-box { background: #fff7e6; border: 1px solid #ffe58f; border-radius: 6px; padding: 14px; margin-bottom: 8px; }
+        .history-item { font-size: 14px; color: #555; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+        .detail-actions { display: flex; gap: 12px; margin-top: 16px; }
+        .btn-bookmark, .btn-read { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
+        .btn-bookmark { background: #C9A84C; color: #fff; }
+        .btn-read { background: #52c41a; color: #fff; }
+        .keyword-tag { display: inline-block; background: #f0f5ff; color: #1A3A6B; padding: 2px 10px; border-radius: 4px; font-size: 13px; margin: 2px 4px 2px 0; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="topics-container">
+        <div class="topics-header">
+            <h1>时政热点专题</h1>
+            <p style="color:#666;">系统积累，精准押题</p>
+        </div>
+
+        <!-- 统计栏 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item"><div class="stat-num" id="statTotal">-</div><div class="stat-label">总专题</div></div>
+            <div class="stat-item"><div class="stat-num" id="statRead">-</div><div class="stat-label">已学习</div></div>
+            <div class="stat-item"><div class="stat-num" id="statUnread">-</div><div class="stat-label">未学习</div></div>
+            <div class="stat-item"><div class="stat-num" id="statBookmark">-</div><div class="stat-label">已收藏</div></div>
+        </div>
+
+        <!-- 本周热点 -->
+        <div class="section-title">本周热点</div>
+        <div class="week-card" id="weekCard">
+            <div class="week-title" id="weekTitle">加载中...</div>
+            <div class="week-topics" id="weekTopics"></div>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div class="section-title">全部热点</div>
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" onclick="filterByCategory('')">全部</button>
+            <button class="filter-btn" onclick="filterByCategory('jingji')">经济</button>
+            <button class="filter-btn" onclick="filterByCategory('shehui')">社会</button>
+            <button class="filter-btn" onclick="filterByCategory('wenhua')">文化</button>
+            <button class="filter-btn" onclick="filterByCategory('shengtai')">生态</button>
+            <button class="filter-btn" onclick="filterByCategory('minsheng')">民生</button>
+            <button class="filter-btn" onclick="filterByCategory('zhili')">治理</button>
+            <button class="filter-btn" onclick="filterByCategory('keji')">科技</button>
+        </div>
+
+        <!-- 热点列表 -->
+        <div class="topic-list" id="topicList">
+            <div class="empty-state">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="detail-overlay" id="detailOverlay" style="display:none;" onclick="closeDetail(event)">
+        <div class="detail-box" id="detailBox" onclick="event.stopPropagation()">
+            <button class="detail-close" onclick="document.getElementById('detailOverlay').style.display='none'">&times;</button>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api/topics';
+    const token = localStorage.getItem('token');
+    const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+    let currentCategory = '';
+
+    async function loadStats() {
+        if (!token) return;
+        const res = await fetch(API + '/stats', {headers: headers()});
+        const data = await res.json();
+        if (!data.data) return;
+        const s = data.data;
+        document.getElementById('statTotal').textContent = s.total_topics;
+        document.getElementById('statRead').textContent = s.read_count;
+        document.getElementById('statUnread').textContent = s.unread_count;
+        document.getElementById('statBookmark').textContent = s.bookmark_count;
+    }
+
+    async function loadWeekTopics() {
+        const res = await fetch(API + '/week', {headers: headers()});
+        const data = await res.json();
+        if (!data.data) return;
+        const d = data.data;
+        document.getElementById('weekTitle').textContent = '本周热点 · ' + (d.week_label || '');
+        const container = document.getElementById('weekTopics');
+        if (!d.topics || !d.topics.length) {
+            container.innerHTML = '<div style="opacity:0.7;">本周暂无新热点</div>';
+            return;
+        }
+        container.innerHTML = d.topics.map(t =>
+            '<div class="week-topic-item" onclick="viewTopic(' + t.topic_id + ')">' +
+                '<div class="week-topic-title">' + escapeHtml(t.title) + '</div>' +
+                '<div class="week-topic-meta">' + escapeHtml(t.category_name) +
+                    (t.probability ? ' · 考试概率：' + t.probability : '') +
+                    (t.related_count ? ' · 关联真题：' + t.related_count + '道' : '') + '</div>' +
+            '</div>'
+        ).join('');
+    }
+
+    async function loadTopics(page = 1) {
+        const params = new URLSearchParams({page, limit: 20});
+        if (currentCategory) params.append('category', currentCategory);
+        const res = await fetch(API + '?' + params, {headers: headers()});
+        const data = await res.json();
+        if (!data.data) return;
+
+        const list = document.getElementById('topicList');
+        const items = data.data.items || [];
+        if (!items.length) {
+            list.innerHTML = '<div class="empty-state">暂无热点专题</div>';
+            return;
+        }
+
+        list.innerHTML = items.map(t => {
+            const probCls = t.probability === '高' ? 'prob-high' : t.probability === '中' ? 'prob-medium' : 'prob-low';
+            return '<div class="topic-card" onclick="viewTopic(' + t.topic_id + ')">' +
+                '<div class="top-row">' +
+                    '<span class="topic-badge badge-' + t.category + '">' + escapeHtml(t.category_name) + '</span>' +
+                    (t.probability ? '<span class="' + probCls + '">考试概率：' + t.probability + '</span>' : '') +
+                '</div>' +
+                '<div class="topic-title">' + escapeHtml(t.title) + '</div>' +
+                '<div class="topic-summary">' + escapeHtml(t.summary) + '</div>' +
+                '<div class="topic-footer">' +
+                    (t.keywords || []).slice(0, 3).map(k => '<span>' + escapeHtml(k) + '</span>').join(' · ') +
+                    (t.related_count ? '<span>关联真题 ' + t.related_count + ' 道</span>' : '') +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function filterByCategory(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        loadTopics();
+    }
+
+    async function viewTopic(id) {
+        const res = await fetch(API + '/' + id, {headers: headers()});
+        const data = await res.json();
+        if (!data.data) return;
+        renderDetail(data.data);
+        document.getElementById('detailOverlay').style.display = 'flex';
+        // 标记已读
+        fetch(API + '/' + id + '/read', {method: 'POST', headers: headers()});
+    }
+
+    function renderDetail(t) {
+        let html = '<div class="detail-title">' + escapeHtml(t.title) + '</div>';
+        html += '<div style="margin-bottom:12px;">';
+        (t.keywords || []).forEach(k => { html += '<span class="keyword-tag">' + escapeHtml(k) + '</span>'; });
+        html += '</div>';
+
+        html += '<div class="detail-section"><h4>背景梳理</h4><div class="detail-text">' + escapeHtml(t.summary) + '</div></div>';
+
+        // 多方观点
+        const views = t.multi_views || [];
+        if (views.length) {
+            html += '<div class="detail-section"><h4>多方视角</h4>';
+            views.forEach(v => {
+                html += '<div class="view-card"><div class="view-perspective">' + escapeHtml(v.perspective || '') + '</div>' +
+                    '<div class="view-text">' + escapeHtml(v.view || '') + '</div></div>';
+            });
+            html += '</div>';
+        }
+
+        // AI 押题
+        const pred = t.exam_prediction || {};
+        if (pred.possible_angles || pred.probability) {
+            html += '<div class="detail-section"><h4>AI 押题分析</h4><div class="prediction-box">';
+            if (pred.probability) html += '<div style="margin-bottom:8px;">考试概率：<b>' + escapeHtml(pred.probability) + '</b></div>';
+            if (pred.reason) html += '<div style="font-size:14px;color:#666;margin-bottom:8px;">' + escapeHtml(pred.reason) + '</div>';
+            if (pred.possible_angles) {
+                html += '<div style="font-size:14px;font-weight:600;margin-bottom:4px;">可能出题角度：</div>';
+                pred.possible_angles.forEach(a => {
+                    html += '<div style="font-size:14px;color:#555;padding:2px 0;">· ' + escapeHtml(a) + '</div>';
+                });
+            }
+            html += '</div></div>';
+        }
+
+        // 历年考题
+        const history = t.exam_history || [];
+        if (history.length) {
+            html += '<div class="detail-section"><h4>历年相关考题</h4>';
+            history.forEach(h => {
+                html += '<div class="history-item"><b>' + (h.year||'') + ' ' + escapeHtml(h.exam||'') + '</b>：' + escapeHtml(h.question||'') + '</div>';
+            });
+            html += '</div>';
+        }
+
+        // 操作按钮
+        const userState = t.user_state || {};
+        html += '<div class="detail-actions">';
+        html += '<button class="btn-bookmark" onclick="toggleBookmark(' + t.topic_id + ')">' +
+            (userState.is_bookmarked ? '取消收藏' : '收藏') + '</button>';
+        html += '<button class="btn-read" onclick="document.getElementById(\'detailOverlay\').style.display=\'none\';">关闭</button>';
+        html += '</div>';
+
+        document.getElementById('detailContent').innerHTML = html;
+    }
+
+    async function toggleBookmark(id) {
+        const res = await fetch(API + '/' + id + '/bookmark', {method: 'POST', headers: headers()});
+        const data = await res.json();
+        if (data.data) {
+            alert(data.data.is_bookmarked ? '已收藏' : '已取消收藏');
+            loadStats();
+        }
+    }
+
+    function closeDetail(e) {
+        if (e.target === document.getElementById('detailOverlay')) {
+            document.getElementById('detailOverlay').style.display = 'none';
+        }
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    loadStats(); loadWeekTopics(); loadTopics();
+    </script>
+</body>
+</html>

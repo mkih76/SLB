@@ -379,6 +379,47 @@ CREATE INDEX IF NOT EXISTS idx_daily_uid_date ON daily_tasks(uid, task_date);
 CREATE INDEX IF NOT EXISTS idx_daily_status ON daily_tasks(status);
 
 -- ============================================================
+-- 热点专题表（板块六）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS hot_topics (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    title           TEXT NOT NULL,              -- e.g. "新质生产力"
+    summary         TEXT NOT NULL,              -- 300字以内的背景梳理
+    category        TEXT NOT NULL,              -- jingji/shehui/wenhua/shengtai/minsheng/zhili/keji
+    keywords        TEXT DEFAULT '[]',          -- JSON: 关键词列表
+    multi_views     TEXT,                       -- JSON: 多方观点
+    related_phrases TEXT DEFAULT '[]',          -- JSON: 关联素材ID
+    related_papers  TEXT DEFAULT '[]',          -- JSON: 关联真题ID
+    exam_prediction TEXT,                       -- JSON: AI押题分析
+    exam_history    TEXT DEFAULT '[]',          -- JSON: 历年考过的相关题目
+    week_label      TEXT,                       -- e.g. "2026-W22"
+    status          TEXT DEFAULT 'published',
+    created_at      DATETIME DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_topic_status ON hot_topics(status);
+CREATE INDEX IF NOT EXISTS idx_topic_week ON hot_topics(week_label);
+CREATE INDEX IF NOT EXISTS idx_topic_category ON hot_topics(category);
+
+-- ============================================================
+-- 用户热点学习记录（板块六）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_topic_learning (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid             TEXT NOT NULL,
+    topic_id        INTEGER NOT NULL,
+    is_read         INTEGER DEFAULT 0,
+    is_bookmarked   INTEGER DEFAULT 0,
+    notes           TEXT,                       -- 用户自己的笔记
+    created_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    FOREIGN KEY (topic_id) REFERENCES hot_topics(id),
+    UNIQUE(uid, topic_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_topic_learn_uid ON user_topic_learning(uid);
+
+-- ============================================================
 -- 系统设置表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS settings (
