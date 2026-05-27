@@ -1,9 +1,11 @@
+import sqlite3
+
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
 
 from src.config import Config, JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_DAYS
-from src.api.utils import get_db, generate_uuid, generate_sid
+from src.api.utils import get_db, generate_uuid
 
 
 def hash_password(password: str) -> str:
@@ -40,10 +42,8 @@ def register_user(username: str, password: str, nickname: str = None):
             (uid, username, password_hash, nickname)
         )
         db.commit()
-    except Exception as e:
-        if 'UNIQUE constraint failed: users.username' in str(e):
-            return None, "用户名已存在"
-        raise
+    except sqlite3.IntegrityError:
+        return None, "用户名已存在"
 
     token = create_token(uid)
     return {

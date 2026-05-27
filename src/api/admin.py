@@ -581,5 +581,5 @@ def clear_cache():
             grader_cache.client.flushdb()
         return api_success(message="缓存已清除")
     except Exception as e:
-        return api_error(f"清除缓存失败: {str(e)}", 500)
+        return api_error("清除缓存失败", 500)
 

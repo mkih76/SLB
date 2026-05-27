@@ -29,7 +29,6 @@ class Config:
     JWT_ALGORITHM = 'HS256'
     JWT_EXPIRE_DAYS = int(os.getenv('JWT_EXPIRE_DAYS', 7))
 
-    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///data/slb.db')
     DATABASE_PATH = os.getenv('DATABASE_PATH', 'data/slb.db')
 
     # LLM Config
@@ -61,7 +60,6 @@ SECRET_KEY = Config.SECRET_KEY
 JWT_SECRET = Config.JWT_SECRET
 JWT_ALGORITHM = Config.JWT_ALGORITHM
 JWT_EXPIRE_DAYS = Config.JWT_EXPIRE_DAYS
-DATABASE_URL = Config.DATABASE_URL
 DATABASE_PATH = Config.DATABASE_PATH
 LLM_PROVIDER = Config.LLM_PROVIDER
 LLM_MODEL = Config.LLM_MODEL

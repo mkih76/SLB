@@ -31,6 +31,8 @@ def get_paper(pid):
     paper = paper_service.get_paper_by_pid(pid)
     if not paper:
         return api_error("试卷不存在", 404)
+    # Remove answer_keys from public response to prevent cheating
+    paper.pop('answer_keys', None)
     return api_success(paper)
 
 
@@ -74,4 +76,4 @@ def demo_grade():
             'improving_suggestions': grading_result.get('improving_suggestions')
         })
     except Exception as e:
-        return api_error(f"批改失败: {str(e)}", 500)
+        return api_error("批改失败，请稍后重试", 500)

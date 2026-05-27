@@ -5,7 +5,6 @@ from src.api.utils import api_success, api_error, token_required, get_db, clamp_
 from src.services import submission_service, paper_service, weak_point_service
 from src.services.grader.scorer import grade_answer
 from src.services.auth import is_vip_user
-from src.services.grader.scorer import get_simple_feedback
 
 submissions_bp = Blueprint('submissions', __name__, url_prefix='/api/submissions')
 

@@ -75,10 +75,15 @@
       if (data.papers && data.papers.length > 0) {
         container.innerHTML = data.papers.map(paper => {
           const questions = parseQuestions(paper.questions);
+          const safePid = escapeHtml(paper.pid);
+          const safeQid = escapeHtml(questions[0]?.qid || 'q1');
+          const safeTitle = escapeHtml(paper.title);
+          const safeExamType = escapeHtml(paper.exam_type);
+          const safeYear = escapeHtml(paper.year);
           return `
-            <div class="card" style="cursor: pointer;" onclick="selectPaper('${paper.pid}', '${questions[0]?.qid}')">
-              <h4>${paper.title}</h4>
-              <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">${paper.exam_type} | ${paper.year}</p>
+            <div class="card" style="cursor: pointer;" onclick="selectPaper('${safePid}', '${safeQid}')">
+              <h4>${safeTitle}</h4>
+              <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">${safeExamType} | ${safeYear}</p>
             </div>
           `;
         }).join('');
@@ -163,12 +168,12 @@
       document.getElementById('demo-feedback').innerHTML = `
         <p><strong>各维度得分：</strong></p>
         <ul>
-          ${Object.entries(dims).map(([k, v]) => `<li>${k}：${v}分</li>`).join('')}
+          ${Object.entries(dims).map(([k, v]) => `<li>${escapeHtml(k)}：${escapeHtml(v)}分</li>`).join('')}
         </ul>
-        ${data.hit_points && data.hit_points.length > 0 ? `<p style="margin-top: var(--space-2);"><strong>命中要点：</strong>${data.hit_points.join('、')}</p>` : ''}
-        ${data.missing_points && data.missing_points.length > 0 ? `<p><strong>遗漏要点：</strong>${data.missing_points.join('、')}</p>` : ''}
-        <p style="margin-top: var(--space-2);"><strong>AI评语：</strong>${data.ai_feedback || '暂无评语'}</p>
-        ${data.improving_suggestions ? `<p><strong>改进建议：</strong>${data.improving_suggestions}</p>` : ''}
+        ${data.hit_points && data.hit_points.length > 0 ? `<p style="margin-top: var(--space-2);"><strong>命中要点：</strong>${data.hit_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
+        ${data.missing_points && data.missing_points.length > 0 ? `<p><strong>遗漏要点：</strong>${data.missing_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
+        <p style="margin-top: var(--space-2);"><strong>AI评语：</strong>${escapeHtml(data.ai_feedback || '暂无评语')}</p>
+        ${data.improving_suggestions ? `<p><strong>改进建议：</strong>${escapeHtml(data.improving_suggestions)}</p>` : ''}
       `;
 
       document.getElementById('demo-exam-section').style.display = 'none';

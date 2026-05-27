@@ -36,12 +36,3 @@ def get_weak_point_stats(uid: str):
         (uid,)
     ).fetchall()
     return [dict(s) for s in stats]
-
-
-def mark_reviewed(weak_id: int):
-    db = get_db()
-    db.execute(
-        "UPDATE weak_points SET review_count = review_count + 1, last_reviewed = ? WHERE id = ?",
-        (datetime.now().isoformat(), weak_id)
-    )
-    db.commit()

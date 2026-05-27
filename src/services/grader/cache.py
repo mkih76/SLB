@@ -1,6 +1,9 @@
 import json
 import hashlib
+import logging
 from src.config import REDIS_HOST, REDIS_PORT, REDIS_DB, CACHE_TTL
+
+logger = logging.getLogger(__name__)
 
 try:
     import redis
@@ -21,7 +24,8 @@ class GradingCache:
                     decode_responses=True
                 )
                 self.client.ping()
-            except:
+            except Exception as e:
+                logger.warning(f"Redis连接失败，缓存不可用: {e}")
                 self.client = None
 
     def _make_key(self, pid: str, qid: str, answer: str) -> str:
@@ -35,7 +39,8 @@ class GradingCache:
             key = self._make_key(pid, qid, answer)
             cached = self.client.get(key)
             return json.loads(cached) if cached else None
-        except:
+        except Exception as e:
+            logger.warning(f"缓存读取失败: {e}")
             return None
 
     def set(self, pid: str, qid: str, answer: str, result: dict):
@@ -44,8 +49,8 @@ class GradingCache:
         try:
             key = self._make_key(pid, qid, answer)
             self.client.setex(key, CACHE_TTL, json.dumps(result))
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"缓存写入失败: {e}")
 
     def invalidate(self, pid: str, qid: str):
         if not self.client:
@@ -55,8 +60,8 @@ class GradingCache:
             keys = self.client.keys(pattern)
             if keys:
                 self.client.delete(*keys)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"缓存清除失败: {e}")
 
 
 grader_cache = GradingCache()
