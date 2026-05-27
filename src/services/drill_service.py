@@ -220,7 +220,7 @@ def get_drill_progress(uid, question_type, limit=10):
     ).fetchall()
 
     # 反转为时间正序
-    return [{'score': row['score'], 'created_at': row['created_at']} for reversed(row) in rows]
+    return [{'score': row['score'], 'created_at': row['created_at']} for row in reversed(rows)]
 
 
 def get_recommended_questions(uid, question_type, limit=5):
