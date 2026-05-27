@@ -196,6 +196,107 @@ CREATE INDEX IF NOT EXISTS idx_blacklist_uid ON token_blacklist(uid);
 CREATE INDEX IF NOT EXISTS idx_blacklist_expires ON token_blacklist(expires_at);
 
 -- ============================================================
+-- 题型能力画像表（板块一）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_question_type_stats (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid                TEXT NOT NULL,
+    question_type      TEXT NOT NULL,          -- guina/zonghe/duice/zhixing/zuowen
+    total_attempts     INT DEFAULT 0,
+    total_score        REAL DEFAULT 0,
+    avg_score          REAL DEFAULT 0,
+    best_score         REAL DEFAULT 0,
+    last_attempt_at    DATETIME,
+    dimension_breakdown TEXT DEFAULT '{}',     -- JSON: 各维度平均分
+    level              TEXT DEFAULT 'bronze',  -- bronze/silver/gold/platinum/diamond
+    created_at         DATETIME DEFAULT (datetime('now')),
+    updated_at         DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    UNIQUE(uid, question_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_uqts_uid ON user_question_type_stats(uid);
+
+-- ============================================================
+-- 题型训练记录表（板块一）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS question_type_drills (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid                TEXT NOT NULL,
+    question_type      TEXT NOT NULL,
+    pid                TEXT NOT NULL,
+    qid                TEXT NOT NULL,
+    sid                TEXT,                   -- 关联 submissions 表
+    score              REAL,
+    dimension_scores   TEXT,                   -- JSON
+    key_point_hit_rate REAL,                   -- 踩点率
+    time_spent         INT,                    -- 用时（秒）
+    created_at         DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    FOREIGN KEY (pid) REFERENCES papers(pid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_drills_uid_type ON question_type_drills(uid, question_type);
+
+-- ============================================================
+-- 诊断报告表（板块四）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS diagnostic_reports (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid                   TEXT NOT NULL,
+    report_type           TEXT NOT NULL,       -- single/weekly/monthly
+    trigger_id            TEXT,                -- 触发报告的 sid
+
+    -- 五维度得分
+    score_point_coverage  REAL,
+    score_logic_structure REAL,
+    score_language        REAL,
+    score_format          REAL,
+    score_word_count      REAL,
+
+    -- 五题型得分
+    score_guina           REAL,
+    score_zonghe          REAL,
+    score_duice           REAL,
+    score_zhixing         REAL,
+    score_zuowen          REAL,
+
+    -- 综合分析
+    overall_score         REAL,
+    strengths             TEXT,                -- JSON
+    weaknesses            TEXT,                -- JSON
+    recommendations       TEXT,                -- JSON
+    score_trend           TEXT,                -- JSON: 近10次得分序列
+
+    created_at            DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_diag_uid ON diagnostic_reports(uid);
+CREATE INDEX IF NOT EXISTS idx_diag_type ON diagnostic_reports(report_type);
+
+-- ============================================================
+-- 模拟考试记录表（板块二）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS simulation_records (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid              TEXT NOT NULL,
+    pid              TEXT NOT NULL,
+    started_at       DATETIME NOT NULL,
+    submitted_at     DATETIME,
+    time_spent       INT,                     -- 实际用时（秒）
+    total_score      REAL,
+    question_scores  TEXT,                     -- JSON
+    rank_percentile  REAL,
+    status           TEXT DEFAULT 'in_progress', -- in_progress/submitted/timeout
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    FOREIGN KEY (pid) REFERENCES papers(pid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sim_uid ON simulation_records(uid);
+CREATE INDEX IF NOT EXISTS idx_sim_pid ON simulation_records(pid);
+
+-- ============================================================
 -- 系统设置表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS settings (

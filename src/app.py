@@ -14,6 +14,8 @@ from src.api.submissions import submissions_bp
 from src.api.phrases import phrases_bp
 from src.api.admin import admin_bp
 from src.api.weak import weak_bp
+from src.api.drill import drill_bp
+from src.api.diagnosis import diagnosis_bp
 
 
 def create_app():
@@ -30,6 +32,8 @@ def create_app():
     app.register_blueprint(phrases_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(weak_bp)
+    app.register_blueprint(drill_bp)
+    app.register_blueprint(diagnosis_bp)
 
     # Initialize database
     with app.app_context():
@@ -55,6 +59,14 @@ def create_app():
     @app.route('/demo')
     def demo():
         return render_template('demo.html')
+
+    @app.route('/drill')
+    def drill():
+        return render_template('drill.html')
+
+    @app.route('/diagnosis')
+    def diagnosis():
+        return render_template('diagnosis.html')
 
     # Admin routes
     @app.route('/admin')

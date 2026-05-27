@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力诊断 - 申论帮</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .diag-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .diag-header { text-align: center; margin-bottom: 30px; }
+        .diag-header h1 { font-size: 24px; color: #1A3A6B; }
+        .overall-score { text-align: center; margin-bottom: 30px; }
+        .score-circle { display: inline-block; width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #1A3A6B, #2a5298); color: #fff; line-height: 120px; font-size: 36px; font-weight: 700; }
+        .score-label { font-size: 14px; color: #666; margin-top: 8px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #1A3A6B; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #1A3A6B; }
+        .dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+        .dim-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 14px; }
+        .dim-label { font-size: 13px; color: #666; margin-bottom: 6px; }
+        .dim-bar { height: 8px; background: #e8e8e8; border-radius: 4px; overflow: hidden; }
+        .dim-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .dim-value { font-size: 14px; font-weight: 600; color: #333; margin-top: 4px; float: right; }
+        .type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 30px; }
+        .type-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 16px; text-align: center; }
+        .type-name { font-size: 13px; color: #666; }
+        .type-score { font-size: 24px; font-weight: 700; color: #1A3A6B; margin: 6px 0; }
+        .sw-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .sw-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 16px; }
+        .sw-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+        .sw-title.strength { color: #52c41a; }
+        .sw-title.weakness { color: #f5222d; }
+        .sw-item { font-size: 14px; color: #333; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+        .rec-list { margin-bottom: 30px; }
+        .rec-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+        .rec-badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #fff; }
+        .rec-high { background: #f5222d; }
+        .rec-medium { background: #fa8c16; }
+        .rec-low { background: #52c41a; }
+        .rec-text { font-size: 14px; color: #333; }
+        .trend-chart { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        .btn-generate { background: #1A3A6B; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 15px; margin-top: 16px; }
+        .btn-generate:hover { background: #2a5298; }
+    </style>
+</head>
+<body>
+    <div class="diag-container">
+        <div class="diag-header">
+            <h1>能力诊断报告</h1>
+            <p style="color:#666;" id="reportTime"></p>
+        </div>
+
+        <div id="loadingState" class="empty-state">
+            <p>加载中...</p>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display:none;">
+            <p>暂无诊断报告</p>
+            <p style="font-size:14px;">完成一次练习后，系统将自动生成你的能力诊断报告</p>
+            <button class="btn-generate" onclick="generateReport()">立即生成报告</button>
+        </div>
+
+        <div id="reportContent" style="display:none;">
+            <!-- 总分 -->
+            <div class="overall-score">
+                <div class="score-circle" id="overallScore">--</div>
+                <div class="score-label">综合得分</div>
+            </div>
+
+            <!-- 五维度 -->
+            <div class="section-title">能力维度</div>
+            <div class="dim-grid" id="dimGrid"></div>
+
+            <!-- 五题型 -->
+            <div class="section-title">题型得分</div>
+            <div class="type-grid" id="typeGrid"></div>
+
+            <!-- 强弱项 -->
+            <div class="sw-section">
+                <div class="sw-card">
+                    <div class="sw-title strength">你的优势</div>
+                    <div id="strengthsList"></div>
+                </div>
+                <div class="sw-card">
+                    <div class="sw-title weakness">你的短板</div>
+                    <div id="weaknessesList"></div>
+                </div>
+            </div>
+
+            <!-- 推荐 -->
+            <div class="section-title">下一步建议</div>
+            <div class="rec-list" id="recList"></div>
+
+            <!-- 趋势 -->
+            <div class="section-title">得分趋势</div>
+            <div class="trend-chart">
+                <canvas id="trendCanvas" width="860" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api/diagnosis';
+    const token = localStorage.getItem('token');
+    const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+    const dimNames = {point_coverage:'踩点命中',logic_structure:'逻辑结构',language:'语言表达',format:'格式规范',word_count:'字数控制'};
+    const typeNames = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+    const dimMax = {point_coverage:40,logic_structure:25,language:20,format:5,word_count:10};
+
+    async function loadReport() {
+        try {
+            const res = await fetch(API + '/latest', {headers: headers()});
+            const data = await res.json();
+            if (!data.data || data.error) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+            renderReport(data.data);
+        } catch(e) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+    }
+
+    function renderReport(r) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('reportContent').style.display = 'block';
+        document.getElementById('reportTime').textContent = '报告时间：' + (r.created_at||'').substring(0,16);
+        document.getElementById('overallScore').textContent = r.overall_score || '--';
+
+        // 维度
+        const dimGrid = document.getElementById('dimGrid');
+        dimGrid.innerHTML = '';
+        const dims = r.dimension_scores || {};
+        for (const [k,label] of Object.entries(dimNames)) {
+            const val = dims[k] || 0;
+            const max = dimMax[k] || 20;
+            const pct = Math.min(100, (val/max)*100);
+            const color = pct >= 75 ? '#52c41a' : pct >= 50 ? '#fa8c16' : '#f5222d';
+            dimGrid.innerHTML += '<div class="dim-card"><div class="dim-label">' + label +
+                '<span class="dim-value">' + val + '/' + max + '</span></div>' +
+                '<div class="dim-bar"><div class="dim-fill" style="width:' + pct + '%;background:' + color + '"></div></div></div>';
+        }
+
+        // 题型
+        const typeGrid = document.getElementById('typeGrid');
+        typeGrid.innerHTML = '';
+        const types = r.type_scores || {};
+        for (const [k,label] of Object.entries(typeNames)) {
+            const val = types[k] ?? '--';
+            typeGrid.innerHTML += '<div class="type-card"><div class="type-name">' + label + '</div>' +
+                '<div class="type-score">' + (typeof val === 'object' ? val.score : val) + '</div></div>';
+        }
+
+        // 强弱项
+        renderList('strengthsList', r.strengths || [], '暂无数据');
+        renderList('weaknessesList', r.weaknesses || [], '暂无数据');
+
+        // 推荐
+        const recList = document.getElementById('recList');
+        recList.innerHTML = '';
+        const recs = r.recommendations || [];
+        if (!recs.length) { recList.innerHTML = '<p style="color:#999;">暂无建议</p>'; }
+        recs.forEach(rec => {
+            const p = rec.priority || 'medium';
+            const cls = p === 'high' ? 'rec-high' : p === 'medium' ? 'rec-medium' : 'rec-low';
+            recList.innerHTML += '<div class="rec-item"><span class="rec-badge ' + cls + '">' + p.toUpperCase() + '</span>' +
+                '<span class="rec-text">' + (rec.action||'') + '</span></div>';
+        });
+
+        // 趋势
+        if (r.score_trend && r.score_trend.length) drawTrend(r.score_trend);
+    }
+
+    function renderList(id, items, emptyText) {
+        const el = document.getElementById(id);
+        if (!items.length) { el.innerHTML = '<div style="color:#999;font-size:14px;padding:8px 0;">' + emptyText + '</div>'; return; }
+        el.innerHTML = items.map(i => '<div class="sw-item">' + i + '</div>').join('');
+    }
+
+    function drawTrend(trend) {
+        const canvas = document.getElementById('trendCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.clientWidth - 40;
+        canvas.height = 200;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const max = 100, pad = 40;
+        const w = canvas.width - pad*2, h = canvas.height - pad*2;
+        ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+            const y = pad + (h/4)*i;
+            ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad+w, y); ctx.stroke();
+            ctx.fillStyle = '#999'; ctx.font = '11px sans-serif';
+            ctx.fillText(Math.round(max - (max/4)*i), 5, y+4);
+        }
+        ctx.strokeStyle = '#1A3A6B'; ctx.lineWidth = 2; ctx.beginPath();
+        trend.forEach((s, i) => {
+            const x = pad + (w / Math.max(trend.length-1, 1)) * i;
+            const y = pad + h - (s/max)*h;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        trend.forEach((s, i) => {
+            const x = pad + (w / Math.max(trend.length-1, 1)) * i;
+            const y = pad + h - (s/max)*h;
+            ctx.fillStyle = '#1A3A6B'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.fillText(s, x-10, y-10);
+        });
+    }
+
+    async function generateReport() {
+        const res = await fetch(API + '/generate', {method:'POST', headers: headers()});
+        const data = await res.json();
+        if (data.data) { renderReport(data.data); }
+        else { alert(data.error || '生成失败，请先完成一次练习'); }
+    }
+
+    if (!token) { window.location.href = '/'; } else { loadReport(); }
+    </script>
+</body>
+</html>
