@@ -14,6 +14,7 @@ def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(Config.DATABASE_PATH)
         g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
 
 
@@ -46,6 +47,11 @@ def api_success(data=None, message="ok"):
 
 def api_error(message, code=400):
     return jsonify({"error": message, "code": code}), code
+
+
+def clamp_per_page(per_page: int, max_val: int = 100) -> int:
+    """限制每页数量，防止恶意请求过大值"""
+    return max(1, min(per_page, max_val))
 
 
 def token_required(f):
@@ -136,14 +142,3 @@ def get_user_by_username(username: str) -> Optional[dict]:
     return dict(user) if user else None
 
 
-def paginate(query, page=1, per_page=20):
-    offset = (page - 1) * per_page
-    items = query.limit(per_page).offset(offset).all()
-    total = query.count()
-    return {
-        'items': [dict(i) for i in items],
-        'total': total,
-        'page': page,
-        'pages': (total + per_page - 1) // per_page,
-        'per_page': per_page
-    }

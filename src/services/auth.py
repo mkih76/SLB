@@ -27,21 +27,21 @@ def create_token(uid: str) -> str:
 def register_user(username: str, password: str, nickname: str = None):
     db = get_db()
 
-    # Check if username exists
-    existing = db.execute("SELECT uid FROM users WHERE username = ?", (username,)).fetchone()
-    if existing:
-        return None, "用户名已存在"
-
     uid = generate_uuid()
     password_hash = hash_password(password)
     nickname = nickname or username
 
-    db.execute(
-        """INSERT INTO users (uid, username, password_hash, nickname, role, status)
-           VALUES (?, ?, ?, ?, 'user', 'active')""",
-        (uid, username, password_hash, nickname)
-    )
-    db.commit()
+    try:
+        db.execute(
+            """INSERT INTO users (uid, username, password_hash, nickname, role, status)
+               VALUES (?, ?, ?, ?, 'user', 'active')""",
+            (uid, username, password_hash, nickname)
+        )
+        db.commit()
+    except Exception as e:
+        if 'UNIQUE constraint failed: users.username' in str(e):
+            return None, "用户名已存在"
+        raise
 
     token = create_token(uid)
     return {

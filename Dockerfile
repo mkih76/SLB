@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8790
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8790", "src.app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8790", "app:app"]

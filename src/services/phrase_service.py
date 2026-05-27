@@ -78,14 +78,16 @@ def reject_phrase(phrase_id: int):
 def favorite_phrase(uid: str, phrase_id: int, note: str = None):
     db = get_db()
     try:
-        db.execute(
+        cursor = db.execute(
             "INSERT OR IGNORE INTO user_favorites (uid, phrase_id, note) VALUES (?, ?, ?)",
             (uid, phrase_id, note)
         )
-        db.execute("UPDATE good_phrases SET heat = heat + 1 WHERE id = ?", (phrase_id,))
+        # Only increment heat if a new row was actually inserted
+        if cursor.rowcount > 0:
+            db.execute("UPDATE good_phrases SET heat = heat + 1 WHERE id = ?", (phrase_id,))
         db.commit()
         return True
-    except:
+    except Exception:
         return False
 
 

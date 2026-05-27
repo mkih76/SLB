@@ -101,6 +101,14 @@
   </div>
 
   <script>
+    // XSS防护：HTML转义工具函数
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(String(str)));
+      return div.innerHTML;
+    }
+
     // 全局状态
     const state = {
       user: null,

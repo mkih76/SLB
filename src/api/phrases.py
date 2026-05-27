@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required
+from src.api.utils import api_success, api_error, token_required, clamp_per_page
 from src.services import phrase_service
 
 phrases_bp = Blueprint('phrases', __name__, url_prefix='/api/phrases')
@@ -11,7 +11,7 @@ def list_phrases():
     source = request.args.get('source')
     tag = request.args.get('tag')
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
     result = phrase_service.get_phrases(
         source=source, tag=tag, page=page, per_page=per_page
@@ -48,7 +48,7 @@ def unfavorite_phrase(current_user, phrase_id):
 @token_required
 def get_favorites(current_user):
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
     result = phrase_service.get_user_favorites(
         current_user['uid'], page, per_page

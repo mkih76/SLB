@@ -1,6 +1,8 @@
+import json
+
 from flask import Blueprint, request, session
 
-from src.api.utils import api_success, api_error, admin_required, get_db
+from src.api.utils import api_success, api_error, admin_required, get_db, clamp_per_page
 from src.services import paper_service, phrase_service
 from src.services.auth import get_user_profile, is_vip_user, login_user
 
@@ -141,7 +143,7 @@ def stats():
 @admin_required('users.view')
 def list_users():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
     role = request.args.get('role')
     status = request.args.get('status')
     search = request.args.get('search', '')
@@ -212,6 +214,11 @@ def update_user(uid):
     if not data:
         return api_error("请提供更新数据", 400)
 
+    # Validate role assignment (H2)
+    valid_roles = ('user', 'vip', 'admin', 'super_admin', 'reviewer', 'operator')
+    if 'role' in data and data['role'] not in valid_roles:
+        return api_error(f"无效角色，可选: {', '.join(valid_roles)}", 400)
+
     db = get_db()
     fields = []
     values = []
@@ -226,10 +233,11 @@ def update_user(uid):
         db.execute(f"UPDATE users SET {', '.join(fields)} WHERE uid = ?", values)
         db.commit()
 
-    # Log action
+    # Log action with actual admin UID (H3)
+    admin_uid = session.get('admin_user', {}).get('uid', 'system')
     db.execute(
         "INSERT INTO admin_logs (admin_uid, action, target_type, target_id, detail) VALUES (?, 'update_user', 'user', ?, ?)",
-        ('admin', uid, json.dumps(data))
+        (admin_uid, uid, json.dumps(data))
     )
     db.commit()
 
@@ -247,9 +255,10 @@ def ban_user(uid):
     db.execute("UPDATE users SET status = ? WHERE uid = ?", (new_status, uid))
     db.commit()
 
+    admin_uid = session.get('admin_user', {}).get('uid', 'system')
     db.execute(
         "INSERT INTO admin_logs (admin_uid, action, target_type, target_id, detail) VALUES (?, ?, 'user', ?, ?)",
-        ('admin', action + '_user', uid, json.dumps({'action': action}))
+        (admin_uid, action + '_user', uid, json.dumps({'action': action}))
     )
     db.commit()
 
@@ -262,7 +271,7 @@ def ban_user(uid):
 @admin_required('papers.view')
 def list_papers():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
     status = request.args.get('status')
     exam_type = request.args.get('exam_type')
 
@@ -362,7 +371,7 @@ def add_phrase():
 @admin_required('phrases.view')
 def list_phrases():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
     status = request.args.get('status')
     source = request.args.get('source')
 
@@ -396,7 +405,8 @@ def list_phrases():
 @admin_bp.route('/phrases/<int:phrase_id>/approve', methods=['POST'])
 @admin_required('phrases.approve')
 def approve_phrase(phrase_id):
-    phrase_service.approve_phrase(phrase_id, 'admin')
+    admin_uid = session.get('admin_user', {}).get('uid', 'system')
+    phrase_service.approve_phrase(phrase_id, admin_uid)
     return api_success(message="好词已审核通过")
 
 
@@ -458,7 +468,7 @@ def review_submission(sid):
 @admin_required('logs.view')
 def get_logs():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 50, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 50, type=int))
     action = request.args.get('action')
     admin = request.args.get('admin')
     start = request.args.get('start')
@@ -574,5 +584,3 @@ def clear_cache():
     except Exception as e:
         return api_error(f"清除缓存失败: {str(e)}", 500)
 
-
-import json

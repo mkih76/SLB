@@ -3,7 +3,7 @@ import json
 
 from src.services import paper_service
 from src.services.grader.scorer import grade_answer
-from src.api.utils import api_success, api_error
+from src.api.utils import api_success, api_error, clamp_per_page
 
 papers_bp = Blueprint('papers', __name__, url_prefix='/api/papers')
 
@@ -14,7 +14,7 @@ def list_papers():
     year = request.args.get('year', type=int)
     province = request.args.get('province')
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
     result = paper_service.get_papers(
         exam_type=exam_type,

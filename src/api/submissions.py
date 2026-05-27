@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 import json
 
-from src.api.utils import api_success, api_error, token_required, get_db
+from src.api.utils import api_success, api_error, token_required, get_db, clamp_per_page
 from src.services import submission_service, paper_service, weak_point_service
 from src.services.grader.scorer import grade_answer
 from src.services.auth import is_vip_user
@@ -132,7 +132,7 @@ def get_submission(current_user, sid):
 @token_required
 def get_history(current_user):
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('limit', 20, type=int)
+    per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
     result = submission_service.get_user_submissions(
         current_user['uid'], page, per_page

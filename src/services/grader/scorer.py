@@ -4,8 +4,13 @@ from src.services.grader.prompts import build_grading_prompt, build_simple_feedb
 from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_TEMPERATURE, LLM_MAX_TOKENS
 
 
-def call_llm(messages: list) -> dict:
-    """调用LLM API"""
+def call_llm(messages: list, parse_json: bool = True):
+    """调用LLM API
+
+    Args:
+        messages: 聊天消息列表
+        parse_json: 是否将响应内容解析为JSON，默认True
+    """
     import requests
 
     headers = {
@@ -29,7 +34,10 @@ def call_llm(messages: list) -> dict:
         )
         response.raise_for_status()
         result = response.json()
-        return json.loads(result['choices'][0]['message']['content'])
+        content = result['choices'][0]['message']['content']
+        if parse_json:
+            return json.loads(content)
+        return content
     except Exception as e:
         raise Exception(f"LLM调用失败: {str(e)}")
 
@@ -54,22 +62,7 @@ def grade_answer(pid: str, qid: str, question: dict, user_answer: str, material:
 
         return result
     except Exception as e:
-        # Fallback for demo - return mock result
-        return {
-            "score": 70.0,
-            "dimension_scores": {
-                "踩点命中": 28,
-                "逻辑结构": 18,
-                "语言规范": 14,
-                "字数控制": 6,
-                "卷面整洁": 4
-            },
-            "hit_points": ["完善基础设施建设", "发展特色产业"],
-            "missing_points": ["引进专业技术人才"],
-            "ai_feedback": "答案基本完整，能抓住主要问题。建议加强对细节的描述。",
-            "improving_suggestions": "多练习归纳概括题型，注意要点的完整性。",
-            "from_cache": False
-        }
+        raise Exception(f"批改失败: {str(e)}")
 
 
 def get_simple_feedback(question: dict, user_answer: str) -> str:
@@ -80,7 +73,6 @@ def get_simple_feedback(question: dict, user_answer: str) -> str:
             {"role": "system", "content": "你是一位申论老师，请简要评价学生答案。"},
             {"role": "user", "content": prompt}
         ]
-        result = call_llm(messages)
-        return result.get('choices', [{}])[0].get('message', {}).get('content', '答案已提交，请等待详细批改。')
-    except:
+        return call_llm(messages, parse_json=False)
+    except Exception:
         return "答案已提交。由于服务繁忙，详细批改将在稍后完成。"
