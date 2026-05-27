@@ -333,6 +333,52 @@ CREATE TABLE IF NOT EXISTS phrase_packs (
 );
 
 -- ============================================================
+-- 备考计划表（板块五）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS study_plans (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid             TEXT NOT NULL,
+    plan_name       TEXT NOT NULL,
+    exam_date       DATE NOT NULL,              -- 目标考试日期
+    exam_type       TEXT NOT NULL,              -- guokao/shengkao/xuandiao
+    daily_minutes   INT DEFAULT 120,            -- 每天可用学习时间
+    current_level   TEXT DEFAULT 'beginner',    -- beginner/intermediate/advanced
+    phases          TEXT NOT NULL,              -- JSON: 分阶段计划
+    daily_tasks_tmpl TEXT NOT NULL,             -- JSON: 每日任务模板
+    status          TEXT DEFAULT 'active',      -- active/completed/paused
+    progress_pct    REAL DEFAULT 0,             -- 完成进度
+    streak_days     INT DEFAULT 0,              -- 连续打卡天数
+    longest_streak  INT DEFAULT 0,              -- 最长连续天数
+    created_at      DATETIME DEFAULT (datetime('now')),
+    updated_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+CREATE INDEX IF NOT EXISTS idx_plan_uid ON study_plans(uid);
+
+-- ============================================================
+-- 每日任务表（板块五）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS daily_tasks (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid             TEXT NOT NULL,
+    plan_id         INTEGER NOT NULL,
+    task_date       DATE NOT NULL,
+    task_type       TEXT NOT NULL,              -- drill/phrase_read/simulation/review/essay_write
+    task_detail     TEXT NOT NULL,              -- JSON: 具体任务描述
+    target_id       TEXT,                       -- 关联的 paper_id 或 phrase_pack_id
+    status          TEXT DEFAULT 'pending',     -- pending/in_progress/completed/skipped
+    completed_at    DATETIME,
+    score           REAL,                       -- 如果是练习，记录得分
+    created_at      DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    FOREIGN KEY (plan_id) REFERENCES study_plans(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_uid_date ON daily_tasks(uid, task_date);
+CREATE INDEX IF NOT EXISTS idx_daily_status ON daily_tasks(status);
+
+-- ============================================================
 -- 系统设置表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS settings (

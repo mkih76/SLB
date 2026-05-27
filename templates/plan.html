@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备考计划 - 申论帮</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .plan-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .plan-header { text-align: center; margin-bottom: 30px; }
+        .plan-header h1 { font-size: 24px; color: #1A3A6B; }
+        .section-title { font-size: 18px; font-weight: 600; color: #1A3A6B; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #1A3A6B; }
+
+        /* 计划概览 */
+        .overview-card {
+            background: linear-gradient(135deg, #1A3A6B, #2a5298);
+            color: #fff; border-radius: 12px; padding: 28px; margin-bottom: 24px;
+        }
+        .overview-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .overview-title { font-size: 20px; font-weight: 700; }
+        .countdown { font-size: 32px; font-weight: 700; }
+        .countdown small { font-size: 14px; font-weight: 400; opacity: 0.8; }
+        .overview-stats { display: flex; gap: 32px; }
+        .ov-stat { text-align: center; }
+        .ov-stat .num { font-size: 24px; font-weight: 700; }
+        .ov-stat .label { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #C9A84C; border-radius: 4px; transition: width 0.3s; }
+
+        /* 阶段信息 */
+        .phase-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+        .phase-seg { flex: 1; text-align: center; padding: 10px 8px; border-radius: 6px; background: #f0f0f0; font-size: 13px; color: #666; }
+        .phase-seg.active { background: #1A3A6B; color: #fff; font-weight: 600; }
+        .phase-seg .phase-name { font-weight: 600; }
+        .phase-seg .phase-focus { font-size: 11px; margin-top: 2px; opacity: 0.8; }
+
+        /* 今日任务 */
+        .task-list { margin-bottom: 24px; }
+        .task-item {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+            padding: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+            transition: all 0.2s;
+        }
+        .task-item:hover { border-color: #1A3A6B; }
+        .task-item.completed { opacity: 0.6; background: #f8f8f8; }
+        .task-item.skipped { opacity: 0.4; }
+        .task-check {
+            width: 28px; height: 28px; border: 2px solid #d9d9d9; border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: transparent; transition: all 0.2s; flex-shrink: 0;
+        }
+        .task-check:hover { border-color: #52c41a; }
+        .task-item.completed .task-check { background: #52c41a; border-color: #52c41a; color: #fff; }
+        .task-info { flex: 1; }
+        .task-type-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 4px;
+        }
+        .badge-drill { background: #1A3A6B; }
+        .badge-phrase_read { background: #C9A84C; }
+        .badge-simulation { background: #722ed1; }
+        .badge-review { background: #52c41a; }
+        .badge-essay_write { background: #fa8c16; }
+        .task-title { font-size: 15px; color: #333; }
+        .task-meta { font-size: 12px; color: #999; margin-top: 2px; }
+        .task-actions { display: flex; gap: 8px; }
+        .btn-task { padding: 6px 14px; border-radius: 4px; font-size: 13px; border: none; cursor: pointer; }
+        .btn-start { background: #1A3A6B; color: #fff; }
+        .btn-start:hover { background: #2a5298; }
+        .btn-skip { background: #f0f0f0; color: #666; }
+        .btn-skip:hover { background: #e0e0e0; }
+
+        /* 本周进度 */
+        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+        .week-day { text-align: center; padding: 12px 8px; border-radius: 8px; background: #fff; border: 1px solid #e8e8e8; }
+        .week-day .day-label { font-size: 12px; color: #999; }
+        .week-day .day-status { font-size: 20px; margin-top: 4px; }
+        .week-day.done { border-color: #52c41a; background: #f6ffed; }
+        .week-day.today { border-color: #1A3A6B; background: #f0f5ff; }
+        .week-day.future { opacity: 0.5; }
+
+        /* 创建表单 */
+        .create-form { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+        .form-row { display: flex; gap: 16px; margin-bottom: 16px; }
+        .form-group { flex: 1; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 6px; }
+        .input-field { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 10px 14px; font-size: 15px; font-family: inherit; }
+        .input-field:focus { outline: none; border-color: #1A3A6B; }
+        select.input-field { cursor: pointer; }
+        .btn-create { background: #1A3A6B; color: #fff; border: none; padding: 12px 32px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        .btn-create:hover { background: #2a5298; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="plan-container">
+        <div class="plan-header">
+            <h1>备考计划</h1>
+            <p style="color:#666;">科学规划，高效备考</p>
+        </div>
+
+        <div id="loadingState" class="empty-state"><p>加载中...</p></div>
+
+        <!-- 无计划时显示创建表单 -->
+        <div id="createView" style="display:none;">
+            <div class="create-form">
+                <div class="section-title">创建备考计划</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">计划名称</label>
+                        <input type="text" class="input-field" id="planName" placeholder="例如：2026国考冲刺" value="我的备考计划">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">考试类型</label>
+                        <select class="input-field" id="examType">
+                            <option value="guokao">国考</option>
+                            <option value="shengkao">省考</option>
+                            <option value="xuandiao">选调</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">考试日期</label>
+                        <input type="date" class="input-field" id="examDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">每天学习时间（分钟）</label>
+                        <input type="number" class="input-field" id="dailyMinutes" value="120" min="30" max="480">
+                    </div>
+                </div>
+                <button class="btn-create" onclick="createPlan()">生成备考计划</button>
+            </div>
+        </div>
+
+        <!-- 有计划时显示 -->
+        <div id="planView" style="display:none;">
+            <!-- 概览卡片 -->
+            <div class="overview-card" id="overviewCard">
+                <div class="overview-top">
+                    <div class="overview-title" id="planTitle">--</div>
+                    <div class="countdown" id="countdown">--<small> 天</small></div>
+                </div>
+                <div class="overview-stats">
+                    <div class="ov-stat"><div class="num" id="streakDays">0</div><div class="label">连续打卡</div></div>
+                    <div class="ov-stat"><div class="num" id="progressPct">0%</div><div class="label">完成进度</div></div>
+                    <div class="ov-stat"><div class="num" id="dailyMin">0</div><div class="label">分钟/天</div></div>
+                    <div class="ov-stat"><div class="num" id="levelName">--</div><div class="label">当前水平</div></div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+            </div>
+
+            <!-- 阶段进度 -->
+            <div class="section-title">阶段进度</div>
+            <div class="phase-bar" id="phaseBar"></div>
+
+            <!-- 今日任务 -->
+            <div class="section-title">今日任务 <span id="taskSummary" style="font-size:14px;font-weight:400;color:#999;"></span></div>
+            <div class="task-list" id="taskList"></div>
+
+            <!-- 本周进度 -->
+            <div class="section-title">本周进度</div>
+            <div class="week-grid" id="weekGrid"></div>
+
+            <!-- 操作按钮 -->
+            <div style="text-align:center; margin-top: 20px;">
+                <button class="btn-skip" style="padding:10px 24px;" onclick="pauseResume()">暂停/恢复计划</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api/plan';
+    const token = localStorage.getItem('token');
+    const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+
+    let activePlan = null;
+
+    async function init() {
+        document.getElementById('loadingState').style.display = 'block';
+        try {
+            const res = await fetch(API + '/active', {headers: headers()});
+            const data = await res.json();
+            if (data.data) {
+                activePlan = data.data;
+                renderPlan(data.data);
+                await loadTodayTasks();
+            } else {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('createView').style.display = 'block';
+                // 设置默认考试日期为3个月后
+                const d = new Date(); d.setMonth(d.getMonth() + 3);
+                document.getElementById('examDate').value = d.toISOString().split('T')[0];
+            }
+        } catch (e) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('createView').style.display = 'block';
+        }
+    }
+
+    function renderPlan(plan) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('createView').style.display = 'none';
+        document.getElementById('planView').style.display = 'block';
+
+        document.getElementById('planTitle').textContent = plan.plan_name + ' · ' + plan.exam_type_name;
+        document.getElementById('countdown').innerHTML = plan.days_remaining + '<small> 天</small>';
+        document.getElementById('streakDays').textContent = plan.streak_days;
+        document.getElementById('progressPct').textContent = plan.progress_pct + '%';
+        document.getElementById('dailyMin').textContent = plan.daily_minutes;
+        document.getElementById('levelName').textContent = plan.level_name;
+        document.getElementById('progressBar').style.width = plan.progress_pct + '%';
+
+        // 阶段进度条
+        const phaseBar = document.getElementById('phaseBar');
+        const phases = plan.phases || [];
+        phaseBar.innerHTML = phases.map((p, i) => {
+            const isActive = i === 0; // 简化：标记第一阶段为活跃
+            return '<div class="phase-seg' + (isActive ? ' active' : '') + '">' +
+                '<div class="phase-name">' + escapeHtml(p.name) + '</div>' +
+                '<div class="phase-focus">' + p.days + '天 · ' + escapeHtml(p.focus || '') + '</div></div>';
+        }).join('');
+    }
+
+    async function loadTodayTasks() {
+        const res = await fetch(API + '/today', {headers: headers()});
+        const data = await res.json();
+        if (!data.data) return;
+
+        const tasks = data.data.tasks || [];
+        const completed = data.data.completed || 0;
+        document.getElementById('taskSummary').textContent = completed + '/' + tasks.length + ' 完成';
+
+        const list = document.getElementById('taskList');
+        if (!tasks.length) {
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">今日暂无任务</div>';
+            return;
+        }
+
+        list.innerHTML = tasks.map(t => {
+            const badgeCls = 'badge-' + t.task_type;
+            const statusCls = t.status === 'completed' ? ' completed' : t.status === 'skipped' ? ' skipped' : '';
+            const checkMark = t.status === 'completed' ? '✓' : '';
+            const actionBtns = t.status === 'pending' ?
+                '<button class="btn-task btn-start" onclick="startTask(\'' + t.task_type + '\')">开始</button>' +
+                '<button class="btn-task btn-skip" onclick="skipTask(' + t.task_id + ')">跳过</button>' :
+                t.status === 'completed' ? '<span style="color:#52c41a;font-size:13px;">已完成</span>' :
+                '<span style="color:#999;font-size:13px;">已跳过</span>';
+
+            return '<div class="task-item' + statusCls + '">' +
+                '<div class="task-check" onclick="completeTask(' + t.task_id + ')">' + checkMark + '</div>' +
+                '<div class="task-info">' +
+                    '<span class="task-type-badge ' + badgeCls + '">' + escapeHtml(t.task_type_name) + '</span>' +
+                    '<div class="task-title">' + escapeHtml(t.title) + '</div>' +
+                    '<div class="task-meta">预计 ' + (t.estimated_minutes || 0) + ' 分钟</div>' +
+                '</div>' +
+                '<div class="task-actions">' + actionBtns + '</div>' +
+            '</div>';
+        }).join('');
+
+        // 本周进度
+        renderWeekProgress();
+    }
+
+    function renderWeekProgress() {
+        const grid = document.getElementById('weekGrid');
+        const days = ['一', '二', '三', '四', '五', '六', '日'];
+        const today = new Date().getDay(); // 0=Sun
+        const todayIdx = today === 0 ? 6 : today - 1; // 转换为 Mon=0
+
+        grid.innerHTML = days.map((d, i) => {
+            let cls = 'week-day';
+            let status = '';
+            if (i < todayIdx) { cls += ' done'; status = '✓'; }
+            else if (i === todayIdx) { cls += ' today'; status = '●'; }
+            else { cls += ' future'; status = '·'; }
+            return '<div class="' + cls + '"><div class="day-label">' + d + '</div><div class="day-status">' + status + '</div></div>';
+        }).join('');
+    }
+
+    async function createPlan() {
+        const planName = document.getElementById('planName').value.trim();
+        const examType = document.getElementById('examType').value;
+        const examDate = document.getElementById('examDate').value;
+        const dailyMinutes = parseInt(document.getElementById('dailyMinutes').value) || 120;
+
+        if (!examDate) { alert('请选择考试日期'); return; }
+
+        const res = await fetch(API + '/create', {
+            method: 'POST', headers: headers(),
+            body: JSON.stringify({plan_name: planName, exam_type: examType, exam_date: examDate, daily_minutes: dailyMinutes})
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        activePlan = data.data;
+        renderPlan(data.data);
+        await loadTodayTasks();
+    }
+
+    async function completeTask(taskId) {
+        await fetch(API + '/task/' + taskId + '/complete', {method: 'POST', headers: headers()});
+        await loadTodayTasks();
+        // 刷新计划概览
+        const res = await fetch(API + '/active', {headers: headers()});
+        const data = await res.json();
+        if (data.data) { activePlan = data.data; renderPlan(data.data); }
+    }
+
+    async function skipTask(taskId) {
+        await fetch(API + '/task/' + taskId + '/skip', {method: 'POST', headers: headers()});
+        await loadTodayTasks();
+    }
+
+    function startTask(type) {
+        if (type === 'drill') window.location.href = '/drill';
+        else if (type === 'phrase_read') window.location.href = '/phrases/study';
+        else if (type === 'simulation') window.location.href = '/papers';
+        else if (type === 'essay_write') window.location.href = '/drill';
+        else if (type === 'review') window.location.href = '/diagnosis';
+    }
+
+    async function pauseResume() {
+        if (!activePlan) return;
+        const action = activePlan.plan_id;
+        const endpoint = activePlan.status === 'active' ? 'pause' : 'resume';
+        await fetch(API + '/' + action + '/' + endpoint, {method: 'POST', headers: headers()});
+        location.reload();
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    if (!token) { window.location.href = '/'; } else { init(); }
+    </script>
+</body>
+</html>

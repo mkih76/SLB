@@ -17,6 +17,7 @@ from src.api.weak import weak_bp
 from src.api.drill import drill_bp
 from src.api.diagnosis import diagnosis_bp
 from src.api.simulation import simulation_bp
+from src.api.plan import plan_bp
 
 
 def create_app():
@@ -36,6 +37,7 @@ def create_app():
     app.register_blueprint(drill_bp)
     app.register_blueprint(diagnosis_bp)
     app.register_blueprint(simulation_bp)
+    app.register_blueprint(plan_bp)
 
     # Initialize database
     with app.app_context():
@@ -81,6 +83,10 @@ def create_app():
     @app.route('/phrases/generate')
     def phrases_generate():
         return render_template('phrases_generate.html')
+
+    @app.route('/plan')
+    def plan():
+        return render_template('plan.html')
 
     # Admin routes
     @app.route('/admin')
