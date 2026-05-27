@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}好词好句 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container">
+    <h1 style="margin-bottom: var(--space-4);">好词好句库</h1>
+
+    <!-- 筛选栏 -->
+    <div class="card" style="margin-bottom: var(--space-3);">
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">来源</label>
+          <select id="filter-source" class="input-field" style="width: auto;">
+            <option value="">全部</option>
+            <option value="人民日报">人民日报</option>
+            <option value="求是">求是</option>
+            <option value="新华网">新华网</option>
+            <option value="半月谈">半月谈</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">标签</label>
+          <input type="text" id="filter-tag" class="input-field" style="width: 150px;" placeholder="乡村振兴">
+        </div>
+        <button class="btn btn-primary" onclick="loadPhrases()">
+          <i data-lucide="search"></i>
+          搜索
+        </button>
+      </div>
+    </div>
+
+    <!-- 好词列表 -->
+    <div id="phrases-list">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div id="pagination" class="pagination"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  async function loadPhrases(page = 1) {
+    currentPage = page;
+    const source = document.getElementById('filter-source').value;
+    const tag = document.getElementById('filter-tag').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (source) params.append('source', source);
+    if (tag) params.append('tag', tag);
+
+    try {
+      const res = await fetch(`/api/phrases?${params}`);
+      const { data } = await res.json();
+
+      renderPhrases(data.phrases);
+      renderPagination(data);
+    } catch (e) {
+      document.getElementById('phrases-list').innerHTML = '<p class="empty-state">加载失败</p>';
+    }
+  }
+
+  function renderPhrases(phrases) {
+    const container = document.getElementById('phrases-list');
+
+    if (!phrases || phrases.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="inbox"></i>
+          <p>暂无好词好句</p>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    container.innerHTML = phrases.map(phrase => {
+      let tags = [];
+      try { tags = JSON.parse(phrase.tag || '[]'); } catch(e) { tags = []; }
+      return `
+        <div class="card" style="margin-bottom: var(--space-2);">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div style="flex: 1;">
+              <p style="font-size: var(--text-lg); line-height: 1.8; margin-bottom: var(--space-2);">${phrase.phrase}</p>
+              ${phrase.translation ? `<p style="color: var(--color-text-secondary); margin-bottom: var(--space-1);"><strong>解读：</strong>${phrase.translation}</p>` : ''}
+              ${phrase.usage ? `<p style="color: var(--color-text-secondary); margin-bottom: var(--space-1);"><strong>适用场景：</strong>${phrase.usage}</p>` : ''}
+              <div style="display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-2);">
+                <span class="badge badge-info">${phrase.source || '未知'}</span>
+                ${tags.map(t => `<span class="badge">${t}</span>`).join('')}
+                <span style="color: var(--color-text-secondary); font-size: var(--text-sm);">热度: ${phrase.heat || 0}</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" onclick="favoritePhrase(${phrase.id})" style="margin-left: var(--space-2);">
+              <i data-lucide="heart"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      if (i === data.page) {
+        html += `<span class="active">${i}</span>`;
+      } else {
+        html += `<a href="#" onclick="loadPhrases(${i}); return false;">${i}</a>`;
+      }
+    }
+    container.innerHTML = html;
+  }
+
+  async function favoritePhrase(phraseId) {
+    if (!state.token) {
+      alert('请先登录');
+      openAuthModal('login');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/phrases/${phraseId}/favorite`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + state.token }
+      });
+
+      if (res.ok) {
+        showToast('已收藏', 'success');
+      } else {
+        const data = await res.json();
+        showToast(data.error || '收藏失败', 'error');
+      }
+    } catch (e) {
+      showToast('收藏失败', 'error');
+    }
+  }
+
+  loadPhrases();
+</script>
+{% endblock %}

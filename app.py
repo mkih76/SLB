@@ -48,7 +48,7 @@ def create_app():
 
     @app.route('/exam/<pid>/<qid>')
     def exam(pid, qid):
-        return render_template('exam.html')
+        return render_template('exam.html', pid=pid, qid=qid)
 
     @app.route('/result/<sid>')
     def result(sid):
