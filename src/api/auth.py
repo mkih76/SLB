@@ -19,8 +19,14 @@ def register():
     if not username or not password:
         return api_error("用户名和密码不能为空", 400)
 
-    if len(password) < 6:
-        return api_error("密码长度至少6位", 400)
+    if len(username) < 3 or len(username) > 30:
+        return api_error("用户名长度需在3-30个字符之间", 400)
+
+    if len(password) < 6 or len(password) > 100:
+        return api_error("密码长度需在6-100个字符之间", 400)
+
+    if nickname and len(nickname) > 50:
+        return api_error("昵称不能超过50个字符", 400)
 
     result, err = register_user(username, password, nickname)
     if err:
@@ -51,7 +57,8 @@ def login():
 @auth_bp.route('/logout', methods=['POST'])
 @token_required
 def logout(current_user):
-    logout_user(current_user['uid'])
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    logout_user(current_user['uid'], token=token)
     return api_success(message="已退出登录")
 
 

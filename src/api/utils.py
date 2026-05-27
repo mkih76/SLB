@@ -63,6 +63,14 @@ def token_required(f):
         token = auth_header.replace('Bearer ', '')
         try:
             data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            # Check if token is blacklisted (logged out)
+            jti = data.get('jti')
+            if jti:
+                blacklisted = get_db().execute(
+                    "SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)
+                ).fetchone()
+                if blacklisted:
+                    return api_error("Token已失效，请重新登录", 401)
             db = get_db()
             user = db.execute(
                 "SELECT * FROM users WHERE uid = ? AND status = 'active'",

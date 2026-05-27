@@ -146,34 +146,27 @@ def list_users():
     per_page = clamp_per_page(request.args.get('limit', 20, type=int))
     role = request.args.get('role')
     status = request.args.get('status')
-    search = request.args.get('search', '')
+    search = request.args.get('search', '')[:100]  # Limit search length
 
     db = get_db()
-    query = "SELECT uid, username, nickname, role, vip_expire, created_at, last_login, status FROM users WHERE 1=1"
+    where_clause = " WHERE 1=1"
     params = []
 
     if role:
-        query += " AND role = ?"
+        where_clause += " AND role = ?"
         params.append(role)
     if status:
-        query += " AND status = ?"
+        where_clause += " AND status = ?"
         params.append(status)
     if search:
-        query += " AND (username LIKE ? OR nickname LIKE ?)"
+        where_clause += " AND (username LIKE ? OR nickname LIKE ?)"
         params.append(f'%{search}%')
         params.append(f'%{search}%')
 
-    total = db.execute(
-        "SELECT COUNT(*) FROM users WHERE " + " AND ".join(
-            ["1=1"] + [f"{'role = ?' if role else '1=1'}"] +
-            [f"{'status = ?' if status else '1=1'}" for _ in [1]] +
-            [f"(username LIKE ? OR nickname LIKE ?)" if search else '1=1' for _ in [1]]
-        ) if role or status or search else "SELECT COUNT(*) FROM users",
-        params if params else []
-    ).fetchone()[0]
+    total = db.execute(f"SELECT COUNT(*) FROM users{where_clause}", params).fetchone()[0]
 
     offset = (page - 1) * per_page
-    query += f" ORDER BY created_at DESC LIMIT {per_page} OFFSET {offset}"
+    query = f"SELECT uid, username, nickname, role, vip_expire, created_at, last_login, status FROM users{where_clause} ORDER BY created_at DESC LIMIT {per_page} OFFSET {offset}"
     users = db.execute(query, params).fetchall()
 
     return api_success({
@@ -553,6 +546,12 @@ def update_settings():
     data = request.get_json()
     if not data:
         return api_error("请提供设置数据", 400)
+
+    # Validate settings keys - only allow known keys
+    allowed_keys = set(DEFAULT_SETTINGS.keys())
+    invalid_keys = set(data.keys()) - allowed_keys
+    if invalid_keys:
+        return api_error(f"不支持的设置项: {', '.join(invalid_keys)}", 400)
 
     db = get_db()
     for key, value in data.items():

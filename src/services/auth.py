@@ -3,7 +3,7 @@ import jwt
 from datetime import datetime, timedelta
 
 from src.config import Config, JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_DAYS
-from src.api.utils import get_db, generate_uuid, generate_sid, api_success, api_error, token_required
+from src.api.utils import get_db, generate_uuid, generate_sid
 
 
 def hash_password(password: str) -> str:
@@ -16,8 +16,10 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def create_token(uid: str) -> str:
     expire = datetime.utcnow() + timedelta(days=JWT_EXPIRE_DAYS)
+    jti = generate_uuid()
     payload = {
         'sub': uid,
+        'jti': jti,
         'exp': expire,
         'iat': datetime.utcnow()
     }
@@ -78,11 +80,33 @@ def login_user(username: str, password: str):
     }, None
 
 
-def logout_user(uid: str):
+def logout_user(uid: str, token: str = None):
+    """登出用户，将token加入黑名单"""
     db = get_db()
     db.execute("DELETE FROM sessions WHERE uid = ?", (uid,))
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            jti = payload.get('jti')
+            exp = datetime.fromtimestamp(payload['exp'])
+            if jti:
+                db.execute(
+                    "INSERT OR IGNORE INTO token_blacklist (jti, uid, expires_at) VALUES (?, ?, ?)",
+                    (jti, uid, exp.isoformat())
+                )
+        except jwt.InvalidTokenError:
+            pass
     db.commit()
     return True
+
+
+def is_token_blacklisted(jti: str) -> bool:
+    """检查token是否在黑名单中"""
+    if not jti:
+        return False
+    db = get_db()
+    row = db.execute("SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)).fetchone()
+    return row is not None
 
 
 def get_user_profile(uid: str):

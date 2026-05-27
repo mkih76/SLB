@@ -93,6 +93,8 @@ CREATE TABLE IF NOT EXISTS submissions (
 CREATE INDEX IF NOT EXISTS idx_submissions_uid ON submissions(uid);
 CREATE INDEX IF NOT EXISTS idx_submissions_pid ON submissions(pid);
 CREATE INDEX IF NOT EXISTS idx_submissions_created ON submissions(created_at);
+CREATE INDEX IF NOT EXISTS idx_submissions_score ON submissions(score);
+CREATE INDEX IF NOT EXISTS idx_submissions_review ON submissions(is_reviewed, needs_review, score);
 
 -- ============================================================
 -- 薄弱点表
@@ -161,6 +163,7 @@ CREATE TABLE IF NOT EXISTS learning_records (
 
 CREATE INDEX IF NOT EXISTS idx_records_uid ON learning_records(uid);
 CREATE INDEX IF NOT EXISTS idx_records_action ON learning_records(action);
+CREATE INDEX IF NOT EXISTS idx_records_created ON learning_records(created_at);
 
 -- ============================================================
 -- 管理员操作日志表
@@ -177,6 +180,20 @@ CREATE TABLE IF NOT EXISTS admin_logs (
 
 CREATE INDEX IF NOT EXISTS idx_admin_logs_admin ON admin_logs(admin_uid);
 CREATE INDEX IF NOT EXISTS idx_admin_logs_action ON admin_logs(action);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_created ON admin_logs(created_at);
+
+-- ============================================================
+-- Token黑名单表（JWT登出支持）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS token_blacklist (
+    jti           TEXT PRIMARY KEY,              -- JWT ID
+    uid           TEXT NOT NULL,
+    expires_at    DATETIME NOT NULL,
+    created_at    DATETIME DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_blacklist_uid ON token_blacklist(uid);
+CREATE INDEX IF NOT EXISTS idx_blacklist_expires ON token_blacklist(expires_at);
 
 -- ============================================================
 -- 系统设置表
