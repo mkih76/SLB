@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}免注册试用 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: var(--space-4);">
+      <h1>免注册试用</h1>
+      <p style="color: var(--color-text-secondary);">体验完整批改流程，登录后可保存记录</p>
+    </div>
+
+    <!-- 选择试卷 -->
+    <div class="card" style="margin-bottom: var(--space-4);">
+      <h3>选择示范卷</h3>
+      <div id="demo-papers" class="grid grid-3" style="margin-top: var(--space-3);">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作答区 -->
+    <div id="demo-exam-section" class="card" style="display: none;">
+      <h3 id="demo-paper-title"></h3>
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-3);">
+        <div>
+          <h4 style="margin-bottom: var(--space-2);">给定材料</h4>
+          <div id="demo-material" style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md); line-height: 1.8;"></div>
+        </div>
+        <div>
+          <h4 style="margin-bottom: var(--space-2);">题目</h4>
+          <p id="demo-stem" style="margin-bottom: var(--space-2);"></p>
+          <p id="demo-word-limit" style="color: var(--color-text-secondary); margin-bottom: var(--space-2);"></p>
+          <textarea id="demo-answer" class="input-field" style="height: 200px; resize: vertical;" placeholder="请输入答案..."></textarea>
+          <div style="margin-top: var(--space-2); text-align: right;">
+            <span>字数：<span id="demo-count">0</span></span>
+          </div>
+          <button class="btn btn-primary" style="width: 100%; margin-top: var(--space-2);" onclick="submitDemo()">
+            <i data-lucide="send"></i>
+            提交批改
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div id="demo-result" class="card" style="display: none;">
+      <h3>批改结果</h3>
+      <div style="text-align: center; margin: var(--space-4) 0;">
+        <div style="font-size: 64px; font-weight: 700; color: var(--color-primary);" id="demo-score">--</div>
+        <p>总分（满分100分）</p>
+      </div>
+      <div id="demo-feedback" style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md);"></div>
+      <div style="text-align: center; margin-top: var(--space-4);">
+        <a href="#" onclick="location.reload(); return false;" class="btn btn-secondary">重新体验</a>
+        <button class="btn btn-primary" onclick="openAuthModal('register')">登录保存记录</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let selectedPaper = null;
+  let selectedQuestion = null;
+
+  async function loadDemoPapers() {
+    try {
+      const res = await fetch('/api/papers?limit=3');
+      const { data } = await res.json();
+
+      const container = document.getElementById('demo-papers');
+      if (data.papers && data.papers.length > 0) {
+        container.innerHTML = data.papers.map(paper => {
+          const questions = parseQuestions(paper.questions);
+          return `
+            <div class="card" style="cursor: pointer;" onclick="selectPaper('${paper.pid}', '${questions[0]?.qid}')">
+              <h4>${paper.title}</h4>
+              <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">${paper.exam_type} | ${paper.year}</p>
+            </div>
+          `;
+        }).join('');
+      } else {
+        container.innerHTML = '<p class="empty-state">暂无示范卷</p>';
+      }
+      lucide.createIcons();
+    } catch (e) {
+      document.getElementById('demo-papers').innerHTML = '<p class="empty-state">加载失败</p>';
+    }
+  }
+
+  async function selectPaper(pid, qid) {
+    try {
+      const [paperRes, qRes] = await Promise.all([
+        fetch(`/api/papers/${pid}`),
+        fetch(`/api/papers/${pid}/question/${qid}`)
+      ]);
+
+      const { data: paper } = await paperRes.json();
+      const { data: question } = await qRes.json();
+
+      selectedPaper = paper;
+      selectedQuestion = question;
+
+      document.getElementById('demo-paper-title').textContent = paper.title;
+      document.getElementById('demo-material').textContent = (question.material || []).join('\n\n');
+      document.getElementById('demo-stem').textContent = question.stem;
+      document.getElementById('demo-word-limit').textContent = '字数要求：' + (question.word_limit || '未指定');
+
+      document.getElementById('demo-exam-section').style.display = 'block';
+      document.getElementById('demo-result').style.display = 'none';
+
+      lucide.createIcons();
+    } catch (e) {
+      alert('加载失败');
+    }
+  }
+
+  document.getElementById('demo-answer')?.addEventListener('input', function() {
+    document.getElementById('demo-count').textContent = this.value.length;
+  });
+
+  async function submitDemo() {
+    const answer = document.getElementById('demo-answer').value.trim();
+    if (!answer) {
+      alert('请输入答案');
+      return;
+    }
+
+    // Mock grading for demo
+    const mockScore = Math.round(60 + Math.random() * 30);
+    const dimensions = {
+      '踩点命中': Math.round(mockScore * 0.4),
+      '逻辑结构': Math.round(mockScore * 0.25),
+      '语言规范': Math.round(mockScore * 0.2),
+      '字数控制': Math.round(mockScore * 0.1),
+      '卷面整洁': Math.round(mockScore * 0.05)
+    };
+
+    document.getElementById('demo-score').textContent = mockScore;
+    document.getElementById('demo-feedback').innerHTML = `
+      <p><strong>各维度得分：</strong></p>
+      <ul>
+        ${Object.entries(dimensions).map(([k, v]) => `<li>${k}：${v}分</li>`).join('')}
+      </ul>
+      <p style="margin-top: var(--space-2);"><strong>评语：</strong>答案基本完整，建议加强对采分点的把握，注意语言规范性。</p>
+    `;
+
+    document.getElementById('demo-exam-section').style.display = 'none';
+    document.getElementById('demo-result').style.display = 'block';
+  }
+
+  function parseQuestions(questionsJson) {
+    try {
+      return JSON.parse(questionsJson);
+    } catch {
+      return [];
+    }
+  }
+
+  loadDemoPapers();
+</script>
+{% endblock %}

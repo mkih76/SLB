@@ -1,0 +1,137 @@
+{% extends "admin/base.html" %}
+
+{% block title %}工作台 - 申论帮管理后台{% endblock %}
+{% block page_title %}工作台{% endblock %}
+
+{% block admin_content %}
+<!-- 统计卡片 -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-card-label">总用户数</div>
+    <div class="stat-card-value" id="stat-users">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">今日新增用户</div>
+    <div class="stat-card-value" id="stat-today-users">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">总批改数</div>
+    <div class="stat-card-value" id="stat-submissions">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">待复核</div>
+    <div class="stat-card-value" id="stat-pending" style="color: var(--color-warning);">-</div>
+  </div>
+</div>
+
+<!-- 快捷入口 -->
+<div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: var(--space-3);">
+  <div class="card" style="cursor: pointer;" onclick="location.href='/admin/reviews'">
+    <div style="display: flex; align-items: center; gap: var(--space-2);">
+      <i data-lucide="check-square" style="color: var(--color-warning);"></i>
+      <div>
+        <h4>待复核批改</h4>
+        <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">
+          <span id="pending-count">0</span> 条待处理
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="cursor: pointer;" onclick="location.href='/admin/phrases'">
+    <div style="display: flex; align-items: center; gap: var(--space-2);">
+      <i data-lucide="book-marked" style="color: var(--color-primary);"></i>
+      <div>
+        <h4>待审核好词</h4>
+        <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">
+          <span id="phrase-count">0</span> 条待审核
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="cursor: pointer;" onclick="location.href='/admin/papers'">
+    <div style="display: flex; align-items: center; gap: var(--space-2);">
+      <i data-lucide="file-text" style="color: var(--color-success);"></i>
+      <div>
+        <h4>试卷总数</h4>
+        <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">
+          <span id="paper-count">0</span> 套试卷
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 最近操作 -->
+<div class="card" style="margin-top: var(--space-4);">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">最近批改记录</h3>
+    <a href="/admin/reviews" class="btn btn-secondary" style="font-size: var(--text-sm);">查看全部</a>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>用户</th>
+        <th>试卷</th>
+        <th>得分</th>
+        <th>时间</th>
+        <th>状态</th>
+      </tr>
+    </thead>
+    <tbody id="recent-submissions">
+      <tr><td colspan="5" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function loadDashboard() {
+    try {
+      const data = await adminFetch('/dashboard');
+
+      document.getElementById('stat-users').textContent = data.data.total_users || 0;
+      document.getElementById('stat-today-users').textContent = data.data.today_users || 0;
+      document.getElementById('stat-submissions').textContent = data.data.total_submissions || 0;
+      document.getElementById('stat-pending').textContent = data.data.pending_reviews || 0;
+      document.getElementById('pending-count').textContent = data.data.pending_reviews || 0;
+      document.getElementById('phrase-count').textContent = data.data.pending_phrases || 0;
+      document.getElementById('paper-count').textContent = data.data.total_papers || 0;
+
+      lucide.createIcons();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadRecentSubmissions() {
+    try {
+      const data = await adminFetch('/submissions/pending_review');
+      const tbody = document.getElementById('recent-submissions');
+
+      if (data.data.submissions && data.data.submissions.length > 0) {
+        tbody.innerHTML = data.data.submissions.slice(0, 5).map(s => `
+          <tr>
+            <td>${s.nickname || s.uid}</td>
+            <td>${s.paper_title || s.pid}</td>
+            <td>${s.score !== null ? s.score : '批改中'}</td>
+            <td>${formatDate(s.created_at)}</td>
+            <td>
+              ${s.score < 60 ? '<span class="status-badge status-pending">待复核</span>' :
+                '<span class="status-badge status-active">正常</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">暂无数据</td></tr>';
+      }
+    } catch (e) {
+      document.getElementById('recent-submissions').innerHTML =
+        '<tr><td colspan="5" style="text-align: center;">加载失败</td></tr>';
+    }
+  }
+
+  loadDashboard();
+  loadRecentSubmissions();
+</script>
+{% endblock %}

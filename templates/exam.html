@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}作答 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+      <div>
+        <a href="/papers" style="color: var(--color-text-secondary); text-decoration: none; font-size: var(--text-sm);">
+          ← 返回卷库
+        </a>
+        <h1 id="paper-title" style="margin-top: var(--space-1);">加载中...</h1>
+      </div>
+      <div id="question-info" style="text-align: right; color: var(--color-text-secondary);">
+        <!-- 题目信息 -->
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+      <!-- 材料区 -->
+      <div class="card">
+        <h3 style="margin-bottom: var(--space-2);">
+          <i data-lucide="file-text"></i>
+          给定材料
+        </h3>
+        <div id="material-content" style="line-height: 1.8; white-space: pre-wrap;">
+          加载中...
+        </div>
+      </div>
+
+      <!-- 作答区 -->
+      <div class="card">
+        <h3 style="margin-bottom: var(--space-2);">
+          <i data-lucide="edit-3"></i>
+          你的答案
+        </h3>
+        <form id="answer-form" onsubmit="handleSubmit(event)">
+          <input type="hidden" name="pid" value="{{ pid }}">
+          <input type="hidden" name="qid" value="{{ qid }}">
+
+          <div class="form-group">
+            <label class="form-label">题目</label>
+            <p id="question-stem" style="padding: var(--space-2); background: var(--color-bg); border-radius: var(--radius-md);">
+              加载中...
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">字数要求</label>
+            <p id="word-limit" style="color: var(--color-text-secondary);">
+              加载中...
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">作答区域</label>
+            <textarea
+              id="user-answer"
+              name="user_answer"
+              class="input-field"
+              style="height: 300px; resize: vertical; font-family: var(--font-body);"
+              placeholder="请在此输入你的答案..."
+              required
+            ></textarea>
+            <p class="form-hint">
+              当前字数：<span id="word-count">0</span>
+            </p>
+          </div>
+
+          <div style="display: flex; gap: var(--space-2);">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              <i data-lucide="send"></i>
+              提交批改
+            </button>
+            <a href="/papers" class="btn btn-secondary">取消</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const pid = '{{ pid }}';
+  const qid = '{{ qid }}';
+
+  let paperData = null;
+  let questionData = null;
+
+  async function loadQuestion() {
+    try {
+      // Load paper
+      const paperRes = await fetch(`/api/papers/${pid}`);
+      const { data: paper } = await paperRes.json();
+      paperData = paper;
+
+      document.getElementById('paper-title').textContent = paper.title;
+      document.title = `${paper.title} - 申论帮`;
+
+      // Load question
+      const qRes = await fetch(`/api/papers/${pid}/question/${qid}`);
+      const { data: question } = await qRes.json();
+      questionData = question;
+
+      // Render material
+      const material = question.material || [];
+      document.getElementById('material-content').textContent = material.join('\n\n');
+
+      // Render question
+      document.getElementById('question-stem').textContent = question.stem;
+      document.getElementById('word-limit').textContent = question.word_limit || '未指定';
+
+      document.getElementById('question-info').innerHTML = `
+        <p>题型：${question.type || '未知'}</p>
+        <p>满分：${question.score_max || 100}分</p>
+      `;
+
+      lucide.createIcons();
+    } catch (e) {
+      console.error(e);
+      alert('加载失败');
+    }
+  }
+
+  // 字数统计
+  document.getElementById('user-answer')?.addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('word-count').textContent = count;
+  });
+
+  // 提交
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const answer = form.user_answer.value.trim();
+
+    if (!answer) {
+      alert('请输入答案');
+      return;
+    }
+
+    if (!state.token) {
+      alert('请先登录');
+      openAuthModal('login');
+      return;
+    }
+
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    btn.innerHTML = '<span>提交中...</span>';
+
+    try {
+      const res = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        },
+        body: JSON.stringify({
+          pid: pid,
+          qid: qid,
+          user_answer: answer
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = `/result/${data.data.sid}`;
+      } else {
+        alert(data.error || '提交失败');
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.innerHTML = '<i data-lucide="send"></i> 提交批改';
+        lucide.createIcons();
+      }
+    } catch (e) {
+      alert('提交失败，请稍后重试');
+      btn.disabled = false;
+      btn.classList.remove('btn-loading');
+      btn.innerHTML = '<i data-lucide="send"></i> 提交批改';
+      lucide.createIcons();
+    }
+  }
+
+  loadQuestion();
+</script>
+{% endblock %}

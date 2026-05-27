@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}申论帮 - AI智能批改平台{% endblock %}</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">申论帮</a>
+
+    <ul class="navbar-menu">
+      <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a></li>
+      <li><a href="/papers" class="{% if request.path == '/papers' %}active{% endif %}">卷库</a></li>
+      <li><a href="/demo" class="{% if request.path == '/demo' %}active{% endif %}">试用</a></li>
+    </ul>
+
+    <div class="navbar-user">
+      <span id="user-info">
+        <a href="#" id="login-btn" class="btn btn-secondary" style="color: white; border-color: white;">
+          登录
+        </a>
+      </span>
+    </div>
+  </nav>
+
+  <!-- 主体内容 -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 申论帮 - AI智能批改平台 | 让申论学习更高效</p>
+    </div>
+  </footer>
+
+  <!-- Toast 容器 -->
+  <div id="toast-container"></div>
+
+  <!-- 登录模态框 -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="auth-modal-title">登录</h3>
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+      <div id="auth-form-container">
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="input-field" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" name="password" class="input-field" required>
+          </div>
+          <div id="login-error" class="form-error" style="color: var(--color-error); display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">登录</button>
+          <p style="text-align: center; margin-top: var(--space-2); font-size: var(--text-sm);">
+            还没有账号？<a href="#" onclick="switchToRegister(event)">立即注册</a>
+          </p>
+        </form>
+
+        <form id="register-form" style="display: none;" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="input-field" required minlength="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">昵称</label>
+            <input type="text" name="nickname" class="input-field">
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" name="password" class="input-field" required minlength="6">
+          </div>
+          <div id="register-error" class="form-error" style="color: var(--color-error); display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">注册</button>
+          <p style="text-align: center; margin-top: var(--space-2); font-size: var(--text-sm);">
+            已有账号？<a href="#" onclick="switchToLogin(event)">立即登录</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局状态
+    const state = {
+      user: null,
+      token: localStorage.getItem('slb_token')
+    };
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      if (state.token) {
+        fetchUserInfo();
+      }
+      lucide.createIcons();
+    });
+
+    // 获取用户信息
+    async function fetchUserInfo() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          state.user = data;
+          updateUserUI();
+        } else {
+          logout();
+        }
+      } catch (e) {
+        console.error('Failed to fetch user info:', e);
+      }
+    }
+
+    // 更新用户UI
+    function updateUserUI() {
+      const userInfo = document.getElementById('user-info');
+      if (state.user) {
+        const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
+        userInfo.innerHTML = `
+          <span>${state.user.nickname} ${vipBadge}</span>
+          <a href="#" onclick="logout()" style="color: white; margin-left: 8px;">退出</a>
+        `;
+      }
+    }
+
+    // 登录
+    async function handleLogin(e) {
+      e.preventDefault();
+      const form = e.target;
+      const errorDiv = document.getElementById('login-error');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: form.username.value,
+            password: form.password.value
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          state.token = data.data.token;
+          state.user = data.data;
+          localStorage.setItem('slb_token', state.token);
+          closeAuthModal();
+          updateUserUI();
+          showToast('登录成功', 'success');
+        } else {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+        }
+      } catch (e) {
+        errorDiv.textContent = '登录失败，请稍后重试';
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // 注册
+    async function handleRegister(e) {
+      e.preventDefault();
+      const form = e.target;
+      const errorDiv = document.getElementById('register-error');
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: form.username.value,
+            password: form.password.value,
+            nickname: form.nickname.value
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          state.token = data.data.token;
+          state.user = data.data;
+          localStorage.setItem('slb_token', state.token);
+          closeAuthModal();
+          updateUserUI();
+          showToast('注册成功', 'success');
+        } else {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+        }
+      } catch (e) {
+        errorDiv.textContent = '注册失败，请稍后重试';
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // 登出
+    function logout() {
+      state.user = null;
+      state.token = null;
+      localStorage.removeItem('slb_token');
+      updateUserUI();
+      showToast('已退出登录', 'success');
+    }
+
+    // 模态框控制
+    function openAuthModal(mode = 'login') {
+      const modal = document.getElementById('auth-modal');
+      modal.classList.add('active');
+      if (mode === 'login') {
+        switchToLogin();
+      } else {
+        switchToRegister();
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      modal.classList.remove('active');
+    }
+
+    function switchToLogin(e) {
+      if (e) e.preventDefault();
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('auth-modal-title').textContent = '登录';
+    }
+
+    function switchToRegister(e) {
+      if (e) e.preventDefault();
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('auth-modal-title').textContent = '注册';
+    }
+
+    // Toast 提示
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 打开登录弹窗
+    document.getElementById('login-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      openAuthModal('login');
+    });
+
+    // 点击模态框外部关闭
+    document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'auth-modal') {
+        closeAuthModal();
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

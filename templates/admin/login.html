@@ -1,0 +1,146 @@
+{% extends "admin/base.html" %}
+
+{% block title %}登录 - 申论帮管理后台{% endblock %}
+{% block page_title %}管理员登录{% endblock %}
+
+{% block admin_content %}
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>申论帮</h1>
+      <p>管理后台</p>
+    </div>
+    <form id="login-form" onsubmit="handleLogin(event)" class="login-form">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="admin-username" class="input-field" placeholder="请输入用户名" required>
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="admin-password" class="input-field" placeholder="请输入密码" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">
+        <i data-lucide="log-in"></i>
+        登录
+      </button>
+    </form>
+    <div class="login-footer">
+      <a href="/">返回前台</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.login-header h1 {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+}
+
+.login-header p {
+  color: var(--color-text-secondary);
+}
+
+.login-form {
+  margin-top: var(--space-3);
+}
+
+.login-form .form-group {
+  margin-bottom: var(--space-3);
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.login-footer a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('admin-username').value;
+  const password = document.getElementById('admin-password').value;
+
+  try {
+    const res = await fetch('/api/admin/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('admin_token', data.data.token);
+      showToast('登录成功');
+      setTimeout(() => window.location.href = '/admin', 500);
+    } else {
+      showToast(data.error || '登录失败', 'error');
+    }
+  } catch (e) {
+    showToast('登录失败', 'error');
+  }
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container') || (() => {
+    const div = document.createElement('div');
+    div.id = 'toast-container';
+    document.body.appendChild(div);
+    return div;
+  })();
+
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 6px; color: white; z-index: 2000;';
+  toast.style.background = type === 'success' ? '#059669' : '#DC2626';
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

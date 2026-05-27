@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}申论帮 - AI智能批改平台{% endblock %}
+
+{% block content %}
+<!-- 英雄区 -->
+<section class="hero">
+  <div class="container">
+    <h1>申论帮</h1>
+    <p>AI智能批改 + 好词好句鉴赏 + 薄弱点追踪<br>让申论学习更高效</p>
+    <div style="display: flex; gap: var(--space-2); justify-content: center;">
+      <a href="/papers" class="btn btn-accent" style="background: var(--color-accent);">
+        <i data-lucide="book-open"></i>
+        开始练习
+      </a>
+      <a href="/demo" class="btn btn-secondary" style="border-color: white; color: white;">
+        <i data-lucide="play-circle"></i>
+        免注册试用
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 功能区 -->
+<section class="features">
+  <div class="container">
+    <h2>为什么选择申论帮？</h2>
+    <div class="grid grid-3">
+      <div class="card feature-card">
+        <i data-lucide="sparkles"></i>
+        <h3>AI智能批改</h3>
+        <p>多维度分析：踩点命中、逻辑结构、语言规范、字数控制、卷面整洁</p>
+      </div>
+      <div class="card feature-card">
+        <i data-lucide="book-marked"></i>
+        <h3>好词好句积累</h3>
+        <p>来自人民日报、求是网、新华网的精选好词好句，助力写作提升</p>
+      </div>
+      <div class="card feature-card">
+        <i data-lucide="target"></i>
+        <h3>薄弱点追踪</h3>
+        <p>自动记录遗漏采分点，针对性推荐练习，告别短板</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 题型介绍 -->
+<section class="features" style="background: white;">
+  <div class="container">
+    <h2>支持的题型</h2>
+    <div class="grid grid-4">
+      <div class="card" style="text-align: center;">
+        <h4 style="color: var(--color-primary);">归纳概括</h4>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">概括问题、原因、对策等</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <h4 style="color: var(--color-primary);">对策建议</h4>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">提出解决问题的措施</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <h4 style="color: var(--color-primary);">应用文</h4>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">调研报告、倡议书等</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <h4 style="color: var(--color-primary);">议论文</h4>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">大作文写作训练</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 最新试卷 -->
+<section class="features">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+      <h2>最新试卷</h2>
+      <a href="/papers" class="btn btn-secondary">查看全部</a>
+    </div>
+    <div class="grid grid-3" id="latest-papers">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="features" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white;">
+  <div class="container" style="text-align: center;">
+    <h2 style="color: white;">免费体验一个月</h2>
+    <p style="max-width: 500px; margin: 0 auto var(--space-3); opacity: 0.9;">
+      注册即享一个月免费体验，完整功能包括AI批改、好词收藏、学习报告
+    </p>
+    <button class="btn btn-accent" onclick="openAuthModal('register')" style="background: var(--color-accent);">
+      立即注册
+    </button>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 加载最新试卷
+  async function loadLatestPapers() {
+    try {
+      const res = await fetch('/api/papers?limit=3');
+      const { data } = await res.json();
+
+      const container = document.getElementById('latest-papers');
+      if (data.papers && data.papers.length > 0) {
+        container.innerHTML = data.papers.map(paper => `
+          <a href="/exam/${paper.pid}/${getFirstQid(paper)}" class="card" style="text-decoration: none; color: inherit;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <span class="badge badge-info">${paper.exam_type}</span>
+                <h3 class="card-title" style="margin-top: var(--space-2);">${paper.title}</h3>
+                <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+                  ${paper.year}年 | 难度：${'★'.repeat(paper.difficulty)}${'☆'.repeat(5-paper.difficulty)}
+                </p>
+              </div>
+              <i data-lucide="arrow-right" style="color: var(--color-text-secondary);"></i>
+            </div>
+          </a>
+        `).join('');
+      } else {
+        container.innerHTML = '<p class="empty-state">暂无试卷</p>';
+      }
+      lucide.createIcons();
+    } catch (e) {
+      document.getElementById('latest-papers').innerHTML = '<p class="empty-state">加载失败</p>';
+    }
+  }
+
+  function getFirstQid(paper) {
+    try {
+      const questions = JSON.parse(paper.questions);
+      return questions[0]?.qid || 'q1';
+    } catch {
+      return 'q1';
+    }
+  }
+
+  loadLatestPapers();
+</script>
+{% endblock %}

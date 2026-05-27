@@ -1,0 +1,214 @@
+{% extends "admin/base.html" %}
+
+{% block title %}用户管理 - 申论帮管理后台{% endblock %}
+{% block page_title %}用户管理{% endblock %}
+
+{% block admin_content %}
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <div class="filter-item">
+    <label>角色</label>
+    <select id="filter-role" onchange="loadUsers()">
+      <option value="">全部</option>
+      <option value="user">普通用户</option>
+      <option value="vip">VIP</option>
+      <option value="admin">管理员</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>状态</label>
+    <select id="filter-status" onchange="loadUsers()">
+      <option value="">全部</option>
+      <option value="active">正常</option>
+      <option value="banned">已封禁</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>搜索</label>
+    <input type="text" id="filter-search" placeholder="用户名/昵称" onkeyup="if(event.key==='Enter')loadUsers()">
+  </div>
+  <button class="btn btn-primary" onclick="loadUsers()">
+    <i data-lucide="search"></i>
+    搜索
+  </button>
+</div>
+
+<!-- 用户列表 -->
+<div class="admin-table-container">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">用户列表</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>用户ID</th>
+        <th>用户名</th>
+        <th>昵称</th>
+        <th>角色</th>
+        <th>VIP到期</th>
+        <th>注册时间</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="users-table">
+      <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+  <div class="admin-pagination">
+    <div class="pagination-info" id="pagination-info">共 0 条</div>
+    <div class="pagination-buttons" id="pagination-buttons"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  async function loadUsers(page = 1) {
+    currentPage = page;
+    const role = document.getElementById('filter-role').value;
+    const status = document.getElementById('filter-status').value;
+    const search = document.getElementById('filter-search').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (role) params.append('role', role);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+
+    try {
+      const data = await adminFetch(`/users?${params}`);
+      renderUsers(data.data);
+    } catch (e) {
+      document.getElementById('users-table').innerHTML =
+        '<tr><td colspan="8" style="text-align: center;">加载失败</td></tr>';
+    }
+  }
+
+  function renderUsers(data) {
+    const tbody = document.getElementById('users-table');
+
+    if (!data.users || data.users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.users.map(user => `
+      <tr>
+        <td>${user.uid.substring(0, 8)}...</td>
+        <td>${user.username}</td>
+        <td>${user.nickname || '-'}</td>
+        <td>
+          ${user.role === 'admin' ? '<span class="badge badge-info">管理员</span>' :
+            user.role === 'vip' ? '<span class="badge badge-accent" style="background: var(--color-accent);">VIP</span>' :
+            '<span class="badge">用户</span>'}
+        </td>
+        <td>${user.vip_expire ? formatDate(user.vip_expire) : '-'}</td>
+        <td>${formatDate(user.created_at)}</td>
+        <td>
+          ${user.status === 'active' ?
+            '<span class="status-badge status-active">正常</span>' :
+            '<span class="status-badge status-rejected">已封禁</span>'}
+        </td>
+        <td>
+          <button class="action-btn action-btn-view" onclick="viewUser('${user.uid}')">查看</button>
+          ${user.status === 'active' ?
+            `<button class="action-btn action-btn-delete" onclick="banUser('${user.uid}')">封禁</button>` :
+            `<button class="action-btn action-btn-edit" onclick="banUser('${user.uid}', 'unban')">解封</button>`}
+        </td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pagination-info').textContent = `共 ${data.total} 条`;
+    renderPagination(data);
+    lucide.createIcons();
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination-buttons');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      html += `<button class="pagination-btn ${i === data.page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+  }
+
+  async function viewUser(uid) {
+    try {
+      const data = await adminFetch(`/users/${uid}`);
+      const user = data.data;
+      openModal('用户详情', `
+        <div class="admin-form-group">
+          <label class="admin-form-label">用户ID</label>
+          <p>${user.uid}</p>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">用户名</label>
+            <p>${user.username}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">昵称</label>
+            <p>${user.nickname || '-'}</p>
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">角色</label>
+            <p>${user.role}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">状态</label>
+            <p>${user.status}</p>
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">提交次数</label>
+            <p>${user.submissions_count || 0}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">平均得分</label>
+            <p>${user.avg_score ? user.avg_score + '分' : '-'}</p>
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">注册时间</label>
+            <p>${formatDate(user.created_at)}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">最后登录</label>
+            <p>${formatDate(user.last_login)}</p>
+          </div>
+        </div>
+      `);
+    } catch (e) {
+      showToast('加载失败', 'error');
+    }
+  }
+
+  async function banUser(uid, action = 'ban') {
+    if (!confirm(`确定要${action === 'ban' ? '封禁' : '解封'}该用户吗？`)) return;
+
+    try {
+      await adminFetch(`/users/${uid}/ban`, {
+        method: 'PUT',
+        body: JSON.stringify({ action })
+      });
+      showToast(action === 'ban' ? '已封禁' : '已解封');
+      loadUsers(currentPage);
+    } catch (e) {
+      showToast('操作失败', 'error');
+    }
+  }
+
+  loadUsers();
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+import bcrypt
+import jwt
+from datetime import datetime, timedelta
+
+from src.config import Config, JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_DAYS
+from src.api.utils import get_db, generate_uuid, generate_sid, api_success, api_error, token_required
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+
+
+def create_token(uid: str) -> str:
+    expire = datetime.utcnow() + timedelta(days=JWT_EXPIRE_DAYS)
+    payload = {
+        'sub': uid,
+        'exp': expire,
+        'iat': datetime.utcnow()
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def register_user(username: str, password: str, nickname: str = None):
+    db = get_db()
+
+    # Check if username exists
+    existing = db.execute("SELECT uid FROM users WHERE username = ?", (username,)).fetchone()
+    if existing:
+        return None, "用户名已存在"
+
+    uid = generate_uuid()
+    password_hash = hash_password(password)
+    nickname = nickname or username
+
+    db.execute(
+        """INSERT INTO users (uid, username, password_hash, nickname, role, status)
+           VALUES (?, ?, ?, ?, 'user', 'active')""",
+        (uid, username, password_hash, nickname)
+    )
+    db.commit()
+
+    token = create_token(uid)
+    return {
+        'uid': uid,
+        'username': username,
+        'nickname': nickname,
+        'role': 'user',
+        'token': token
+    }, None
+
+
+def login_user(username: str, password: str):
+    db = get_db()
+
+    user = db.execute("SELECT * FROM users WHERE username = ? AND status = 'active'", (username,)).fetchone()
+    if not user:
+        return None, "用户名或密码错误"
+
+    if not verify_password(password, user['password_hash']):
+        return None, "用户名或密码错误"
+
+    # Update last login
+    db.execute("UPDATE users SET last_login = ? WHERE uid = ?", (datetime.now().isoformat(), user['uid']))
+    db.commit()
+
+    token = create_token(user['uid'])
+    return {
+        'uid': user['uid'],
+        'username': user['username'],
+        'nickname': user['nickname'],
+        'role': user['role'],
+        'vip_expire': user['vip_expire'],
+        'token': token
+    }, None
+
+
+def logout_user(uid: str):
+    db = get_db()
+    db.execute("DELETE FROM sessions WHERE uid = ?", (uid,))
+    db.commit()
+    return True
+
+
+def get_user_profile(uid: str):
+    db = get_db()
+    user = db.execute(
+        "SELECT uid, username, nickname, role, vip_expire, created_at, last_login, settings FROM users WHERE uid = ?",
+        (uid,)
+    ).fetchone()
+    return dict(user) if user else None
+
+
+def is_vip_user(user: dict) -> bool:
+    if user.get('role') in ('admin', 'super_admin', 'vip'):
+        return True
+    vip_expire = user.get('vip_expire')
+    if not vip_expire:
+        return False
+    return datetime.fromisoformat(vip_expire) > datetime.now()

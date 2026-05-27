@@ -1,0 +1,209 @@
+{% extends "admin/base.html" %}
+
+{% block title %}数据统计 - 申论帮管理后台{% endblock %}
+{% block page_title %}数据统计{% endblock %}
+
+{% block admin_content %}
+<!-- 统计概览 -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-card-label">总用户数</div>
+    <div class="stat-card-value" id="stat-users">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">今日新增</div>
+    <div class="stat-card-value" id="stat-today-users">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">总批改数</div>
+    <div class="stat-card-value" id="stat-submissions">-</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">VIP用户</div>
+    <div class="stat-card-value" id="stat-vip-users">-</div>
+  </div>
+</div>
+
+<!-- 图表区 -->
+<div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-4);">
+  <!-- 用户增长趋势 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">用户增长趋势</h3>
+    <div id="user-chart" style="height: 250px; display: flex; align-items: flex-end; justify-content: space-around; padding: var(--space-2);">
+      <!-- 动态渲染 -->
+    </div>
+    <div style="display: flex; justify-content: space-around; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-secondary);">
+      <span>7天前</span>
+      <span>6天前</span>
+      <span>5天前</span>
+      <span>4天前</span>
+      <span>3天前</span>
+      <span>昨天</span>
+      <span>今天</span>
+    </div>
+  </div>
+
+  <!-- 批改分数分布 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">批改分数分布</h3>
+    <div id="score-distribution" style="padding: var(--space-3);">
+      <!-- 动态渲染 -->
+    </div>
+  </div>
+</div>
+
+<!-- 详细数据表 -->
+<div class="card" style="margin-top: var(--space-4);">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">用户数据明细</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>日期</th>
+        <th>新增用户</th>
+        <th>活跃用户</th>
+        <th>新增批改</th>
+        <th>VIP转化</th>
+      </tr>
+    </thead>
+    <tbody id="daily-stats">
+      <tr><td colspan="5" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 热门试卷 -->
+<div class="card" style="margin-top: var(--space-4);">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">热门试卷 TOP 10</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>标题</th>
+        <th>考试类型</th>
+        <th>年份</th>
+        <th>批改次数</th>
+        <th>平均得分</th>
+      </tr>
+    </thead>
+    <tbody id="hot-papers">
+      <tr><td colspan="6" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function loadStats() {
+    try {
+      const data = await adminFetch('/stats');
+      const stats = data.data;
+
+      // 更新概览数据
+      document.getElementById('stat-users').textContent = stats.total_users || 0;
+      document.getElementById('stat-today-users').textContent = stats.today_users || 0;
+      document.getElementById('stat-submissions').textContent = stats.total_submissions || 0;
+      document.getElementById('stat-vip-users').textContent = stats.vip_users || 0;
+
+      // 渲染用户增长趋势
+      renderUserChart(stats.user_growth || []);
+
+      // 渲染分数分布
+      renderScoreDistribution(stats.score_distribution || {});
+
+      // 渲染每日数据
+      renderDailyStats(stats.daily_stats || []);
+
+      // 渲染热门试卷
+      renderHotPapers(stats.hot_papers || []);
+
+      lucide.createIcons();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderUserChart(growthData) {
+    const container = document.getElementById('user-chart');
+    if (!growthData.length) {
+      container.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">暂无数据</p>';
+      return;
+    }
+
+    const maxValue = Math.max(...growthData.map(d => d.count), 1);
+    container.innerHTML = growthData.map(d => {
+      const height = Math.max((d.count / maxValue) * 200, 4);
+      return `<div style="width: 30px; height: ${height}px; background: var(--color-primary); border-radius: 4px 4px 0 0;" title="${d.date}: ${d.count}人"></div>`;
+    }).join('');
+  }
+
+  function renderScoreDistribution(distribution) {
+    const container = document.getElementById('score-distribution');
+    const ranges = [
+      { label: '0-60', key: 'low', color: 'var(--color-error)' },
+      { label: '60-75', key: 'medium', color: 'var(--color-warning)' },
+      { label: '75-90', key: 'high', color: 'var(--color-success)' },
+      { label: '90-100', key: 'excellent', color: 'var(--color-primary)' }
+    ];
+
+    const total = Object.values(distribution).reduce((sum, v) => sum + v, 0) || 1;
+
+    container.innerHTML = ranges.map(range => {
+      const count = distribution[range.key] || 0;
+      const percent = ((count / total) * 100).toFixed(1);
+      return `
+        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+          <span style="width: 60px;">${range.label}分</span>
+          <div style="flex: 1; height: 20px; background: var(--color-bg); border-radius: 4px; margin: 0 var(--space-2);">
+            <div style="width: ${percent}%; height: 100%; background: ${range.color}; border-radius: 4px;"></div>
+          </div>
+          <span style="width: 80px; text-align: right;">${count}人 (${percent}%)</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderDailyStats(stats) {
+    const tbody = document.getElementById('daily-stats');
+    if (!stats.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = stats.map(s => `
+      <tr>
+        <td>${s.date}</td>
+        <td>${s.new_users || 0}</td>
+        <td>${s.active_users || 0}</td>
+        <td>${s.new_submissions || 0}</td>
+        <td>${s.new_vip || 0}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderHotPapers(papers) {
+    const tbody = document.getElementById('hot-papers');
+    if (!papers.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = papers.map((p, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${p.title}</td>
+        <td>${p.exam_type}</td>
+        <td>${p.year}</td>
+        <td>${p.submission_count || 0}</td>
+        <td>${p.avg_score ? p.avg_score.toFixed(1) : '-'}</td>
+      </tr>
+    `).join('');
+  }
+
+  loadStats();
+</script>
+{% endblock %}

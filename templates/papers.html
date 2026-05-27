@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}卷库 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container">
+    <h1 style="margin-bottom: var(--space-4);">试卷库</h1>
+
+    <!-- 筛选栏 -->
+    <div class="card" style="margin-bottom: var(--space-3);">
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">考试类型</label>
+          <select id="filter-exam-type" class="input-field" style="width: auto;">
+            <option value="">全部</option>
+            <option value="国考">国考</option>
+            <option value="省考">省考</option>
+            <option value="事业单位">事业单位</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">年份</label>
+          <select id="filter-year" class="input-field" style="width: auto;">
+            <option value="">全部</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="loadPapers()">
+          <i data-lucide="search"></i>
+          搜索
+        </button>
+      </div>
+    </div>
+
+    <!-- 试卷列表 -->
+    <div id="papers-list">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div id="pagination" class="pagination"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  async function loadPapers(page = 1) {
+    currentPage = page;
+    const examType = document.getElementById('filter-exam-type').value;
+    const year = document.getElementById('filter-year').value;
+
+    const params = new URLSearchParams({
+      page: page,
+      limit: 20
+    });
+    if (examType) params.append('exam_type', examType);
+    if (year) params.append('year', year);
+
+    try {
+      const res = await fetch(`/api/papers?${params}`);
+      const { data } = await res.json();
+
+      renderPapers(data.papers);
+      renderPagination(data);
+    } catch (e) {
+      document.getElementById('papers-list').innerHTML = '<p class="empty-state">加载失败</p>';
+    }
+  }
+
+  function renderPapers(papers) {
+    const container = document.getElementById('papers-list');
+
+    if (!papers || papers.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="inbox"></i>
+          <p>暂无试卷</p>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    container.innerHTML = papers.map(paper => {
+      const questions = parseQuestions(paper.questions);
+      return `
+        <a href="/exam/${paper.pid}/${questions[0]?.qid || 'q1'}" class="card" style="text-decoration: none; color: inherit; display: block;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-2);">
+                <span class="badge badge-info">${paper.exam_type}</span>
+                <span class="badge badge-warning">${paper.year}</span>
+                ${paper.province ? `<span class="badge">${paper.province}</span>` : ''}
+              </div>
+              <h3 class="card-title">${paper.title}</h3>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+                题目数量：${questions.length} | 难度：${'★'.repeat(paper.difficulty)}${'☆'.repeat(5-paper.difficulty)} | 热度：${paper.heat}
+              </p>
+            </div>
+            <button class="btn btn-primary">
+              <i data-lucide="pencil"></i>
+              开始作答
+            </button>
+          </div>
+        </a>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function parseQuestions(questionsJson) {
+    try {
+      return JSON.parse(questionsJson);
+    } catch {
+      return [];
+    }
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      if (i === data.page) {
+        html += `<span class="active">${i}</span>`;
+      } else {
+        html += `<a href="#" onclick="loadPapers(${i}); return false;">${i}</a>`;
+      }
+    }
+    container.innerHTML = html;
+  }
+
+  loadPapers();
+</script>
+{% endblock %}
