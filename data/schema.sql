@@ -179,6 +179,15 @@ CREATE INDEX IF NOT EXISTS idx_admin_logs_admin ON admin_logs(admin_uid);
 CREATE INDEX IF NOT EXISTS idx_admin_logs_action ON admin_logs(action);
 
 -- ============================================================
+-- 系统设置表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS settings (
+    key           TEXT PRIMARY KEY,
+    value         TEXT NOT NULL,
+    updated_at    DATETIME DEFAULT (datetime('now'))
+);
+
+-- ============================================================
 -- 管理员账号（默认）
 -- ============================================================
 -- 密码: admin123456 (bcrypt hash)

@@ -288,12 +288,37 @@ def publish_paper(pid):
 
 # ============ Phrase Management ============
 
+@admin_bp.route('/phrases', methods=['POST'])
+@admin_required('phrases.add')
+def add_phrase():
+    data = request.get_json()
+    if not data or not data.get('phrase') or not data.get('source'):
+        return api_error("请提供好词内容和来源", 400)
+
+    phrase_id = phrase_service.add_phrase({
+        'phrase': data['phrase'],
+        'translation': data.get('translation'),
+        'usage': data.get('usage'),
+        'source': data['source'],
+        'source_url': data.get('source_url'),
+        'source_date': data.get('source_date'),
+        'tag': data.get('tag', [])
+    })
+
+    # Auto-approve if created by admin
+    if data.get('status') == 'approved':
+        phrase_service.approve_phrase(phrase_id, session.get('admin_user', {}).get('uid', 'admin'))
+
+    return api_success({'id': phrase_id}, "好词已添加")
+
+
 @admin_bp.route('/phrases', methods=['GET'])
 @admin_required('phrases.view')
 def list_phrases():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     status = request.args.get('status')
+    source = request.args.get('source')
 
     db = get_db()
     query = "SELECT * FROM good_phrases WHERE 1=1"
@@ -302,6 +327,9 @@ def list_phrases():
     if status:
         query += " AND status = ?"
         params.append(status)
+    if source:
+        query += " AND source = ?"
+        params.append(source)
 
     total = db.execute(
         query.replace("SELECT *", "SELECT COUNT(*)"), params
@@ -409,6 +437,78 @@ def get_logs():
         'page': page,
         'pages': (total + per_page - 1) // per_page
     })
+
+
+# ============ Settings ============
+
+DEFAULT_SETTINGS = {
+    'site_name': '申论帮',
+    'site_description': 'AI驱动的申论批改平台',
+    'contact_email': '',
+    'free_grades': 3,
+    'vip_daily_grades': 10,
+    'ai_review_enabled': True,
+    'low_score_threshold': 60,
+    'free_trial_days': 30,
+    'monthly_price': 99,
+    'yearly_price': 399,
+    'credit_ratio': 0.1,
+    'llm_provider': 'deepseek',
+    'llm_model': 'deepseek-chat',
+    'llm_base_url': 'https://api.deepseek.com'
+}
+
+
+@admin_bp.route('/settings', methods=['GET'])
+@admin_required('stats.view')
+def get_settings():
+    db = get_db()
+    rows = db.execute("SELECT key, value FROM settings").fetchall()
+    settings = dict(DEFAULT_SETTINGS)
+    for row in rows:
+        try:
+            settings[row['key']] = json.loads(row['value'])
+        except (json.JSONDecodeError, TypeError):
+            settings[row['key']] = row['value']
+    return api_success(settings)
+
+
+@admin_bp.route('/settings', methods=['PUT'])
+@admin_required('*')
+def update_settings():
+    data = request.get_json()
+    if not data:
+        return api_error("请提供设置数据", 400)
+
+    db = get_db()
+    for key, value in data.items():
+        db.execute(
+            """INSERT INTO settings (key, value, updated_at)
+               VALUES (?, ?, datetime('now'))
+               ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = datetime('now')""",
+            (key, json.dumps(value, ensure_ascii=False), json.dumps(value, ensure_ascii=False))
+        )
+    db.commit()
+
+    db.execute(
+        "INSERT INTO admin_logs (admin_uid, action, target_type, detail) VALUES (?, 'update_settings', 'system', ?)",
+        (session.get('admin_user', {}).get('uid', 'admin'), json.dumps(list(data.keys())))
+    )
+    db.commit()
+
+    return api_success(message="设置已保存")
+
+
+@admin_bp.route('/settings/cache', methods=['DELETE'])
+@admin_required('*')
+def clear_cache():
+    try:
+        from src.services.grader.cache import grader_cache
+        if grader_cache.client:
+            grader_cache.client.flushdb()
+        return api_success(message="缓存已清除")
+    except Exception as e:
+        return api_error(f"清除缓存失败: {str(e)}", 500)
 
 
 import json

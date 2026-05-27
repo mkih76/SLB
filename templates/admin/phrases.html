@@ -16,15 +16,13 @@
     </select>
   </div>
   <div class="filter-item">
-    <label>分类</label>
-    <select id="filter-category" onchange="loadPhrases()">
+    <label>来源</label>
+    <select id="filter-source" onchange="loadPhrases()">
       <option value="">全部</option>
-      <option value="开头">开头</option>
-      <option value="结尾">结尾</option>
-      <option value="过渡">过渡</option>
-      <option value="论证">论证</option>
-      <option value="名言">名言</option>
-      <option value="对策">对策</option>
+      <option value="人民日报">人民日报</option>
+      <option value="求是">求是</option>
+      <option value="新华网">新华网</option>
+      <option value="半月谈">半月谈</option>
     </select>
   </div>
   <div class="filter-item">
@@ -51,17 +49,16 @@
       <tr>
         <th>ID</th>
         <th>内容</th>
-        <th>分类</th>
+        <th>来源</th>
         <th>标签</th>
-        <th>使用次数</th>
+        <th>热度</th>
         <th>状态</th>
-        <th>添加人</th>
         <th>添加时间</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody id="phrases-table">
-      <tr><td colspan="9" style="text-align: center;">加载中...</td></tr>
+      <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
     </tbody>
   </table>
   <div class="admin-pagination">
@@ -78,12 +75,12 @@
   async function loadPhrases(page = 1) {
     currentPage = page;
     const status = document.getElementById('filter-status').value;
-    const category = document.getElementById('filter-category').value;
+    const source = document.getElementById('filter-source').value;
     const search = document.getElementById('filter-search').value;
 
     const params = new URLSearchParams({ page, limit: 20 });
     if (status) params.append('status', status);
-    if (category) params.append('category', category);
+    if (source) params.append('source', source);
     if (search) params.append('search', search);
 
     try {
@@ -91,7 +88,7 @@
       renderPhrases(data.data);
     } catch (e) {
       document.getElementById('phrases-table').innerHTML =
-        '<tr><td colspan="9" style="text-align: center;">加载失败</td></tr>';
+        '<tr><td colspan="8" style="text-align: center;">加载失败</td></tr>';
     }
   }
 
@@ -99,7 +96,7 @@
     const tbody = document.getElementById('phrases-table');
 
     if (!data.phrases || data.phrases.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
       return;
     }
 
@@ -109,26 +106,28 @@
       'rejected': '<span class="status-badge status-rejected">已拒绝</span>'
     };
 
-    tbody.innerHTML = data.phrases.map(phrase => `
+    tbody.innerHTML = data.phrases.map(phrase => {
+      let tags = [];
+      try { tags = JSON.parse(phrase.tag || '[]'); } catch(e) { tags = []; }
+      return `
       <tr>
-        <td>${phrase.gid.substring(0, 8)}...</td>
-        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${phrase.content}</td>
-        <td>${phrase.category}</td>
-        <td>${(phrase.tags || []).map(t => `<span class="badge">${t}</span>`).join(' ') || '-'}</td>
-        <td>${phrase.use_count || 0}</td>
+        <td>${phrase.id}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${phrase.phrase}</td>
+        <td>${phrase.source || '-'}</td>
+        <td>${tags.map(t => `<span class="badge">${t}</span>`).join(' ') || '-'}</td>
+        <td>${phrase.heat || 0}</td>
         <td>${statusMap[phrase.status] || statusMap['pending']}</td>
-        <td>${phrase.nickname || phrase.uid?.substring(0, 8) || '-'}</td>
         <td>${formatDate(phrase.created_at)}</td>
         <td>
           ${phrase.status === 'pending' ? `
-            <button class="action-btn action-btn-edit" onclick="reviewPhrase('${phrase.gid}', 'approve')">通过</button>
-            <button class="action-btn action-btn-delete" onclick="reviewPhrase('${phrase.gid}', 'reject')">拒绝</button>
+            <button class="action-btn action-btn-edit" onclick="reviewPhrase(${phrase.id}, 'approve')">通过</button>
+            <button class="action-btn action-btn-delete" onclick="reviewPhrase(${phrase.id}, 'reject')">拒绝</button>
           ` : `
-            <button class="action-btn action-btn-view" onclick="viewPhrase('${phrase.gid}')">查看</button>
+            <button class="action-btn action-btn-view" onclick="viewPhrase(${phrase.id})">查看</button>
           `}
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
 
     document.getElementById('pagination-info').textContent = `共 ${data.total} 条`;
     renderPagination(data);
@@ -149,30 +148,44 @@
     container.innerHTML = html;
   }
 
-  async function viewPhrase(gid) {
+  async function viewPhrase(id) {
     try {
-      const data = await adminFetch(`/phrases/${gid}`);
+      const data = await adminFetch(`/phrases/${id}`);
       const phrase = data.data;
+      let tags = [];
+      try { tags = JSON.parse(phrase.tag || '[]'); } catch(e) { tags = []; }
 
       openModal('好词详情', `
         <div class="admin-form-group">
           <label class="admin-form-label">内容</label>
-          <p>${phrase.content}</p>
+          <div style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md); white-space: pre-wrap;">${phrase.phrase}</div>
         </div>
+        ${phrase.translation ? `
+        <div class="admin-form-group">
+          <label class="admin-form-label">解读</label>
+          <p>${phrase.translation}</p>
+        </div>
+        ` : ''}
+        ${phrase.usage ? `
+        <div class="admin-form-group">
+          <label class="admin-form-label">用法/适用场景</label>
+          <p>${phrase.usage}</p>
+        </div>
+        ` : ''}
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label class="admin-form-label">分类</label>
-            <p>${phrase.category}</p>
+            <label class="admin-form-label">来源</label>
+            <p>${phrase.source || '-'}</p>
           </div>
           <div class="admin-form-group">
             <label class="admin-form-label">标签</label>
-            <p>${(phrase.tags || []).join(', ') || '-'}</p>
+            <p>${tags.join(', ') || '-'}</p>
           </div>
         </div>
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label class="admin-form-label">使用次数</label>
-            <p>${phrase.use_count || 0}</p>
+            <label class="admin-form-label">热度</label>
+            <p>${phrase.heat || 0}</p>
           </div>
           <div class="admin-form-group">
             <label class="admin-form-label">状态</label>
@@ -189,13 +202,12 @@
     }
   }
 
-  async function reviewPhrase(gid, action) {
+  async function reviewPhrase(id, action) {
     if (!confirm(`确定要${action === 'approve' ? '通过' : '拒绝'}该好词吗？`)) return;
 
     try {
-      await adminFetch(`/phrases/${gid}/review`, {
-        method: 'PUT',
-        body: JSON.stringify({ action })
+      await adminFetch(`/phrases/${id}/${action}`, {
+        method: 'POST'
       });
       showToast(action === 'approve' ? '已通过' : '已拒绝');
       loadPhrases(currentPage);
@@ -208,19 +220,26 @@
     openModal('添加好词', `
       <form id="phrase-form" onsubmit="savePhrase(event)">
         <div class="admin-form-group">
-          <label class="admin-form-label">内容 *</label>
+          <label class="admin-form-label">好词好句 *</label>
           <textarea id="phrase-content" class="input-field" style="height: 100px;" required></textarea>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">解读/翻译</label>
+          <textarea id="phrase-translation" class="input-field" style="height: 60px;" placeholder="对该好词好句的解读..."></textarea>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">用法/适用场景</label>
+          <input type="text" id="phrase-usage" class="input-field" placeholder="适用于乡村振兴类作文开头">
         </div>
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label class="admin-form-label">分类</label>
-            <select id="phrase-category" class="input-field">
-              <option value="开头">开头</option>
-              <option value="结尾">结尾</option>
-              <option value="过渡">过渡</option>
-              <option value="论证">论证</option>
-              <option value="名言">名言</option>
-              <option value="对策">对策</option>
+            <label class="admin-form-label">来源 *</label>
+            <select id="phrase-source" class="input-field">
+              <option value="人民日报">人民日报</option>
+              <option value="求是">求是</option>
+              <option value="新华网">新华网</option>
+              <option value="半月谈">半月谈</option>
+              <option value="其他">其他</option>
             </select>
           </div>
           <div class="admin-form-group">
@@ -239,15 +258,17 @@
   async function savePhrase(e) {
     e.preventDefault();
 
-    const content = document.getElementById('phrase-content').value;
-    const category = document.getElementById('phrase-category').value;
+    const phrase = document.getElementById('phrase-content').value;
+    const translation = document.getElementById('phrase-translation').value;
+    const usage = document.getElementById('phrase-usage').value;
+    const source = document.getElementById('phrase-source').value;
     const tagsStr = document.getElementById('phrase-tags').value;
-    const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t);
+    const tag = tagsStr.split(',').map(t => t.trim()).filter(t => t);
 
     try {
       await adminFetch('/phrases', {
         method: 'POST',
-        body: JSON.stringify({ content, category, tags, status: 'approved' })
+        body: JSON.stringify({ phrase, translation, usage, source, tag, status: 'approved' })
       });
       showToast('保存成功');
       closeModal();

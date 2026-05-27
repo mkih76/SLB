@@ -95,7 +95,7 @@
     if (search) params.append('search', search);
 
     try {
-      const data = await adminFetch(`/reviews?${params}`);
+      const data = await adminFetch(`/submissions/pending_review?${params}`);
       renderReviews(data.data);
     } catch (e) {
       document.getElementById('reviews-table').innerHTML =
@@ -260,7 +260,7 @@
     const feedback = document.getElementById('review-feedback').value;
 
     try {
-      await adminFetch(`/reviews/${sid}`, {
+      await adminFetch(`/submissions/${sid}/review`, {
         method: 'PUT',
         body: JSON.stringify({ action, score, feedback })
       });

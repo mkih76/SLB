@@ -333,7 +333,7 @@
     if (!confirm(`确定要${status === 'published' ? '发布' : '下架'}该试卷吗？`)) return;
 
     try {
-      await adminFetch(`/papers/${pid}/status`, {
+      await adminFetch(`/papers/${pid}/publish`, {
         method: 'PUT',
         body: JSON.stringify({ status })
       });

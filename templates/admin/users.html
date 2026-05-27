@@ -113,6 +113,7 @@
         </td>
         <td>
           <button class="action-btn action-btn-view" onclick="viewUser('${user.uid}')">查看</button>
+          <button class="action-btn action-btn-edit" onclick="editUser('${user.uid}')">编辑</button>
           ${user.status === 'active' ?
             `<button class="action-btn action-btn-delete" onclick="banUser('${user.uid}')">封禁</button>` :
             `<button class="action-btn action-btn-edit" onclick="banUser('${user.uid}', 'unban')">解封</button>`}
@@ -206,6 +207,73 @@
       loadUsers(currentPage);
     } catch (e) {
       showToast('操作失败', 'error');
+    }
+  }
+
+  async function editUser(uid) {
+    try {
+      const data = await adminFetch(`/users/${uid}`);
+      const user = data.data;
+
+      openModal('编辑用户', `
+        <form id="edit-user-form" onsubmit="saveUser(event, '${uid}')">
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label class="admin-form-label">用户名</label>
+              <p>${user.username}</p>
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-form-label">昵称</label>
+              <input type="text" id="edit-nickname" class="input-field" value="${user.nickname || ''}">
+            </div>
+          </div>
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label class="admin-form-label">角色</label>
+              <select id="edit-role" class="input-field">
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>普通用户</option>
+                <option value="vip" ${user.role === 'vip' ? 'selected' : ''}>VIP</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>管理员</option>
+                <option value="reviewer" ${user.role === 'reviewer' ? 'selected' : ''}>复核员</option>
+                <option value="operator" ${user.role === 'operator' ? 'selected' : ''}>运维</option>
+              </select>
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-form-label">VIP到期时间</label>
+              <input type="date" id="edit-vip-expire" class="input-field" value="${user.vip_expire ? user.vip_expire.substring(0, 10) : ''}">
+            </div>
+          </div>
+          <div style="text-align: right; margin-top: var(--space-3);">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </form>
+      `);
+    } catch (e) {
+      showToast('加载失败', 'error');
+    }
+  }
+
+  async function saveUser(e, uid) {
+    e.preventDefault();
+    const nickname = document.getElementById('edit-nickname').value;
+    const role = document.getElementById('edit-role').value;
+    const vipExpire = document.getElementById('edit-vip-expire').value;
+
+    try {
+      await adminFetch(`/users/${uid}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          nickname,
+          role,
+          vip_expire: vipExpire || null
+        })
+      });
+      showToast('保存成功');
+      closeModal();
+      loadUsers(currentPage);
+    } catch (e) {
+      showToast('保存失败', 'error');
     }
   }
 
