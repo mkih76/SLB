@@ -1,93 +1,161 @@
-/* 卡片悬停：上浮 + 阴影加深 */
+/* ========================================
+   微交互系统
+   克制、有目的、不炫技
+   ======================================== */
+
+/* ---- 卡片 ---- */
 .card {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
 }
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
 }
 
-/* 按钮按压效果 */
+/* ---- 按钮 ---- */
 .btn-primary {
-  background: var(--color-primary);
-  border-radius: var(--radius-md);
-  transition: background 200ms ease, transform 80ms ease;
-  border: none;
-  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform 80ms var(--ease-out);
 }
 .btn-primary:hover {
-  background: var(--color-primary-light);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
 }
 .btn-primary:active {
   transform: scale(0.97);
+  box-shadow: none;
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary);
-  border-radius: var(--radius-md);
-  transition: all 200ms ease;
-}
-.btn-secondary:hover {
-  background: var(--color-primary);
-  color: white;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
-/* 输入框聚焦边框过渡 */
+.btn-accent {
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+.btn-accent:hover {
+  box-shadow: 0 2px 8px rgba(184, 148, 46, 0.25);
+}
+
+/* ---- 输入框 ---- */
 .input-field {
-  border: 1px solid #D1D5DB;
-  border-radius: var(--radius-md);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-  padding: var(--space-2);
-  width: 100%;
-  box-sizing: border-box;
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
 .input-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(26,58,107,0.1);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
   outline: none;
 }
 
-/* 表单验证失败 shake 动画 */
+/* ---- 表单验证 shake ---- */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
 }
 .input-error {
-  animation: shake 400ms ease;
+  animation: shake 350ms var(--ease-out);
   border-color: var(--color-error) !important;
 }
 
-/* Loading 态 */
+/* ---- 按钮加载态 ---- */
 .btn-loading {
   position: relative;
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 .btn-loading::after {
   content: '';
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   top: 50%;
   left: 50%;
-  margin: -8px 0 0 -8px;
+  margin: -7px 0 0 -7px;
   border: 2px solid transparent;
-  border-top-color: #fff;
+  border-top-color: currentColor;
   border-radius: 50%;
-  animation: spin 600ms linear infinite;
+  animation: spin 500ms linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-/* 页面淡入 */
+/* ---- 页面淡入 ---- */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 .fade-in {
-  animation: fadeIn 300ms ease forwards;
+  animation: fadeIn 250ms var(--ease-out) forwards;
+}
+
+/* ---- 列表项交错动画 ---- */
+.stagger-in > * {
+  opacity: 0;
+  animation: fadeIn 300ms var(--ease-out) forwards;
+}
+.stagger-in > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-in > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-in > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-in > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-in > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-in > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-in > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-in > *:nth-child(8) { animation-delay: 350ms; }
+
+/* ---- 链接下划线动画 ---- */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: currentColor;
+  transition: width var(--duration-normal) var(--ease-out);
+}
+.link-underline:hover::after {
+  width: 100%;
+
+/* ---- 数字滚动（配合 JS） ---- */
+.counter {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ---- 焦点环 —— 键盘可访问性 ---- */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---- 减少动画偏好 ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
