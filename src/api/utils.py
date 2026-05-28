@@ -91,35 +91,57 @@ def clamp_per_page(per_page: int, max_val: int = 100) -> int:
     return max(1, min(per_page, max_val))
 
 
+def _extract_user_from_token():
+    """从请求中提取用户信息，返回 (user_dict, error_response)"""
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None, None  # 没有 token，不算错误
+    token = auth_header.replace('Bearer ', '')
+    try:
+        data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        jti = data.get('jti')
+        if jti:
+            blacklisted = get_db().execute(
+                "SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)
+            ).fetchone()
+            if blacklisted:
+                return None, api_error("Token已失效，请重新登录", 401)
+        db = get_db()
+        user = db.execute(
+            "SELECT * FROM users WHERE uid = ? AND status = 'active'",
+            (data['sub'],)
+        ).fetchone()
+        if not user:
+            return None, api_error("User not found", 401)
+        return dict(user), None
+    except jwt.ExpiredSignatureError:
+        return None, api_error("Token expired", 401)
+    except jwt.InvalidTokenError:
+        return None, api_error("Invalid token", 401)
+
+
 def token_required(f):
+    """强制要求登录的装饰器"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
+        user, err = _extract_user_from_token()
+        if err:
+            return err
+        if not user:
             return api_error("Token required", 401)
-        token = auth_header.replace('Bearer ', '')
-        try:
-            data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            # Check if token is blacklisted (logged out)
-            jti = data.get('jti')
-            if jti:
-                blacklisted = get_db().execute(
-                    "SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)
-                ).fetchone()
-                if blacklisted:
-                    return api_error("Token已失效，请重新登录", 401)
-            db = get_db()
-            user = db.execute(
-                "SELECT * FROM users WHERE uid = ? AND status = 'active'",
-                (data['sub'],)
-            ).fetchone()
-            if not user:
-                return api_error("User not found", 401)
-            kwargs['current_user'] = dict(user)
-        except jwt.ExpiredSignatureError:
-            return api_error("Token expired", 401)
-        except jwt.InvalidTokenError:
-            return api_error("Invalid token", 401)
+        kwargs['current_user'] = user
+        return f(*args, **kwargs)
+    return decorated
+
+
+def optional_token(f):
+    """可选登录装饰器：有 token 则解析用户，没有则 current_user=None"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user, err = _extract_user_from_token()
+        if err:
+            return err
+        kwargs['current_user'] = user  # None 或 user dict
         return f(*args, **kwargs)
     return decorated
 

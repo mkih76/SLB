@@ -165,6 +165,6 @@ async function loadPacks() {
 function viewPack(id) { window.open('/api/phrases/packs/' + id, '_blank'); }
 function tryParseJson(s) { try { return JSON.parse(s || '[]'); } catch { return []; } }
 
-if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); } else { loadStats(); loadCards(); loadPacks(); }
+loadStats(); loadCards(); loadPacks();
 </script>
 {% endblock %}

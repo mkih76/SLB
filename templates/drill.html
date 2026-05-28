@@ -183,6 +183,6 @@ async function loadHistory(type) {
   }
 }
 
-if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); } else { loadStats(); }
+loadStats();
 </script>
 {% endblock %}

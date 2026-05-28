@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required, admin_required, get_db
+from src.api.utils import api_success, api_error, token_required, optional_token, admin_required, get_db
 from src.services import topic_service
 from src.services.topic_scraper import run_scrape, run_scrape_xuexi
 
@@ -80,9 +80,11 @@ def save_notes(current_user, topic_id):
 
 
 @topic_bp.route('/bookmarks', methods=['GET'])
-@token_required
+@optional_token
 def get_bookmarks(current_user):
     """获取收藏列表"""
+    if not current_user:
+        return api_success({'items': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     result = topic_service.get_user_bookmarks(current_user['uid'], page, per_page)
@@ -90,9 +92,11 @@ def get_bookmarks(current_user):
 
 
 @topic_bp.route('/stats', methods=['GET'])
-@token_required
+@optional_token
 def get_stats(current_user):
     """获取学习统计"""
+    if not current_user:
+        return api_success({'total_read': 0, 'total_bookmarked': 0})
     result = topic_service.get_user_learning_stats(current_user['uid'])
     return api_success(result)
 

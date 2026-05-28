@@ -202,6 +202,6 @@ async function generateReport() {
   else { showToast(data.error || '生成失败，请先完成一次练习', 'error'); }
 }
 
-if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); } else { loadReport(); }
+loadReport();
 </script>
 {% endblock %}

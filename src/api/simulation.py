@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required, clamp_per_page
+from src.api.utils import api_success, api_error, token_required, optional_token, clamp_per_page
 from src.services import simulation_service
 
 simulation_bp = Blueprint('simulation', __name__, url_prefix='/api/simulation')
@@ -37,9 +37,11 @@ def submit_sim(current_user):
 
 
 @simulation_bp.route('/<sim_id>', methods=['GET'])
-@token_required
+@optional_token
 def get_detail(current_user, sim_id):
     """获取模拟考试详情"""
+    if not current_user:
+        return api_error("请先登录", 401)
     result = simulation_service.get_simulation_detail(sim_id, current_user['uid'])
     if not result:
         return api_error("记录不存在", 404)
@@ -47,9 +49,11 @@ def get_detail(current_user, sim_id):
 
 
 @simulation_bp.route('/history', methods=['GET'])
-@token_required
+@optional_token
 def get_history(current_user):
     """获取模拟考试历史"""
+    if not current_user:
+        return api_success({'records': [], 'total': 0, 'page': 1, 'pages': 0})
     page = int(request.args.get('page', 1))
     per_page = clamp_per_page(request.args.get('limit', 20))
     result = simulation_service.get_simulation_history(

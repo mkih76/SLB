@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required, clamp_per_page
+from src.api.utils import api_success, api_error, token_required, optional_token, clamp_per_page
 from src.services import phrase_service
 
 phrases_bp = Blueprint('phrases', __name__, url_prefix='/api/phrases')
@@ -45,8 +45,10 @@ def unfavorite_phrase(current_user, phrase_id):
 
 
 @phrases_bp.route('/favorites', methods=['GET'])
-@token_required
+@optional_token
 def get_favorites(current_user):
+    if not current_user:
+        return api_success({'phrases': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
@@ -61,17 +63,21 @@ def get_favorites(current_user):
 # ============================================================
 
 @phrases_bp.route('/study/stats', methods=['GET'])
-@token_required
+@optional_token
 def get_study_stats(current_user):
     """获取素材学习统计"""
+    if not current_user:
+        return api_success({'total_learned': 0, 'mastered': 0, 'learning': 0, 'new': 0})
     result = phrase_service.get_study_stats(current_user['uid'])
     return api_success(result)
 
 
 @phrases_bp.route('/study/cards', methods=['GET'])
-@token_required
+@optional_token
 def get_study_cards(current_user):
     """获取今日待复习素材卡片"""
+    if not current_user:
+        return api_success({'cards': []})
     limit = request.args.get('limit', 5, type=int)
     result = phrase_service.get_study_cards(current_user['uid'], limit=min(limit, 20))
     return api_success({'cards': result})
@@ -92,9 +98,11 @@ def record_study(current_user):
 
 
 @phrases_bp.route('/study/history', methods=['GET'])
-@token_required
+@optional_token
 def get_study_history(current_user):
     """获取学习历史"""
+    if not current_user:
+        return api_success({'records': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = clamp_per_page(request.args.get('limit', 20, type=int))
     result = phrase_service.get_study_history(current_user['uid'], page, per_page)

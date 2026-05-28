@@ -1,15 +1,17 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required
+from src.api.utils import api_success, api_error, token_required, optional_token
 from src.services import diagnosis_service
 
 diagnosis_bp = Blueprint('diagnosis', __name__, url_prefix='/api/diagnosis')
 
 
 @diagnosis_bp.route('/latest', methods=['GET'])
-@token_required
+@optional_token
 def get_latest(current_user):
     """获取最新诊断报告"""
+    if not current_user:
+        return api_success(None)
     report = diagnosis_service.get_latest_report(current_user['uid'])
     if not report:
         return api_error("暂无诊断报告，请先完成一次练习", 404)
@@ -17,9 +19,11 @@ def get_latest(current_user):
 
 
 @diagnosis_bp.route('/<int:report_id>', methods=['GET'])
-@token_required
+@optional_token
 def get_report(current_user, report_id):
     """获取指定诊断报告"""
+    if not current_user:
+        return api_error("请先登录", 401)
     report = diagnosis_service.get_report_by_id(current_user['uid'], report_id)
     if not report:
         return api_error("报告不存在", 404)
@@ -27,9 +31,11 @@ def get_report(current_user, report_id):
 
 
 @diagnosis_bp.route('/trend', methods=['GET'])
-@token_required
+@optional_token
 def get_trend(current_user):
     """获取得分趋势"""
+    if not current_user:
+        return api_success({'trend': []})
     limit = min(int(request.args.get('limit', 10)), 50)
     qtype = request.args.get('type')
 
@@ -53,9 +59,11 @@ def generate_report(current_user):
 
 
 @diagnosis_bp.route('/weekly', methods=['GET'])
-@token_required
+@optional_token
 def get_weekly(current_user):
     """获取最新周报"""
+    if not current_user:
+        return api_success(None)
     report = diagnosis_service.generate_weekly_report(current_user['uid'])
     if not report:
         return api_error("本周练习数据不足（至少需要2次练习），暂无法生成周报", 404)

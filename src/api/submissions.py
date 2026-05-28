@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 import json
 
-from src.api.utils import api_success, api_error, token_required, get_db, clamp_per_page
+from src.api.utils import api_success, api_error, token_required, optional_token, get_db, clamp_per_page
 from src.services import submission_service, paper_service, weak_point_service, drill_service, diagnosis_service
 from src.services.grader.scorer import grade_answer
 from src.services.auth import is_vip_user
@@ -103,8 +103,10 @@ def create_submission(current_user):
 
 
 @submissions_bp.route('/<sid>', methods=['GET'])
-@token_required
+@optional_token
 def get_submission(current_user, sid):
+    if not current_user:
+        return api_error("请先登录查看详细批改结果", 401)
     submission = submission_service.get_submission(sid)
     if not submission:
         return api_error("提交记录不存在", 404)
@@ -144,8 +146,10 @@ def get_submission(current_user, sid):
 
 
 @submissions_bp.route('/history', methods=['GET'])
-@token_required
+@optional_token
 def get_history(current_user):
+    if not current_user:
+        return api_success({'submissions': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 

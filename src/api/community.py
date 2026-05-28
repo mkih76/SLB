@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required
+from src.api.utils import api_success, api_error, token_required, optional_token
 from src.services import community_service
 
 community_bp = Blueprint('community', __name__, url_prefix='/api/community')
@@ -95,9 +95,11 @@ def featured_posts():
 
 
 @community_bp.route('/my', methods=['GET'])
-@token_required
+@optional_token
 def my_posts(current_user):
     """获取我的帖子"""
+    if not current_user:
+        return api_success({'posts': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     result = community_service.get_user_posts(current_user['uid'], page, per_page)

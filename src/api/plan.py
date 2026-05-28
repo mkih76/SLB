@@ -1,15 +1,17 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required
+from src.api.utils import api_success, api_error, token_required, optional_token
 from src.services import plan_service
 
 plan_bp = Blueprint('plan', __name__, url_prefix='/api/plan')
 
 
 @plan_bp.route('/active', methods=['GET'])
-@token_required
+@optional_token
 def get_active(current_user):
     """获取当前活跃的备考计划"""
+    if not current_user:
+        return api_success(None)
     result = plan_service.get_active_plan(current_user['uid'])
     if not result:
         return api_success(None, message="暂无备考计划")
@@ -37,9 +39,11 @@ def create_plan(current_user):
 
 
 @plan_bp.route('/today', methods=['GET'])
-@token_required
+@optional_token
 def get_today(current_user):
     """获取今日任务"""
+    if not current_user:
+        return api_success([])
     result = plan_service.get_today_tasks(current_user['uid'])
     return api_success(result)
 
@@ -84,9 +88,11 @@ def resume_plan(current_user, plan_id):
 
 
 @plan_bp.route('/history', methods=['GET'])
-@token_required
+@optional_token
 def get_history(current_user):
     """获取计划历史"""
+    if not current_user:
+        return api_success({'plans': [], 'total': 0, 'page': 1, 'pages': 0})
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     result = plan_service.get_plan_history(current_user['uid'], page, per_page)
@@ -94,8 +100,10 @@ def get_history(current_user):
 
 
 @plan_bp.route('/week-progress', methods=['GET'])
-@token_required
+@optional_token
 def get_week_progress(current_user):
     """获取本周进度"""
+    if not current_user:
+        return api_success(None)
     result = plan_service.get_week_progress(current_user['uid'])
     return api_success(result)
