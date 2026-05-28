@@ -557,3 +557,107 @@ ADMIN_PASSWORD=admin123456
 - [ ] Telegram Bot基本交互正常
 - [ ] 管理后台可管理试卷/好词/用户
 - [ ] 部署后 `slb.19990419.top` 可访问
+
+---
+
+## 十二、多智能体协作规范
+
+### 12.1 角色定义
+
+本项目由多个 AI Agent 协作维护，每个 Agent 有明确职责边界：
+
+| 角色 | 职责 | 禁止事项 |
+|------|------|---------|
+| **Planner** | 拆解任务、创建分支、分配工作、跟踪进度 | 不写业务代码 |
+| **Engineer** | 在指定分支上开发功能/修 bug、写测试 | 不直接改 main、不部署 |
+| **Reviewer** | 审查 diff、检查安全/质量、approve/block | 不修改代码 |
+| **Ops** | Docker 构建、部署、监控、回滚 | 不改业务逻辑 |
+
+### 12.2 分支策略
+
+```
+main ────────────────────────────────── 生产分支（受保护）
+  ├── fix/login-redirect-bug ────────── bug 修复
+  ├── feat/ai-grading-v2 ────────────── 新功能
+  ├── refactor/topic-scraper ─────────── 重构
+  └── docs/api-reference ─────────────── 文档
+```
+
+**命名规范：** `{type}/{简短描述}`，type = fix / feat / refactor / docs / chore
+
+**规则：**
+- 所有变更必须在分支上进行，**禁止直接 commit 到 main**
+- 每个分支只做一件事（一个 bug 修复 = 一个分支）
+- 分支生命周期：创建 → 开发 → 测试 → 审查 → 合并 → 删除
+- 合并方式：`git merge --no-ff`（保留分支历史）
+
+### 12.3 Agent 工作流
+
+#### Engineer 工作流
+```
+1. git checkout -b fix/xxx origin/main    ← 从最新 main 创建分支
+2. 阅读 AGENTS.md 了解项目规范
+3. 定位问题代码（grep/read）
+4. 修改代码
+5. 写/更新测试
+6. python -m pytest tests/ -v            ← 跑测试
+7. git add + commit（conventional commits）
+8. 报告变更摘要给 Planner
+```
+
+#### Reviewer 工作流
+```
+1. git diff main..fix/xxx                ← 查看变更
+2. 检查清单：
+   - [ ] 是否符合 AGENTS.md 规范
+   - [ ] 是否有安全问题（SQL注入、XSS、硬编码密钥）
+   - [ ] 是否有测试覆盖
+   - [ ] 是否有副作用（影响其他模块）
+   - [ ] commit message 是否规范
+3. 输出审查结果：APPROVE / BLOCK + 原因
+```
+
+#### Ops 工作流
+```
+1. git checkout main && git merge --no-ff fix/xxx
+2. docker build -t slb .
+3. docker stop slb && docker rm slb
+4. docker run -d --name slb ... slb
+5. curl -f https://slb.19990419.top/api/health  ← 健康检查
+6. 失败则 docker rollback
+```
+
+### 12.4 Commit 规范
+
+使用 Conventional Commits：
+```
+feat: 新增AI批改多维度评分
+fix: 修复登录后重定向404
+refactor: 重构热点抓取模块
+docs: 更新API文档
+test: 添加用户注册单元测试
+chore: 更新依赖版本
+```
+
+### 12.5 测试规范
+
+```bash
+# 目录结构
+tests/
+├── conftest.py          # 公共 fixture（test db、test client）
+├── test_auth.py         # 认证测试
+├── test_papers.py       # 试卷测试
+├── test_submissions.py  # 批改测试
+└── test_topics.py       # 热点抓取测试
+```
+
+**最低要求：** 每个 PR 必须包含至少一个测试用例覆盖改动。
+
+### 12.6 Agent 上下文注入
+
+每个 Agent 在开始工作前必须阅读：
+1. `AGENTS.md` — 项目规范（本文件）
+2. 相关源码文件
+3. 如果是 bug 修复：错误日志 / 复现步骤
+
+**不要凭记忆写代码。先读，再改。**
