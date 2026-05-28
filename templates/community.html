@@ -14,7 +14,7 @@
   .sort-btn { padding: var(--space-1) var(--space-3); border: none; background: none; font-size: var(--text-xs); color: var(--color-text-muted); cursor: pointer; }
   .sort-btn.active { color: var(--color-primary); font-weight: var(--weight-semibold); }
   .featured-section { margin-bottom: var(--space-6); }
-  .featured-card { background: linear-gradient(135deg, var(--color-gray-900), var(--color-primary)); color: #fff; border-radius: var(--radius-2xl); padding: var(--space-5); margin-bottom: var(--space-3); cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; }
+  .featured-card { background: var(--color-gray-900); color: #fff; border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-3); cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; }
   .featured-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 80% 20%, rgba(184,148,46,0.1) 0%, transparent 60%); pointer-events: none; }
   .featured-card:hover { transform: translateY(-2px); }
   .featured-badge { display: inline-block; background: var(--color-accent); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: var(--weight-semibold); margin-bottom: var(--space-2); position: relative; }
@@ -42,7 +42,7 @@
   .create-form { padding: var(--space-5); margin-top: var(--space-3); display: none; }
   .form-row { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); }
   .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 200; }
-  .detail-box { background: var(--color-bg-elevated); border-radius: var(--radius-2xl); max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: var(--space-8); box-shadow: var(--shadow-2xl); animation: modalIn 300ms var(--ease-out); }
+  .detail-box { background: var(--color-bg-elevated); border-radius: var(--radius-xl); max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: var(--space-8); box-shadow: var(--shadow-2xl); animation: modalIn 300ms var(--ease-out); }
   .detail-close { float: right; background: none; border: none; font-size: var(--text-2xl); cursor: pointer; color: var(--color-text-muted); }
   .detail-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-3); }
   .detail-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4); }

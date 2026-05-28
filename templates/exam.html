@@ -121,7 +121,7 @@
       lucide.createIcons();
     } catch (e) {
       console.error(e);
-      alert('加载失败');
+      showToast('加载失败', 'error');
     }
   }
 
@@ -139,12 +139,12 @@
     const answer = form.user_answer.value.trim();
 
     if (!answer) {
-      alert('请输入答案');
+      showToast('请输入答案', 'warning');
       return;
     }
 
     if (!state.token) {
-      alert('请先登录');
+      showToast('请先登录', 'error');
       openAuthModal('login');
       return;
     }
@@ -173,14 +173,14 @@
       if (res.ok) {
         window.location.href = `/result/${data.data.sid}`;
       } else {
-        alert(data.error || '提交失败');
+        showToast(data.error || '提交失败', 'error');
         btn.disabled = false;
         btn.classList.remove('btn-loading');
         btn.innerHTML = '<i data-lucide="send"></i> 提交批改';
         lucide.createIcons();
       }
     } catch (e) {
-      alert('提交失败，请稍后重试');
+      showToast('提交失败，请稍后重试', 'error');
       btn.disabled = false;
       btn.classList.remove('btn-loading');
       btn.innerHTML = '<i data-lucide="send"></i> 提交批改';

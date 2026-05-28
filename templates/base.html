@@ -51,12 +51,12 @@
 
     <div class="navbar-user">
       <span id="signin-area" style="display: none; margin-right: 12px;">
-        <button id="signin-btn" class="btn btn-secondary" style="color: white; border-color: white; font-size: 13px; padding: 4px 12px;" onclick="doSignIn()">
+        <button id="signin-btn" class="btn btn-ghost btn-sm" onclick="doSignIn()">
           签到
         </button>
       </span>
       <span id="user-info">
-        <a href="#" id="login-btn" class="btn btn-secondary" style="color: white; border-color: white;">
+        <a href="#" id="login-btn" class="btn btn-ghost">
           登录
         </a>
       </span>
@@ -202,7 +202,7 @@
         const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
         userInfo.innerHTML = `
           <span>${state.user.nickname} ${vipBadge}</span>
-          <a href="#" onclick="logout()" style="color: white; margin-left: 8px;">退出</a>
+          <a href="#" onclick="logout()" class="btn btn-ghost btn-sm" style="margin-left: 8px;">退出</a>
         `;
         if (signinArea) signinArea.style.display = 'inline-block';
         checkSignInStatus();
