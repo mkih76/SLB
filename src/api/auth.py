@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from src.services.auth import register_user, login_user, logout_user, get_user_profile, is_vip_user
 from src.api.utils import api_success, api_error, token_required, get_db
@@ -100,7 +100,7 @@ def sign_in(current_user):
         return api_error("今日已签到，请明天再来", 400)
 
     # Calculate streak
-    yesterday = date.today().replace(day=date.today().day - 1).isoformat() if date.today().day > 1 else None
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
     last_sign = db.execute(
         "SELECT sign_date, streak_days FROM sign_in_records WHERE uid = ? ORDER BY sign_date DESC LIMIT 1",
         (uid,)
