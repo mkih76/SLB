@@ -1,7 +1,8 @@
 from flask import Blueprint, request
 
-from src.api.utils import api_success, api_error, token_required, admin_required
+from src.api.utils import api_success, api_error, token_required, admin_required, get_db
 from src.services import topic_service
+from src.services.topic_scraper import run_scrape, run_scrape_xuexi
 
 topic_bp = Blueprint('topic', __name__, url_prefix='/api/topics')
 
@@ -34,10 +35,19 @@ def week_topics():
 
 
 @topic_bp.route('/<int:topic_id>', methods=['GET'])
-@token_required
-def get_topic(current_user, topic_id):
-    """获取热点详情"""
-    result = topic_service.get_topic_detail(topic_id, current_user['uid'])
+def get_topic(topic_id):
+    """获取热点详情（支持未登录浏览）"""
+    import jwt
+    from src.config import JWT_SECRET, JWT_ALGORITHM
+    uid = None
+    auth = request.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        try:
+            data = jwt.decode(auth[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            uid = data.get('sub')
+        except Exception:
+            pass
+    result = topic_service.get_topic_detail(topic_id, uid)
     if not result:
         return api_error("专题不存在", 404)
     return api_success(result)
@@ -88,7 +98,7 @@ def get_stats(current_user):
 
 
 @topic_bp.route('', methods=['POST'])
-@admin_required
+@admin_required()
 def add_topic(current_user):
     """添加热点专题（管理员）"""
     data = request.get_json()
@@ -96,3 +106,21 @@ def add_topic(current_user):
         return api_error("缺少必要参数", 400)
     topic_id = topic_service.add_topic(data)
     return api_success({'topic_id': topic_id})
+
+
+@topic_bp.route('/scrape', methods=['POST'])
+@admin_required()
+def scrape_topics(current_user):
+    """自动抓取热点（管理员）"""
+    db = get_db()
+    result = run_scrape(db)
+    return api_success(result)
+
+
+@topic_bp.route('/scrape-xuexi', methods=['POST'])
+@admin_required()
+def scrape_xuexi(current_user):
+    """抓取学习强国文章（管理员）"""
+    db = get_db()
+    result = run_scrape_xuexi(db)
+    return api_success(result)

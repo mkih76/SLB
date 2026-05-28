@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from src.api.utils import get_db
 
 CATEGORY_NAMES = {
+    'shiping': '时评', 'lilun': '理论', 'dangjian': '党建',
+    'xuexi': '学习强国',
     'jingji': '经济', 'shehui': '社会', 'wenhua': '文化',
     'shengtai': '生态', 'minsheng': '民生', 'zhili': '治理',
     'keji': '科技'
@@ -296,5 +298,7 @@ def _format_topic_detail(row):
         'exam_prediction': json.loads(row.get('exam_prediction', '{}')) if isinstance(row.get('exam_prediction'), str) else row.get('exam_prediction', {}),
         'exam_history': json.loads(row.get('exam_history', '[]')) if isinstance(row.get('exam_history'), str) else row.get('exam_history', []),
         'week_label': row.get('week_label', ''),
+        'source_url': row.get('source_url', ''),
+        'original_text': row.get('original_text', ''),
         'created_at': row.get('created_at', '')
     }

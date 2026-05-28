@@ -4,7 +4,7 @@ import sys
 # Add src to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, abort
 
 from src.config import Config
 from src.api.utils import init_db
@@ -95,6 +95,25 @@ def create_app():
     @app.route('/topics')
     def topics():
         return render_template('topics.html')
+
+    @app.route('/topics/<int:topic_id>')
+    def topic_detail(topic_id):
+        import jwt
+        from src.config import JWT_SECRET, JWT_ALGORITHM
+        from src.services import topic_service
+        from flask import request
+        uid = None
+        auth = request.headers.get('Authorization', '')
+        if auth.startswith('Bearer '):
+            try:
+                data = jwt.decode(auth[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                uid = data.get('sub')
+            except Exception:
+                pass
+        topic = topic_service.get_topic_detail(topic_id, uid)
+        if not topic:
+            abort(404)
+        return render_template('topic_detail.html', topic=topic)
 
     @app.route('/community')
     def community():

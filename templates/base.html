@@ -11,10 +11,14 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- Lenis 平滑滚动 -->
+  <script src="https://unpkg.com/lenis@latest/dist/lenis.min.js"></script>
+
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -26,6 +30,12 @@
     <ul class="navbar-menu">
       <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a></li>
       <li><a href="/papers" class="{% if request.path == '/papers' %}active{% endif %}">卷库</a></li>
+      <li><a href="/drill" class="{% if request.path == '/drill' %}active{% endif %}">题型训练</a></li>
+      <li><a href="/diagnosis" class="{% if request.path == '/diagnosis' %}active{% endif %}">能力诊断</a></li>
+      <li><a href="/phrases/study" class="{% if request.path.startswith('/phrases') %}active{% endif %}">素材学习</a></li>
+      <li><a href="/plan" class="{% if request.path == '/plan' %}active{% endif %}">备考计划</a></li>
+      <li><a href="/topics" class="{% if request.path == '/topics' %}active{% endif %}">时政热点</a></li>
+      <li><a href="/community" class="{% if request.path == '/community' %}active{% endif %}">社区</a></li>
       <li><a href="/demo" class="{% if request.path == '/demo' %}active{% endif %}">试用</a></li>
     </ul>
 
@@ -101,6 +111,34 @@
   </div>
 
   <script>
+    // Lenis 平滑滚动
+    try {
+      const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+      function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+          const id = a.getAttribute('href');
+          if (id.length > 1) { e.preventDefault(); lenis.scrollTo(id); }
+        });
+      });
+    } catch(e) { /* lenis 加载失败时静默降级 */ }
+
+    // 滚动进场 —— IntersectionObserver
+    (function() {
+      const els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger');
+      if (!els.length) return;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(el => io.observe(el));
+    })();
+
     // XSS防护：HTML转义工具函数
     function escapeHtml(str) {
       if (str == null) return '';

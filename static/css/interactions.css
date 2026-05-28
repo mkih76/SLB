@@ -1,9 +1,8 @@
 /* ========================================
-   微交互系统
-   克制、有目的、不炫技
+   交互系统 —— 克制、有目的、不炫技
    ======================================== */
 
-/* ---- 卡片 ---- */
+/* ---- 卡片悬停 ---- */
 .card {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
@@ -13,10 +12,10 @@
 }
 .card:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
-/* ---- 按钮 ---- */
+/* ---- 按钮反馈 ---- */
 .btn-primary {
   transition:
     background var(--duration-fast) var(--ease-out),
@@ -24,7 +23,7 @@
     transform 80ms var(--ease-out);
 }
 .btn-primary:hover {
-  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
+  box-shadow: var(--shadow-glow-primary);
 }
 .btn-primary:active {
   transform: scale(0.97);
@@ -44,7 +43,7 @@
     box-shadow var(--duration-fast) var(--ease-out);
 }
 .btn-accent:hover {
-  box-shadow: 0 2px 8px rgba(184, 148, 46, 0.25);
+  box-shadow: var(--shadow-glow-accent);
 }
 
 /* ---- 输入框 ---- */
@@ -55,7 +54,7 @@
 }
 .input-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: var(--shadow-glow-primary);
   outline: none;
 }
 
@@ -90,32 +89,124 @@
   animation: spin 500ms linear infinite;
 }
 
-/* ---- 页面淡入 ---- */
-@keyframes fadeIn {
+/* ========================================
+   滚动进场动画 —— IntersectionObserver 驱动
+   ======================================== */
+
+/* 基础淡入 */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--duration-slower) var(--ease-out),
+    transform var(--duration-slower) var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 从左滑入 */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-24px);
+  transition:
+    opacity var(--duration-slower) var(--ease-out),
+    transform var(--duration-slower) var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 从右滑入 */
+.reveal-right {
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity var(--duration-slower) var(--ease-out),
+    transform var(--duration-slower) var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal-right.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 缩放进场 */
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity var(--duration-slower) var(--ease-out),
+    transform var(--duration-slower) var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal-scale.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 交错延迟 —— 配合 reveal 类 */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--duration-slower) var(--ease-out),
+    transform var(--duration-slower) var(--ease-out);
+}
+.reveal-stagger.revealed > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger.revealed > *:nth-child(1) { transition-delay: 0ms; }
+.reveal-stagger.revealed > *:nth-child(2) { transition-delay: 60ms; }
+.reveal-stagger.revealed > *:nth-child(3) { transition-delay: 120ms; }
+.reveal-stagger.revealed > *:nth-child(4) { transition-delay: 180ms; }
+.reveal-stagger.revealed > *:nth-child(5) { transition-delay: 240ms; }
+.reveal-stagger.revealed > *:nth-child(6) { transition-delay: 300ms; }
+.reveal-stagger.revealed > *:nth-child(7) { transition-delay: 360ms; }
+.reveal-stagger.revealed > *:nth-child(8) { transition-delay: 420ms; }
+
+/* ========================================
+   页面进场
+   ======================================== */
+@keyframes pageIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
 }
-.fade-in {
-  animation: fadeIn 250ms var(--ease-out) forwards;
+main {
+  animation: pageIn 300ms var(--ease-out);
 }
 
-/* ---- 列表项交错动画 ---- */
-.stagger-in > * {
-  opacity: 0;
-  animation: fadeIn 300ms var(--ease-out) forwards;
+/* ========================================
+   数字滚动（配合 JS）
+   ======================================== */
+.counter {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
 }
-.stagger-in > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-in > *:nth-child(2) { animation-delay: 50ms; }
-.stagger-in > *:nth-child(3) { animation-delay: 100ms; }
-.stagger-in > *:nth-child(4) { animation-delay: 150ms; }
-.stagger-in > *:nth-child(5) { animation-delay: 200ms; }
-.stagger-in > *:nth-child(6) { animation-delay: 250ms; }
-.stagger-in > *:nth-child(7) { animation-delay: 300ms; }
-.stagger-in > *:nth-child(8) { animation-delay: 350ms; }
 
-/* ---- 链接下划线动画 ---- */
+/* ========================================
+   Toast 进退场
+   ======================================== */
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+}
+.toast.toast-exit {
+  animation: toastOut 200ms var(--ease-out) forwards;
+}
+
+/* ========================================
+   链接下划线动画
+   ======================================== */
 .link-underline {
   position: relative;
   display: inline-block;
@@ -132,14 +223,21 @@
 }
 .link-underline:hover::after {
   width: 100%;
-
-/* ---- 数字滚动（配合 JS） ---- */
-.counter {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
 }
 
-/* ---- 焦点环 —— 键盘可访问性 ---- */
+/* ========================================
+   图标旋转 —— 展开/折叠指示
+   ======================================== */
+.icon-rotate {
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.icon-rotate.open {
+  transform: rotate(180deg);
+}
+
+/* ========================================
+   焦点环 —— 键盘可访问性
+   ======================================== */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -149,7 +247,9 @@ a:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* ---- 减少动画偏好 ---- */
+/* ========================================
+   减少动画偏好
+   ======================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -157,5 +257,13 @@ a:focus:not(:focus-visible) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-stagger > * {
+    opacity: 1;
+    transform: none;
   }
 }
