@@ -66,13 +66,15 @@ SLB/
 │   ├── services/       # 业务逻辑
 │   ├── api/            # API路由
 │   ├── grader/         # AI批改核心
-│   ├── crawler/        # 爬虫模块
+│   ├── crawler/        # 爬虫模块（粉笔+学习强国+人民网）
 │   └── bot/            # Telegram Bot
 ├── data/               # 数据文件
 │   ├── schema.sql     # 建表语句
 │   └── slb.db         # SQLite数据库
 ├── templates/          # 前端模板
 ├── static/            # 静态资源
+├── scripts/            # 工具脚本
+│   └── fenbi_download.py  # 粉笔资料一键下载
 └── tests/            # 测试
 ```
 
@@ -81,6 +83,21 @@ SLB/
 - 深蓝/藏青主色调（正气、官方风格）
 - 金色点缀（权威感）
 - 思源黑体（清晰正式）
+
+## 粉笔数据抓取
+
+SLB 从粉笔教育获取申论真题和备考资料。详见 [docs/fenbi_scraper.md](docs/fenbi_scraper.md)
+
+```bash
+# 一键下载全部公开申论资料（无需登录，约 290MB）
+python scripts/fenbi_download.py
+
+# 下载题库真题（需粉笔账号）
+python scripts/fenbi_download.py --phone 13800138000 --password xxx
+
+# 扫描发现新目录
+python scripts/fenbi_download.py --scan 40000 40100
+```
 
 ## License
 
