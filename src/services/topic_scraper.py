@@ -352,7 +352,7 @@ def fetch_xuexi_articles(limit=10):
                     await page.wait_for_timeout(3000)
 
                     title = await page.evaluate("""() => {
-                        var el = document.querySelector('.article-title') || document.querySelector('h1');
+                        var el = document.querySelector('[class*=title]') || document.querySelector('.article-title') || document.querySelector('h1');
                         return el ? el.innerText.trim() : '';
                     }""")
 
