@@ -4,7 +4,13 @@
 
 时政热点模块从两个渠道抓取内容：
 1. **人民网合作源**（requests 直接抓取）：时评、理论、党建三个板块
-2. **学习强国 SPA 页面**（Playwright + Cookies）：习近平重要文章专栏
+2. **学习强国 SPA 页面**（Playwright）：习近平重要文章专栏
+
+**学习强国抓取支持两种模式：**
+- **有 cookies**：Playwright + cookies 从列表页自动发现文章
+- **无 cookies**：从 URL 缓存文件读取文章链接（由 Hermes cron 自动搜索更新）
+
+文章详情页是公开的，抓取正文不需要 cookies。
 
 ---
 
