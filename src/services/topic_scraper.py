@@ -264,8 +264,13 @@ def save_topics(items, db):
     return {'saved': saved, 'skipped': skipped, 'total': len(items)}
 
 
-def fetch_xuexi_articles(limit=10):
-    """从学习强国抓取习近平重要文章（需要 Playwright + cookies）"""
+def fetch_xuexi_articles(limit=10, cookies_file=None):
+    """从学习强国抓取习近平重要文章。
+
+    优先用 cookies + Playwright 从列表页发现文章；
+    若 cookies 缺失/过期（列表页 0 篇），自动 fallback 到搜索引擎发现文章 URL。
+    文章详情页是公开的，抓正文不需要 cookies。
+    """
     import asyncio
     try:
         from playwright.async_api import async_playwright
@@ -273,120 +278,204 @@ def fetch_xuexi_articles(limit=10):
         logger.warning('playwright 未安装，跳过学习强国抓取')
         return []
 
-    COOKIES_FILE = r"D:\新建文件夹\下载\www.xuexi.cn.cookies.json"
+    if cookies_file is None:
+        import os
+        # 按优先级查找 cookies 文件
+        candidates = [
+            os.path.expanduser('~/.hermes/xuexi_cookies.json'),
+            r"D:\新建文件夹\下载\www.xuexi.cn.cookies.json",
+        ]
+        for c in candidates:
+            if os.path.exists(c):
+                cookies_file = c
+                break
+
     PAGE_URL = "https://www.xuexi.cn/6db80fbc0859e5c06b81fd5d6d618749/9a3668c13f6e303932b5e0e100fc248b.html"
     from datetime import datetime, timedelta
     CUTOFF = datetime.now() - timedelta(days=180)
 
-    async def _scrape():
-        import json as _json
+    # ---- 正文抓取（不需要 cookies） ----
+    async def _fetch_article_content(page, art):
+        """打开文章详情页，提取标题和正文"""
         import re as _re
-        try:
-            with open(COOKIES_FILE, 'r', encoding='utf-8') as f:
-                cookies = _json.load(f)
-        except Exception as e:
-            logger.error(f'读取cookies失败: {e}')
+        url = art['url']
+        await page.goto(url, wait_until='networkidle', timeout=30000)
+        await page.wait_for_timeout(3000)
+
+        title = await page.evaluate("""() => {
+            var el = document.querySelector('[class*=title]')
+                     || document.querySelector('.article-title')
+                     || document.querySelector('h1');
+            return el ? el.innerText.trim() : '';
+        }""")
+
+        body = await page.evaluate("""() => {
+            var ps = document.querySelectorAll('p');
+            var parts = [];
+            for (var i = 0; i < ps.length; i++) {
+                var t = ps[i].innerText.trim();
+                if (t.length > 5) parts.push(t);
+            }
+            if (parts.length > 3) return parts.join('\\n\\n');
+            return document.body.innerText;
+        }""")
+
+        title = _re.sub(r'\s*20\d{2}[-/]\d{2}[-/]\d{2}\s*', '', title).strip()
+        markers = ['服务电话：12361', '中央宣传部宣传舆情研究中心版权所有',
+                    'Copyright', '互联网新闻信息服务许可证', 'ICP备案']
+        for marker in markers:
+            idx = body.find(marker)
+            if idx > 0:
+                body = body[:idx]
+        body = body.strip()
+
+        if title and len(body) > 200:
+            return {
+                'title': title,
+                'source': '学习强国',
+                'source_url': url,
+                'category': 'xuexi',
+                'original_text': body,
+                'date': art.get('date', ''),
+            }
+        return None
+
+    # ---- 方式 A：cookies + 列表页发现 ----
+    async def _discover_via_cookies(context, page):
+        import re as _re
+        import json as _json
+
+        if not cookies_file:
+            logger.info('cookies 文件未配置，跳过列表页发现')
             return []
 
-        pw_cookies = [{'name': c['name'], 'value': c['value'], 'domain': c['domain'], 'path': c['path']} for c in cookies]
+        try:
+            with open(cookies_file, 'r', encoding='utf-8') as f:
+                cookies = _json.load(f)
+        except Exception as e:
+            logger.warning(f'读取 cookies 失败: {e}')
+            return []
 
+        pw_cookies = [{'name': c['name'], 'value': c['value'],
+                        'domain': c['domain'], 'path': c['path']} for c in cookies]
+        await context.add_cookies(pw_cookies)
+
+        await page.goto(PAGE_URL, wait_until='networkidle', timeout=30000)
+        await page.wait_for_timeout(3000)
+
+        cells = await page.query_selector_all('.grid-cell')
+        if not cells:
+            logger.info('列表页无 grid-cell（cookies 可能过期）')
+            return []
+
+        article_cells = []
+        for i, cell in enumerate(cells):
+            text = await cell.inner_text()
+            date_match = _re.search(r'20\d{2}[-年/]\d{2}[-月/]\d{2}', text)
+            if date_match:
+                date_str = date_match.group(0).replace('年', '-').replace('月', '-').replace('/', '-')
+                try:
+                    art_date = datetime.strptime(date_str, '%Y-%m-%d')
+                    if art_date < CUTOFF:
+                        continue
+                except:
+                    continue
+                article_cells.append((i, date_str))
+
+        article_urls = []
+        seen_ids = set()
+        for cell_idx, date_str in article_cells:
+            cells = await page.query_selector_all('.grid-cell')
+            if cell_idx >= len(cells):
+                continue
+            try:
+                async with context.expect_page(timeout=8000) as new_page_info:
+                    await cells[cell_idx].click()
+                new_page = await new_page_info.value
+                await new_page.wait_for_load_state('domcontentloaded', timeout=10000)
+                id_match = _re.search(r'id=(\d+)', new_page.url)
+                if id_match:
+                    art_id = id_match.group(1)
+                    if art_id not in seen_ids:
+                        seen_ids.add(art_id)
+                        article_urls.append({'id': art_id, 'date': date_str, 'url': new_page.url})
+                await new_page.close()
+                await page.wait_for_timeout(500)
+            except:
+                if 'lgpage/detail' in page.url:
+                    await page.go_back()
+                    await page.wait_for_timeout(1000)
+
+        logger.info(f'列表页发现 {len(article_urls)} 篇文章')
+        return article_urls
+
+    # ---- 方式 B：从 URL 缓存文件发现（不需要 cookies） ----
+    async def _discover_via_cache(limit_count):
+        """从 URL 缓存文件读取待抓取的文章 URL。
+
+        缓存文件由 Hermes cron 定期写入（搜索引擎发现），
+        也支持手动写入。格式: 每行一个 URL 或 JSON 数组。
+        """
+        import json as _json
+        import os as _os
+        import re as _re
+
+        cache_file = _os.path.expanduser('~/.hermes/xuexi_urls.json')
+        if not _os.path.exists(cache_file):
+            logger.info(f'URL 缓存文件不存在: {cache_file}')
+            return []
+
+        try:
+            with open(cache_file, 'r') as f:
+                data = _json.load(f)
+            # 支持两种格式: [{"id":..., "url":...}] 或 ["url1", "url2"]
+            article_urls = []
+            seen_ids = set()
+            for item in data[:limit_count * 2]:
+                if isinstance(item, str):
+                    url = item
+                    id_match = _re.search(r'id=(\d+)', url)
+                    art_id = id_match.group(1) if id_match else url
+                else:
+                    url = item.get('url', '')
+                    art_id = item.get('id', '')
+                if art_id not in seen_ids:
+                    seen_ids.add(art_id)
+                    article_urls.append({'id': str(art_id), 'date': item.get('date', '') if isinstance(item, dict) else '', 'url': url})
+            logger.info(f'从缓存文件读取 {len(article_urls)} 篇文章 URL')
+            return article_urls[:limit_count]
+        except Exception as e:
+            logger.warning(f'读取 URL 缓存失败: {e}')
+            return []
+
+    # ---- 主流程 ----
+    async def _scrape():
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context()
-            await context.add_cookies(pw_cookies)
             page = await context.new_page()
 
-            # Step 1: Load the list page and find article cells with dates
-            await page.goto(PAGE_URL, wait_until='networkidle', timeout=30000)
-            await page.wait_for_timeout(3000)
+            # 优先 cookies 方式
+            article_urls = await _discover_via_cookies(context, page)
 
-            cells = await page.query_selector_all('.grid-cell')
-            article_cells = []
-            for i, cell in enumerate(cells):
-                text = await cell.inner_text()
-                date_match = _re.search(r'20\d{2}[-年/]\d{2}[-月/]\d{2}', text)
-                if date_match:
-                    date_str = date_match.group(0).replace('年', '-').replace('月', '-').replace('/', '-')
-                    try:
-                        art_date = datetime.strptime(date_str, '%Y-%m-%d')
-                        if art_date < CUTOFF:
-                            continue
-                    except:
-                        continue
-                    title_text = text[:200].strip()
-                    article_cells.append((i, date_str, title_text))
+            # fallback: 搜索引擎
+            if not article_urls:
+                logger.info('cookies 方式无结果，切换搜索引擎发现')
+                article_urls = await _discover_via_cache(limit)
 
-            # Step 2: Click each cell to get article URL
-            article_urls = []
-            seen_ids = set()
-            for cell_idx, date_str, title_text in article_cells:
-                cells = await page.query_selector_all('.grid-cell')
-                if cell_idx >= len(cells):
-                    continue
-                try:
-                    async with context.expect_page(timeout=8000) as new_page_info:
-                        await cells[cell_idx].click()
-                    new_page = await new_page_info.value
-                    await new_page.wait_for_load_state('domcontentloaded', timeout=10000)
-                    article_url = new_page.url
-                    # Extract article ID from URL
-                    id_match = _re.search(r'id=(\d+)', article_url)
-                    if id_match:
-                        art_id = id_match.group(1)
-                        if art_id not in seen_ids:
-                            seen_ids.add(art_id)
-                            article_urls.append({'id': art_id, 'date': date_str, 'url': article_url})
-                    await new_page.close()
-                    await page.wait_for_timeout(500)
-                except:
-                    if 'lgpage/detail' in page.url:
-                        await page.go_back()
-                        await page.wait_for_timeout(1000)
+            if not article_urls:
+                logger.warning('两种方式均未发现文章')
+                await browser.close()
+                return []
 
-            # Step 3: Fetch each article's content
+            # 抓取正文（不需要 cookies）
             results = []
             for art in article_urls[:limit]:
-                url = art['url']
                 try:
-                    await page.goto(url, wait_until='networkidle', timeout=30000)
-                    await page.wait_for_timeout(3000)
-
-                    title = await page.evaluate("""() => {
-                        var el = document.querySelector('[class*=title]') || document.querySelector('.article-title') || document.querySelector('h1');
-                        return el ? el.innerText.trim() : '';
-                    }""")
-
-                    body = await page.evaluate("""() => {
-                        var ps = document.querySelectorAll('p');
-                        var parts = [];
-                        for (var i = 0; i < ps.length; i++) {
-                            var t = ps[i].innerText.trim();
-                            if (t.length > 5) parts.push(t);
-                        }
-                        if (parts.length > 3) return parts.join('\\n\\n');
-                        return document.body.innerText;
-                    }""")
-
-                    # Clean title
-                    title = _re.sub(r'\s*20\d{2}[-/]\d{2}[-/]\d{2}\s*', '', title).strip()
-
-                    # Clean body - remove footer
-                    markers = ['服务电话：12361', '中央宣传部宣传舆情研究中心版权所有', 'Copyright', '互联网新闻信息服务许可证']
-                    for marker in markers:
-                        idx = body.find(marker)
-                        if idx > 0:
-                            body = body[:idx]
-                    body = body.strip()
-
-                    if title and len(body) > 200:
-                        results.append({
-                            'title': title,
-                            'source': '学习强国',
-                            'source_url': url,
-                            'category': 'xuexi',
-                            'original_text': body,
-                            'date': art['date']
-                        })
+                    result = await _fetch_article_content(page, art)
+                    if result:
+                        results.append(result)
+                        logger.info(f'✅ {result["title"][:40]} ({len(result["original_text"])}字)')
                 except Exception as e:
                     logger.warning(f'抓取文章失败 {art["id"]}: {e}')
 
