@@ -275,3 +275,107 @@ def _format_report(row):
         'score_trend': json.loads(row['score_trend']) if row['score_trend'] else [],
         'created_at': row['created_at']
     }
+
+
+def generate_weekly_report(uid):
+    """生成周报：汇总本周练习数据"""
+    db = get_db()
+
+    # 获取本周提交（最近7天）
+    week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+    recent = db.execute(
+        """SELECT score, dimension_scores, created_at
+           FROM submissions WHERE uid = ? AND score IS NOT NULL
+           AND created_at >= ?
+           ORDER BY created_at DESC""",
+        (uid, week_ago)
+    ).fetchall()
+
+    if len(recent) < 2:
+        return None
+
+    scores = [row['score'] for row in recent]
+    avg_score = round(sum(scores) / len(scores), 1)
+    best_score = round(max(scores), 1)
+
+    # 与上周对比
+    prev_week_start = (datetime.now() - timedelta(days=14)).isoformat()
+    prev = db.execute(
+        """SELECT AVG(score) as avg_s FROM submissions
+           WHERE uid = ? AND score IS NOT NULL
+           AND created_at >= ? AND created_at < ?""",
+        (uid, prev_week_start, week_ago)
+    ).fetchone()
+    prev_avg = round(prev['avg_s'], 1) if prev and prev['avg_s'] else None
+    week_change = round(avg_score - prev_avg, 1) if prev_avg else None
+
+    # 本周题型得分
+    type_stats = db.execute(
+        "SELECT question_type, avg_score FROM user_question_type_stats WHERE uid = ?",
+        (uid,)
+    ).fetchall()
+    type_scores = {row['question_type']: round(row['avg_score'], 1) for row in type_stats}
+
+    # 最佳/最弱题型
+    best_type = max(type_scores, key=type_scores.get) if type_scores else None
+    worst_type = min(type_scores, key=type_scores.get) if type_scores else None
+
+    # 本周维度平均
+    dim_accum = {}
+    dim_count = {}
+    for row in recent:
+        dims = json.loads(row['dimension_scores']) if row['dimension_scores'] else {}
+        for k, v in dims.items():
+            if isinstance(v, (int, float)):
+                dim_accum[k] = dim_accum.get(k, 0) + v
+                dim_count[k] = dim_count.get(k, 0) + 1
+    dim_avg = {}
+    for k in dim_accum:
+        dim_avg[k] = round(dim_accum[k] / dim_count[k], 1) if dim_count[k] > 0 else 0
+
+    # 找最弱维度
+    weakest_dim = min(dim_avg, key=dim_avg.get) if dim_avg else None
+    weakest_dim_name = DIMENSION_NAMES.get(weakest_dim, weakest_dim) if weakest_dim else None
+
+    report = {
+        'report_type': 'weekly',
+        'total_practices': len(recent),
+        'avg_score': avg_score,
+        'best_score': best_score,
+        'week_change': week_change,
+        'best_type': {'code': best_type, 'name': QUESTION_TYPE_NAMES.get(best_type, best_type),
+                       'score': type_scores.get(best_type)} if best_type else None,
+        'worst_type': {'code': worst_type, 'name': QUESTION_TYPE_NAMES.get(worst_type, worst_type),
+                        'score': type_scores.get(worst_type)} if worst_type else None,
+        'dimension_scores': dim_avg,
+        'type_scores': {k: {'score': v, 'name': QUESTION_TYPE_NAMES.get(k, k)}
+                        for k, v in type_scores.items()},
+        'improvement_area': weakest_dim_name,
+        'score_trend': [round(row['score'], 1) for row in reversed(recent)]
+    }
+
+    # 保存周报
+    report_id = generate_uuid()
+    db.execute(
+        """INSERT INTO diagnostic_reports
+           (uid, report_type, trigger_id,
+            score_point_coverage, score_logic_structure, score_language,
+            score_format, score_word_count,
+            score_guina, score_zonghe, score_duice, score_zhixing, score_zuowen,
+            overall_score, strengths, weaknesses, recommendations, score_trend)
+           VALUES (?, 'weekly', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (uid, report_id,
+         dim_avg.get('point_coverage'), dim_avg.get('logic_structure'),
+         dim_avg.get('language'), dim_avg.get('format'), dim_avg.get('word_count'),
+         type_scores.get('guina'), type_scores.get('zonghe'),
+         type_scores.get('duice'), type_scores.get('zhixing'), type_scores.get('zuowen'),
+         avg_score,
+         json.dumps([f"{best_type}题型得分最高"], ensure_ascii=False) if best_type else '[]',
+         json.dumps([f"{worst_type}题型需要加强"], ensure_ascii=False) if worst_type else '[]',
+         json.dumps([{'type': 'dimension', 'action': f'重点提升{weakest_dim_name}', 'priority': 'high'}], ensure_ascii=False) if weakest_dim_name else '[]',
+         json.dumps(report['score_trend']))
+    )
+    db.commit()
+
+    report['report_id'] = report_id
+    return report

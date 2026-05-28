@@ -122,11 +122,18 @@
         <label class="admin-form-label">API Base URL</label>
         <input type="text" id="llm-base-url" class="input-field" value="https://api.deepseek.com">
       </div>
-      <button type="submit" class="btn btn-primary">
-        <i data-lucide="save"></i>
-        保存设置
-      </button>
+      <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i>
+          保存设置
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="testLLM()">
+          <i data-lucide="zap"></i>
+          测试连接
+        </button>
+      </div>
     </form>
+    <div id="llm-test-result" style="margin-top: var(--space-2); display: none;"></div>
   </div>
 </div>
 
@@ -243,6 +250,24 @@
       showToast('保存成功');
     } catch (e) {
       showToast('保存失败', 'error');
+    }
+  }
+
+  async function testLLM() {
+    const resultDiv = document.getElementById('llm-test-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<span style="color: var(--color-text-secondary);">测试中...</span>';
+    try {
+      const data = await adminFetch('/settings/test-llm', { method: 'POST' });
+      const info = data.data;
+      resultDiv.innerHTML = `<div style="padding: var(--space-2); background: var(--color-success-bg, #e6f9e6); border-radius: 6px; color: var(--color-success, #2e7d32);">
+        <strong>连接成功</strong> | 提供商: ${info.provider} | 模型: ${info.model}<br>
+        <small>AI回复: ${info.response}</small>
+      </div>`;
+    } catch (e) {
+      resultDiv.innerHTML = `<div style="padding: var(--space-2); background: var(--color-error-bg, #fdecea); border-radius: 6px; color: var(--color-error, #c62828);">
+        <strong>连接失败</strong>: ${e.message || '请检查 API Key 和 Base URL'}
+      </div>`;
     }
   }
 

@@ -50,3 +50,23 @@ def generate_report(current_user):
     if not report:
         return api_error("数据不足，无法生成报告", 400)
     return api_success(report)
+
+
+@diagnosis_bp.route('/weekly', methods=['GET'])
+@token_required
+def get_weekly(current_user):
+    """获取最新周报"""
+    report = diagnosis_service.generate_weekly_report(current_user['uid'])
+    if not report:
+        return api_error("本周练习数据不足（至少需要2次练习），暂无法生成周报", 404)
+    return api_success(report)
+
+
+@diagnosis_bp.route('/weekly/generate', methods=['POST'])
+@token_required
+def generate_weekly(current_user):
+    """手动生成周报"""
+    report = diagnosis_service.generate_weekly_report(current_user['uid'])
+    if not report:
+        return api_error("本周练习数据不足（至少需要2次练习），暂无法生成周报", 400)
+    return api_success(report)

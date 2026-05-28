@@ -240,6 +240,7 @@ function startTimer() {
   timerInterval = setInterval(() => {
     remainSeconds--;
     updateTimerDisplay();
+    if (remainSeconds === 900) { showToast('距离考试结束还有15分钟，请抓紧时间！', 'warning'); }
     if (remainSeconds <= 0) {
       clearInterval(timerInterval);
       showToast('考试时间到，系统将自动交卷！', 'warning');

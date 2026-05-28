@@ -2,7 +2,7 @@ from flask import Blueprint, request
 import json
 
 from src.api.utils import api_success, api_error, token_required, get_db, clamp_per_page
-from src.services import submission_service, paper_service, weak_point_service
+from src.services import submission_service, paper_service, weak_point_service, drill_service, diagnosis_service
 from src.services.grader.scorer import grade_answer
 from src.services.auth import is_vip_user
 
@@ -70,6 +70,22 @@ def create_submission(current_user):
                 current_user['uid'], missing,
                 topic_tag=question.get('type')
             )
+
+        # Record drill stats for question type
+        question_type = question.get('type', 'guina')
+        drill_service.record_drill(
+            uid=current_user['uid'],
+            question_type=question_type,
+            pid=pid, qid=qid, sid=sid,
+            score=grading_result['score'],
+            dimension_scores=grading_result['dimension_scores']
+        )
+
+        # Auto-generate diagnostic report
+        try:
+            diagnosis_service.generate_diagnostic_report(current_user['uid'], sid)
+        except Exception:
+            pass  # don't fail the submission if diagnosis fails
 
         return api_success({
             'sid': sid,

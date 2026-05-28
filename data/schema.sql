@@ -485,6 +485,34 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- ============================================================
+-- 签到记录表（用户增长）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS sign_in_records (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid           TEXT NOT NULL,
+    sign_date     DATE NOT NULL,
+    streak_days   INT DEFAULT 1,              -- 连续签到天数
+    reward_points INT DEFAULT 0,              -- 奖励积分
+    created_at    DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid),
+    UNIQUE(uid, sign_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_signin_uid ON sign_in_records(uid);
+CREATE INDEX IF NOT EXISTS idx_signin_date ON sign_in_records(sign_date);
+
+-- ============================================================
+-- 用户积分表（用户增长）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_points (
+    uid           TEXT PRIMARY KEY,
+    total_points  INT DEFAULT 0,
+    used_points   INT DEFAULT 0,
+    updated_at    DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (uid) REFERENCES users(uid)
+);
+
+-- ============================================================
 -- 管理员账号（默认）
 -- ============================================================
 -- 密码: admin123456 (bcrypt hash)

@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}申论帮 - AI智能批改平台{% endblock %}</title>
+  <title>{% block title %}申论帮 - AI智能申论批改平台{% endblock %}</title>
+  <meta name="description" content="{% block description %}申论帮，AI驱动的申论批改平台。提供五种题型智能批改、好词好句学习、薄弱点追踪、备考计划等功能，助你高效备考公务员申论考试。{% endblock %}">
+  <meta name="keywords" content="{% block keywords %}申论批改,AI批改,公务员考试,申论练习,申论评分,国考,省考{% endblock %}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://slb.19990419.top{{ request.path }}">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}申论帮 - AI智能申论批改平台{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}AI驱动的申论批改，五种题型智能评分，助你高效备考{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://slb.19990419.top{{ request.path }}">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
@@ -40,6 +50,11 @@
     </ul>
 
     <div class="navbar-user">
+      <span id="signin-area" style="display: none; margin-right: 12px;">
+        <button id="signin-btn" class="btn btn-secondary" style="color: white; border-color: white; font-size: 13px; padding: 4px 12px;" onclick="doSignIn()">
+          签到
+        </button>
+      </span>
       <span id="user-info">
         <a href="#" id="login-btn" class="btn btn-secondary" style="color: white; border-color: white;">
           登录
@@ -182,13 +197,60 @@
     // 更新用户UI
     function updateUserUI() {
       const userInfo = document.getElementById('user-info');
+      const signinArea = document.getElementById('signin-area');
       if (state.user) {
         const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
         userInfo.innerHTML = `
           <span>${state.user.nickname} ${vipBadge}</span>
           <a href="#" onclick="logout()" style="color: white; margin-left: 8px;">退出</a>
         `;
+        if (signinArea) signinArea.style.display = 'inline-block';
+        checkSignInStatus();
+      } else {
+        if (signinArea) signinArea.style.display = 'none';
       }
+    }
+
+    // 签到
+    async function doSignIn() {
+      if (!state.token) { openAuthModal('login'); return; }
+      try {
+        const res = await fetch('/api/auth/signin', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.data.message, 'success');
+          const btn = document.getElementById('signin-btn');
+          btn.textContent = '已签到';
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('签到失败', 'error');
+      }
+    }
+
+    // 检查签到状态
+    async function checkSignInStatus() {
+      if (!state.token) return;
+      try {
+        const res = await fetch('/api/auth/signin/status', {
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          const btn = document.getElementById('signin-btn');
+          if (data.signed_today) {
+            btn.textContent = '已签到';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+          }
+        }
+      } catch (e) { /* ignore */ }
     }
 
     // 登录

@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import threading
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,7 +32,7 @@ class Config:
 
     DATABASE_PATH = os.getenv('DATABASE_PATH', 'data/slb.db')
 
-    # LLM Config
+    # LLM Config (defaults from env, overridden by DB settings)
     LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'deepseek')
     LLM_MODEL = os.getenv('LLM_MODEL', 'deepseek-chat')
     LLM_API_KEY = os.getenv('LLM_API_KEY', '')
@@ -72,3 +73,72 @@ REDIS_PORT = Config.REDIS_PORT
 REDIS_DB = Config.REDIS_DB
 CACHE_TTL = Config.CACHE_TTL
 TG_BOT_TOKEN = Config.TG_BOT_TOKEN
+
+
+# ============================================================
+# Dynamic LLM Config (reads from DB, falls back to env)
+# ============================================================
+
+_llm_cache = {}
+_llm_cache_lock = threading.Lock()
+_llm_cache_ttl = 30  # seconds
+
+
+def get_llm_config() -> dict:
+    """Get LLM configuration, preferring DB settings over env vars.
+
+    Returns dict with keys: provider, model, api_key, base_url, temperature, max_tokens
+    """
+    import time
+
+    with _llm_cache_lock:
+        if _llm_cache and time.time() - _llm_cache.get('_ts', 0) < _llm_cache_ttl:
+            return {k: v for k, v in _llm_cache.items() if k != '_ts'}
+
+    # Try reading from DB
+    db_config = {}
+    try:
+        import sqlite3
+        db = sqlite3.connect(Config.DATABASE_PATH)
+        db.row_factory = sqlite3.Row
+        rows = db.execute(
+            "SELECT key, value FROM settings WHERE key IN ('llm_provider','llm_model','llm_api_key','llm_base_url')"
+        ).fetchall()
+        db.close()
+        for row in rows:
+            import json
+            try:
+                val = json.loads(row['value'])
+            except (json.JSONDecodeError, TypeError):
+                val = row['value']
+            db_config[row['key']] = val
+    except Exception as e:
+        logger.debug(f"Could not read LLM config from DB: {e}")
+
+    # Build final config with DB values taking priority
+    result = {
+        'provider': db_config.get('llm_provider', Config.LLM_PROVIDER),
+        'model': db_config.get('llm_model', Config.LLM_MODEL),
+        'api_key': db_config.get('llm_api_key', Config.LLM_API_KEY),
+        'base_url': db_config.get('llm_base_url', Config.LLM_BASE_URL),
+        'temperature': Config.LLM_TEMPERATURE,
+        'max_tokens': Config.LLM_MAX_TOKENS,
+    }
+
+    # Normalize base_url: ensure it ends with /v1 for OpenAI-compatible APIs
+    base = result['base_url'].rstrip('/')
+    if not base.endswith('/v1'):
+        result['base_url'] = base + '/v1'
+
+    with _llm_cache_lock:
+        _llm_cache.clear()
+        _llm_cache.update(result)
+        _llm_cache['_ts'] = time.time()
+
+    return result
+
+
+def invalidate_llm_cache():
+    """Force next get_llm_config() to re-read from DB."""
+    with _llm_cache_lock:
+        _llm_cache.clear()

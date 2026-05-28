@@ -91,3 +91,11 @@ def get_history(current_user):
     per_page = request.args.get('limit', 20, type=int)
     result = plan_service.get_plan_history(current_user['uid'], page, per_page)
     return api_success(result)
+
+
+@plan_bp.route('/week-progress', methods=['GET'])
+@token_required
+def get_week_progress(current_user):
+    """获取本周进度"""
+    result = plan_service.get_week_progress(current_user['uid'])
+    return api_success(result)

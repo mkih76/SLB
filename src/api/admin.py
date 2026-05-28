@@ -563,6 +563,12 @@ def update_settings():
         )
     db.commit()
 
+    # Invalidate LLM cache if LLM settings changed
+    llm_keys = {'llm_provider', 'llm_model', 'llm_api_key', 'llm_base_url'}
+    if llm_keys & set(data.keys()):
+        from src.config import invalidate_llm_cache
+        invalidate_llm_cache()
+
     db.execute(
         "INSERT INTO admin_logs (admin_uid, action, target_type, detail) VALUES (?, 'update_settings', 'system', ?)",
         (session.get('admin_user', {}).get('uid', 'admin'), json.dumps(list(data.keys())))
@@ -570,6 +576,41 @@ def update_settings():
     db.commit()
 
     return api_success(message="设置已保存")
+
+
+@admin_bp.route('/settings/test-llm', methods=['POST'])
+@admin_required('*')
+def test_llm():
+    """测试 LLM 连通性"""
+    from src.config import get_llm_config
+    import requests as req
+
+    llm = get_llm_config()
+    try:
+        resp = req.post(
+            f"{llm['base_url']}/chat/completions",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {llm['api_key']}"
+            },
+            json={
+                "model": llm['model'],
+                "messages": [{"role": "user", "content": "回复ok"}],
+                "max_tokens": 10
+            },
+            timeout=15
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        content = result['choices'][0]['message']['content']
+        return api_success({
+            'status': 'ok',
+            'provider': llm['provider'],
+            'model': llm['model'],
+            'response': content[:100]
+        })
+    except Exception as e:
+        return api_error(f"LLM 连接失败: {str(e)}", 500)
 
 
 @admin_bp.route('/settings/cache', methods=['DELETE'])

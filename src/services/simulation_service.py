@@ -144,6 +144,18 @@ def submit_simulation(sim_id, uid, answers):
                 improving_suggestions=grading.get('improving_suggestions')
             )
 
+            # 更新题型训练统计
+            from src.services import drill_service
+            drill_service.record_drill(
+                uid=uid,
+                question_type=q.get('type', 'guina'),
+                pid=sim['pid'],
+                qid=qid,
+                sid=sid,
+                score=raw_score,
+                dimension_scores=grading.get('dimension_scores')
+            )
+
             results.append({
                 'qid': qid,
                 'score': actual_score,

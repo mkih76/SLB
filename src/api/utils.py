@@ -25,11 +25,48 @@ def close_db(e=None):
 
 
 def init_db():
-    """Initialize database with schema"""
-    db = sqlite3.connect(Config.DATABASE_PATH)
-    with open('data/schema.sql', 'r', encoding='utf-8') as f:
+    """Initialize database with schema and seed data"""
+    import os
+    db_path = Config.DATABASE_PATH
+    os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else '.', exist_ok=True)
+    db = sqlite3.connect(db_path)
+
+    # Use absolute path relative to project root (works in Docker and local)
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    schema_path = os.path.join(project_root, 'data', 'schema.sql')
+    with open(schema_path, 'r', encoding='utf-8') as f:
         db.executescript(f.read())
     db.commit()
+
+    # Load seed data if tables are empty
+    count = db.execute("SELECT COUNT(*) FROM papers").fetchone()[0]
+    if count == 0:
+        seed_files = [
+            'data/seed_papers.sql',
+            'data/seed_phrases.sql',
+        ]
+        for sf in seed_files:
+            sf_path = os.path.join(project_root, sf)
+            if os.path.exists(sf_path):
+                with open(sf_path, 'r', encoding='utf-8') as f:
+                    try:
+                        db.executescript(f.read())
+                    except Exception as e:
+                        print(f"Warning: failed to load {sf}: {e}")
+        db.commit()
+
+    # Load topics seed if hot_topics is empty
+    count = db.execute("SELECT COUNT(*) FROM hot_topics").fetchone()[0]
+    if count == 0:
+        topics_path = os.path.join(project_root, 'data', 'seed_topics.sql')
+        if os.path.exists(topics_path):
+            with open(topics_path, 'r', encoding='utf-8') as f:
+                try:
+                    db.executescript(f.read())
+                except Exception as e:
+                    print(f"Warning: failed to load seed_topics.sql: {e}")
+            db.commit()
+
     db.close()
 
 

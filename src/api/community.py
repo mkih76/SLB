@@ -46,9 +46,10 @@ def get_post(post_id):
     auth = request.headers.get('Authorization', '')
     if auth.startswith('Bearer '):
         try:
-            from src.api.utils import verify_token
-            payload = verify_token(auth[7:])
-            uid = payload.get('uid')
+            import jwt
+            from src.config import JWT_SECRET, JWT_ALGORITHM
+            data = jwt.decode(auth[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            uid = data.get('sub')
         except Exception:
             pass
 
@@ -100,4 +101,55 @@ def my_posts(current_user):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     result = community_service.get_user_posts(current_user['uid'], page, per_page)
+    return api_success(result)
+
+
+@community_bp.route('/posts/<int:post_id>', methods=['PUT'])
+@token_required
+def edit_post(current_user, post_id):
+    """编辑自己的帖子"""
+    data = request.get_json()
+    if not data:
+        return api_error("请提供更新内容", 400)
+    result = community_service.update_post(
+        post_id, current_user['uid'],
+        content=data.get('content'),
+        title=data.get('title')
+    )
+    if 'error' in result:
+        return api_error(result['error'], 403)
+    return api_success(result)
+
+
+@community_bp.route('/posts/<int:post_id>', methods=['DELETE'])
+@token_required
+def delete_post(current_user, post_id):
+    """删除自己的帖子"""
+    result = community_service.delete_post(post_id, current_user['uid'])
+    if 'error' in result:
+        return api_error(result['error'], 403)
+    return api_success(result)
+
+
+@community_bp.route('/posts/<int:post_id>/feature', methods=['POST'])
+@token_required
+def feature_post(current_user, post_id):
+    """管理员精选帖子"""
+    if current_user.get('role') not in ('admin', 'super_admin'):
+        return api_error("无权限", 403)
+    result = community_service.feature_post(post_id)
+    if 'error' in result:
+        return api_error(result['error'], 404)
+    return api_success(result)
+
+
+@community_bp.route('/posts/<int:post_id>/pin', methods=['POST'])
+@token_required
+def pin_post(current_user, post_id):
+    """管理员置顶帖子"""
+    if current_user.get('role') not in ('admin', 'super_admin'):
+        return api_error("无权限", 403)
+    result = community_service.pin_post(post_id)
+    if 'error' in result:
+        return api_error(result['error'], 404)
     return api_success(result)

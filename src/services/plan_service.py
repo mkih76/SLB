@@ -448,6 +448,43 @@ def _update_streak(db, uid, plan_id):
     db.commit()
 
 
+def get_week_progress(uid):
+    """获取本周7天的任务完成状态"""
+    db = get_db()
+    today = date.today()
+    # 计算本周一
+    monday = today - timedelta(days=today.weekday())
+    days = []
+    for i in range(7):
+        d = monday + timedelta(days=i)
+        d_str = d.isoformat()
+        row = db.execute(
+            """SELECT COUNT(*) as total,
+                      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+               FROM daily_tasks WHERE uid = ? AND task_date = ?""",
+            (uid, d_str)
+        ).fetchone()
+        if d > today:
+            status = 'future'
+        elif not row or row['total'] == 0:
+            status = 'no_task'
+        elif row['completed'] == row['total']:
+            status = 'done'
+        elif row['completed'] > 0:
+            status = 'partial'
+        else:
+            status = 'missed'
+        days.append({
+            'date': d_str,
+            'weekday': ['一', '二', '三', '四', '五', '六', '日'][i],
+            'total': row['total'] if row else 0,
+            'completed': row['completed'] if row else 0,
+            'status': status,
+            'is_today': d == today
+        })
+    return days
+
+
 def pause_plan(uid, plan_id):
     """暂停计划"""
     db = get_db()

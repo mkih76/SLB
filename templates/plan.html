@@ -189,19 +189,28 @@ async function loadTodayTasks() {
   renderWeekProgress();
 }
 
-function renderWeekProgress() {
+async function renderWeekProgress() {
   const grid = document.getElementById('weekGrid');
-  const days = ['一', '二', '三', '四', '五', '六', '日'];
-  const today = new Date().getDay();
-  const todayIdx = today === 0 ? 6 : today - 1;
-  grid.innerHTML = days.map((d, i) => {
-    let cls = 'week-day';
-    let status = '';
-    if (i < todayIdx) { cls += ' done'; status = '✓'; }
-    else if (i === todayIdx) { cls += ' today'; status = '●'; }
-    else { cls += ' future'; status = '·'; }
-    return '<div class="' + cls + '"><div class="day-label">' + d + '</div><div class="day-status">' + status + '</div></div>';
-  }).join('');
+  try {
+    const res = await fetch(API + '/week-progress', {headers: headers()});
+    const data = await res.json();
+    if (data.error || !data.data) {
+      grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">暂无数据</div>';
+      return;
+    }
+    grid.innerHTML = data.data.map(d => {
+      let cls = 'week-day';
+      let status = '';
+      if (d.status === 'done') { cls += ' done'; status = '✓'; }
+      else if (d.status === 'partial') { cls += ' today'; status = d.completed + '/' + d.total; }
+      else if (d.is_today) { cls += ' today'; status = '●'; }
+      else if (d.status === 'missed') { cls += ''; status = '✗'; }
+      else { cls += ' future'; status = '·'; }
+      return '<div class="' + cls + '"><div class="day-label">' + d.weekday + '</div><div class="day-status">' + status + '</div></div>';
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">加载失败</div>';
+  }
 }
 
 async function createPlan() {
@@ -241,9 +250,9 @@ function startTask(type) {
 
 async function pauseResume() {
   if (!activePlan) return;
-  const action = activePlan.plan_id;
+  const planId = activePlan.plan_id;
   const endpoint = activePlan.status === 'active' ? 'pause' : 'resume';
-  await fetch(API + '/' + action + '/' + endpoint, {method: 'POST', headers: headers()});
+  await fetch(API + '/' + planId + '/' + endpoint, {method: 'POST', headers: headers()});
   location.reload();
 }
 

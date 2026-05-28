@@ -1,7 +1,8 @@
 from flask import Blueprint, request
+from datetime import date, datetime
 
 from src.services.auth import register_user, login_user, logout_user, get_user_profile, is_vip_user
-from src.api.utils import api_success, api_error, token_required
+from src.api.utils import api_success, api_error, token_required, get_db
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -71,3 +72,115 @@ def me(current_user):
 
     profile['is_vip'] = is_vip_user(profile)
     return api_success(profile)
+
+
+# ============================================================
+# 每日签到系统
+# ============================================================
+
+SIGN_IN_REWARDS = {
+    1: 5, 2: 5, 3: 10, 4: 10, 5: 15, 6: 15, 7: 30  # 连续7天大奖
+}
+
+
+@auth_bp.route('/signin', methods=['POST'])
+@token_required
+def sign_in(current_user):
+    """每日签到"""
+    uid = current_user['uid']
+    today = date.today().isoformat()
+    db = get_db()
+
+    # Check if already signed in today
+    existing = db.execute(
+        "SELECT id FROM sign_in_records WHERE uid = ? AND sign_date = ?",
+        (uid, today)
+    ).fetchone()
+    if existing:
+        return api_error("今日已签到，请明天再来", 400)
+
+    # Calculate streak
+    yesterday = date.today().replace(day=date.today().day - 1).isoformat() if date.today().day > 1 else None
+    last_sign = db.execute(
+        "SELECT sign_date, streak_days FROM sign_in_records WHERE uid = ? ORDER BY sign_date DESC LIMIT 1",
+        (uid,)
+    ).fetchone()
+
+    streak = 1
+    if last_sign:
+        last_date = last_sign['sign_date']
+        if last_date == yesterday:
+            streak = min(last_sign['streak_days'] + 1, 7)
+        elif last_date == today:
+            return api_error("今日已签到", 400)
+
+    # Calculate reward
+    reward = SIGN_IN_REWARDS.get(streak, 5)
+
+    # Insert sign-in record
+    db.execute(
+        "INSERT INTO sign_in_records (uid, sign_date, streak_days, reward_points) VALUES (?, ?, ?, ?)",
+        (uid, today, streak, reward)
+    )
+
+    # Update user points
+    db.execute(
+        """INSERT INTO user_points (uid, total_points, updated_at) VALUES (?, ?, datetime('now'))
+           ON CONFLICT(uid) DO UPDATE SET total_points = total_points + ?, updated_at = datetime('now')""",
+        (uid, reward, reward)
+    )
+
+    # Record learning activity
+    db.execute(
+        "INSERT INTO learning_records (uid, action, target_id, created_at) VALUES (?, 'sign_in', ?, datetime('now'))",
+        (uid, today)
+    )
+
+    db.commit()
+
+    return api_success({
+        'streak_days': streak,
+        'reward_points': reward,
+        'message': f'签到成功！连续签到{streak}天，获得{reward}积分'
+    })
+
+
+@auth_bp.route('/signin/status', methods=['GET'])
+@token_required
+def sign_in_status(current_user):
+    """获取签到状态"""
+    uid = current_user['uid']
+    today = date.today().isoformat()
+    db = get_db()
+
+    # Today's sign-in
+    today_sign = db.execute(
+        "SELECT id FROM sign_in_records WHERE uid = ? AND sign_date = ?",
+        (uid, today)
+    ).fetchone()
+
+    # Current streak
+    last_sign = db.execute(
+        "SELECT streak_days FROM sign_in_records WHERE uid = ? ORDER BY sign_date DESC LIMIT 1",
+        (uid,)
+    ).fetchone()
+
+    # Total points
+    points = db.execute(
+        "SELECT total_points, used_points FROM user_points WHERE uid = ?",
+        (uid,)
+    ).fetchone()
+
+    # This month's sign-in count
+    month_count = db.execute(
+        "SELECT COUNT(*) FROM sign_in_records WHERE uid = ? AND sign_date >= date('now', 'start of month')",
+        (uid,)
+    ).fetchone()[0]
+
+    return api_success({
+        'signed_today': today_sign is not None,
+        'current_streak': last_sign['streak_days'] if last_sign else 0,
+        'total_points': points['total_points'] if points else 0,
+        'used_points': points['used_points'] if points else 0,
+        'month_sign_ins': month_count
+    })

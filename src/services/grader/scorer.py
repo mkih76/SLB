@@ -19,7 +19,7 @@ from src.services.grader.dimensions import (
     check_countermeasure_quality,
     count_chinese_chars,
 )
-from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_TEMPERATURE, LLM_MAX_TOKENS
+from src.config import get_llm_config
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ TYPE_DIMENSION_MAX = {
 
 
 def call_llm(messages: list, parse_json: bool = True):
-    """调用 LLM API
+    """调用 LLM API（动态读取配置，支持后台切换模型）
 
     Args:
         messages: 聊天消息列表
@@ -58,21 +58,23 @@ def call_llm(messages: list, parse_json: bool = True):
     """
     import requests
 
+    llm = get_llm_config()
+
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {LLM_API_KEY}"
+        "Authorization": f"Bearer {llm['api_key']}"
     }
 
     data = {
-        "model": LLM_MODEL,
+        "model": llm['model'],
         "messages": messages,
-        "temperature": LLM_TEMPERATURE,
-        "max_tokens": LLM_MAX_TOKENS
+        "temperature": llm['temperature'],
+        "max_tokens": llm['max_tokens']
     }
 
     try:
         response = requests.post(
-            f"{LLM_BASE_URL}/chat/completions",
+            f"{llm['base_url']}/chat/completions",
             headers=headers,
             json=data,
             timeout=60

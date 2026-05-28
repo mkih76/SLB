@@ -189,6 +189,70 @@ def toggle_like(uid, target_type, target_id):
     return {'liked': liked}
 
 
+def update_post(post_id, uid, content=None, title=None):
+    """编辑帖子（仅作者可编辑）"""
+    db = get_db()
+    post = db.execute("SELECT uid FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not post:
+        return {'error': '帖子不存在'}
+    if post['uid'] != uid:
+        return {'error': '只能编辑自己的帖子'}
+
+    updates = []
+    params = []
+    if content is not None:
+        updates.append("content = ?")
+        params.append(content)
+    if title is not None:
+        updates.append("title = ?")
+        params.append(title)
+    if not updates:
+        return {'error': '没有要更新的内容'}
+
+    params.append(post_id)
+    db.execute(f"UPDATE community_posts SET {', '.join(updates)} WHERE id = ?", params)
+    db.commit()
+    return {'post_id': post_id, 'updated': True}
+
+
+def delete_post(post_id, uid):
+    """删除帖子（仅作者或管理员可删除）"""
+    db = get_db()
+    post = db.execute("SELECT uid FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not post:
+        return {'error': '帖子不存在'}
+    if post['uid'] != uid:
+        return {'error': '只能删除自己的帖子'}
+
+    db.execute("UPDATE community_posts SET status = 'deleted' WHERE id = ?", (post_id,))
+    db.commit()
+    return {'post_id': post_id, 'deleted': True}
+
+
+def feature_post(post_id):
+    """管理员精选/取消精选帖子"""
+    db = get_db()
+    post = db.execute("SELECT is_featured FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not post:
+        return {'error': '帖子不存在'}
+    new_val = 0 if post['is_featured'] else 1
+    db.execute("UPDATE community_posts SET is_featured = ? WHERE id = ?", (new_val, post_id))
+    db.commit()
+    return {'post_id': post_id, 'is_featured': bool(new_val)}
+
+
+def pin_post(post_id):
+    """管理员置顶/取消置顶帖子"""
+    db = get_db()
+    post = db.execute("SELECT is_pinned FROM community_posts WHERE id = ?", (post_id,)).fetchone()
+    if not post:
+        return {'error': '帖子不存在'}
+    new_val = 0 if post['is_pinned'] else 1
+    db.execute("UPDATE community_posts SET is_pinned = ? WHERE id = ?", (new_val, post_id))
+    db.commit()
+    return {'post_id': post_id, 'is_pinned': bool(new_val)}
+
+
 def get_user_posts(uid, page=1, per_page=20):
     """获取用户的帖子"""
     db = get_db()

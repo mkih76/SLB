@@ -10,21 +10,16 @@ services:
       - ./.env:/app/.env:ro
     environment:
       - FLASK_ENV=production
+      - ENV=production
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8790/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8790/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Redis 可选（用于缓存）
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: always
-
-# volumes:
-#   redis_data:
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
