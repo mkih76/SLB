@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 申论帮{% endblock %}
+
+{% block content %}
+<div style="min-height: calc(100vh - var(--navbar-height)); display: flex; align-items: center; justify-content: center; padding: var(--space-6);">
+  <div style="width: 100%; max-width: 400px;">
+    <!-- Logo -->
+    <div style="text-align: center; margin-bottom: var(--space-8);">
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); font-size: var(--text-xl); font-weight: 700;">
+        申
+      </div>
+      <h1 style="font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-2);">注册申论帮</h1>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">创建账号，开始高效备考</p>
+    </div>
+
+    <!-- 注册表单 -->
+    <div class="card" style="padding: var(--space-8);">
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <input type="text" id="username" name="username" class="input-field" placeholder="3-20位字母数字" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">昵称</label>
+          <input type="text" id="nickname" name="nickname" class="input-field" placeholder="显示名称（可选）">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <div style="position: relative;">
+            <input type="password" id="password" name="password" class="input-field" placeholder="至少6位" required minlength="6">
+            <button type="button" onclick="togglePassword('password')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px;">
+              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">确认密码</label>
+          <div style="position: relative;">
+            <input type="password" id="confirm-password" name="confirm_password" class="input-field" placeholder="再次输入密码" required minlength="6">
+            <button type="button" onclick="togglePassword('confirm-password')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px;">
+              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="register-error" style="display: none; color: var(--color-error); font-size: var(--text-sm); margin-bottom: var(--space-4);"></div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: var(--text-base);">
+          注册
+        </button>
+      </form>
+
+      <div style="margin-top: var(--space-6); text-align: center;">
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+          已有账号？<a href="/login" style="color: var(--color-primary); font-weight: 500;">立即登录</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 切换密码可见性
+  function togglePassword(fieldId) {
+    const input = document.getElementById(fieldId);
+    const icon = input.parentElement.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.setAttribute('data-lucide', 'eye-off');
+    } else {
+      input.type = 'password';
+      icon.setAttribute('data-lucide', 'eye');
+    }
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  // 注册
+  async function handleRegister(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const nickname = document.getElementById('nickname').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const errorEl = document.getElementById('register-error');
+    const btn = e.target.querySelector('button[type="submit"]');
+
+    // 验证
+    if (!username || !password) {
+      errorEl.textContent = '请输入用户名和密码';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (username.length < 3 || username.length > 20) {
+      errorEl.textContent = '用户名长度应为3-20位';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (password.length < 6) {
+      errorEl.textContent = '密码至少6位';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      errorEl.textContent = '两次输入的密码不一致';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<div class="grading-status-spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div>';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          nickname: nickname || username,
+          password
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.data) {
+        // 保存 token
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.success('注册成功');
+        }
+
+        // 跳转
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 500);
+      } else {
+        errorEl.textContent = data.error || '注册失败';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '注册';
+      }
+    } catch (e) {
+      console.error('Register error:', e);
+      errorEl.textContent = '网络错误，请稍后重试';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '注册';
+    }
+  }
+</script>
+{% endblock %}

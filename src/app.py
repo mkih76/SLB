@@ -20,6 +20,7 @@ from src.api.simulation import simulation_bp
 from src.api.plan import plan_bp
 from src.api.topic import topic_bp
 from src.api.community import community_bp
+from src.api.ocr import ocr_bp
 
 
 def create_app():
@@ -42,6 +43,7 @@ def create_app():
     app.register_blueprint(plan_bp)
     app.register_blueprint(topic_bp)
     app.register_blueprint(community_bp)
+    app.register_blueprint(ocr_bp)
 
     # Initialize database
     with app.app_context():
@@ -51,6 +53,14 @@ def create_app():
     @app.route('/')
     def index():
         return render_template('index.html')
+
+    @app.route('/login')
+    def login():
+        return render_template('login.html')
+
+    @app.route('/register')
+    def register():
+        return render_template('register.html')
 
     @app.route('/papers')
     def papers():

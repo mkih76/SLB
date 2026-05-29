@@ -2,9 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for lxml
+# Install system dependencies for lxml + Tesseract OCR
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libxml2-dev libxslt1-dev curl \
+    tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng \
+    libtesseract-dev libleptonica-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

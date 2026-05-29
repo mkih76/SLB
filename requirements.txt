@@ -12,3 +12,5 @@ openai==1.55.3
 redis==5.2.0
 tiktoken==0.8.0
 pytest==8.3.5
+pytesseract==0.3.10
+Pillow==10.4.0

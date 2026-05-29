@@ -4,98 +4,125 @@
 
 {% block content %}
 <div class="page-container">
-  <div class="container">
-    <div style="text-align: center; margin-bottom: var(--space-4);">
-      <h1>批改结果</h1>
-      <p id="paper-info" style="color: var(--color-text-secondary);"></p>
+  <div class="container" style="max-width: 800px;">
+    <!-- 返回按钮 -->
+    <div style="margin-bottom: var(--space-6);">
+      <a href="/papers" style="color: var(--color-text-secondary); text-decoration: none; font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-1); width: fit-content;">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+        返回卷库
+      </a>
     </div>
 
-    <!-- 分数卡片 -->
-    <div class="card" style="text-align: center; margin-bottom: var(--space-4);">
-      <div style="font-size: 72px; font-weight: 700; color: var(--color-primary);" id="total-score">
+    <!-- 试卷信息 -->
+    <div style="text-align: center; margin-bottom: var(--space-8);">
+      <h1 id="paper-info" style="font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--space-2);">批改结果</h1>
+      <p id="question-info" style="color: var(--color-text-secondary); font-size: var(--text-sm);"></p>
+    </div>
+
+    <!-- 得分卡片 -->
+    <div class="card" style="text-align: center; margin-bottom: var(--space-6); background: var(--color-accent-light); border-color: var(--color-accent);">
+      <div style="font-size: var(--text-xs); color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2);">综合得分</div>
+      <div id="total-score" style="font-size: 72px; font-weight: 700; color: var(--color-accent); line-height: 1; font-variant-numeric: tabular-nums;">
         --
       </div>
-      <p style="color: var(--color-text-secondary);">总分（满分100分）</p>
+      <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--space-2);">
+        满分 <span id="max-score">100</span> 分
+      </div>
     </div>
 
-    <!-- 维度得分 -->
-    <div class="card" style="margin-bottom: var(--space-4);">
-      <h3 style="margin-bottom: var(--space-3);">各维度得分</h3>
+    <!-- 五维度得分 -->
+    <div class="card" style="margin-bottom: var(--space-6);">
+      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
+        <i data-lucide="bar-chart-3" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
+        <h3 style="margin: 0; font-size: var(--text-base);">维度分析</h3>
+      </div>
       <div id="dimension-scores">
         <!-- 动态渲染 -->
       </div>
     </div>
 
-    <!-- 得分要点 -->
-    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-4);">
-      <div class="card" style="border-left: 4px solid var(--color-success);">
-        <h4 style="color: var(--color-success); margin-bottom: var(--space-2);">
-          <i data-lucide="check-circle"></i>
-          命中要点
-        </h4>
-        <ul id="hit-points" style="padding-left: var(--space-3); color: var(--color-text-secondary);">
+    <!-- 命中/遗漏要点 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+      <div class="card" style="border-left: 3px solid var(--color-success);">
+        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3);">
+          <i data-lucide="check-circle" style="width: 18px; height: 18px; color: var(--color-success);"></i>
+          <h4 style="margin: 0; font-size: var(--text-sm); color: var(--color-success);">命中要点</h4>
+        </div>
+        <ul id="hit-points" style="padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8;">
         </ul>
       </div>
-      <div class="card" style="border-left: 4px solid var(--color-error);">
-        <h4 style="color: var(--color-error); margin-bottom: var(--space-2);">
-          <i data-lucide="x-circle"></i>
-          遗漏要点
-        </h4>
-        <ul id="missing-points" style="padding-left: var(--space-3); color: var(--color-text-secondary);">
+      <div class="card" style="border-left: 3px solid var(--color-error);">
+        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3);">
+          <i data-lucide="x-circle" style="width: 18px; height: 18px; color: var(--color-error);"></i>
+          <h4 style="margin: 0; font-size: var(--text-sm); color: var(--color-error);">遗漏要点</h4>
+        </div>
+        <ul id="missing-points" style="padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8;">
         </ul>
       </div>
     </div>
 
-    <!-- AI反馈 -->
-    <div class="card" style="margin-bottom: var(--space-4);">
-      <h3 style="margin-bottom: var(--space-2);">
-        <i data-lucide="message-square"></i>
-        AI批改意见
-      </h3>
-      <div id="ai-feedback" style="line-height: 1.8; color: var(--color-text-secondary);">
-        加载中...
+    <!-- AI 批改意见 -->
+    <div class="card" style="margin-bottom: var(--space-6);">
+      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
+        <i data-lucide="message-square" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
+        <h3 style="margin: 0; font-size: var(--text-base);">AI 批改意见</h3>
+      </div>
+      <div id="ai-feedback" style="line-height: 1.8; font-size: var(--text-sm); color: var(--color-text-secondary);">
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 60%;"></div>
       </div>
     </div>
 
     <!-- 改进建议 -->
-    <div class="card" style="margin-bottom: var(--space-4);">
-      <h3 style="margin-bottom: var(--space-2);">
-        <i data-lucide="lightbulb"></i>
-        改进建议
-      </h3>
-      <div id="improving-suggestions" style="line-height: 1.8; color: var(--color-text-secondary);">
-        加载中...
+    <div class="card" style="margin-bottom: var(--space-6);">
+      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
+        <i data-lucide="lightbulb" style="width: 18px; height: 18px; color: var(--color-accent);"></i>
+        <h3 style="margin: 0; font-size: var(--text-base);">改进建议</h3>
+      </div>
+      <div id="improving-suggestions" style="line-height: 1.8; font-size: var(--text-sm); color: var(--color-text-secondary);">
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
       </div>
     </div>
 
     <!-- 用户答案 -->
-    <div class="card" style="margin-bottom: var(--space-4);">
-      <h3 style="margin-bottom: var(--space-2);">
-        <i data-lucide="file-text"></i>
-        你的答案
-      </h3>
-      <div id="user-answer" style="line-height: 1.8; white-space: pre-wrap; padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md);">
+    <div class="card" style="margin-bottom: var(--space-8);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4);">
+        <div style="display: flex; align-items: center; gap: var(--space-2);">
+          <i data-lucide="file-text" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
+          <h3 style="margin: 0; font-size: var(--text-base);">你的答案</h3>
+        </div>
+        <span id="answer-word-count" style="font-size: var(--text-xs); color: var(--color-text-muted);"></span>
+      </div>
+      <div id="user-answer" style="line-height: 1.8; white-space: pre-wrap; font-size: var(--text-sm); color: var(--color-text); padding: var(--space-4); background: var(--color-gray-50); border-radius: var(--radius-lg); border: 1px solid var(--color-gray-200);">
       </div>
     </div>
 
     <!-- 操作按钮 -->
-    <div style="display: flex; gap: var(--space-2); justify-content: center;">
-      <button class="btn btn-secondary" onclick="submitFeedback()">
-        <i data-lucide="flag"></i>
+    <div style="display: flex; gap: var(--space-3); justify-content: center; margin-bottom: var(--space-8);">
+      <button class="btn btn-secondary" onclick="submitFeedback()" style="padding: 12px 24px;">
+        <i data-lucide="flag" style="width: 16px; height: 16px;"></i>
         认为批改有误？
       </button>
-      <a href="/papers" class="btn btn-primary">
-        <i data-lucide="arrow-right"></i>
+      <a href="/papers" class="btn btn-primary" style="padding: 12px 24px;">
+        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
         继续练习
       </a>
     </div>
 
     <!-- 纠错表单 -->
-    <div id="feedback-form" class="card" style="display: none; margin-top: var(--space-4);">
-      <h4>提交纠错</h4>
-      <textarea id="feedback-text" class="input-field" style="height: 100px; margin: var(--space-2) 0;"
+    <div id="feedback-form" class="card" style="display: none; margin-bottom: var(--space-8); border-color: var(--color-warning);">
+      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
+        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: var(--color-warning);"></i>
+        <h4 style="margin: 0; font-size: var(--text-base);">提交纠错</h4>
+      </div>
+      <textarea id="feedback-text" class="input-field" style="min-height: 100px; margin-bottom: var(--space-4);"
         placeholder="请说明你认为批改有误的原因..."></textarea>
-      <button class="btn btn-primary" onclick="sendFeedback()">提交</button>
+      <div style="display: flex; gap: var(--space-2); justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="document.getElementById('feedback-form').style.display='none'">取消</button>
+        <button class="btn btn-primary" onclick="sendFeedback()">提交反馈</button>
+      </div>
     </div>
   </div>
 </div>
@@ -106,19 +133,24 @@
   const sid = '{{ sid }}';
 
   async function loadResult() {
-    if (!state.token) {
-      alert('请先登录');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.warning('请先登录');
+      }
       window.location.href = '/';
       return;
     }
 
     try {
       const res = await fetch(`/api/submissions/${sid}`, {
-        headers: { 'Authorization': 'Bearer ' + state.token }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
 
       if (!res.ok) {
-        alert('加载失败');
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.error('加载失败');
+        }
         return;
       }
 
@@ -126,94 +158,165 @@
       renderResult(data);
     } catch (e) {
       console.error(e);
-      alert('加载失败');
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.error('加载失败，请刷新重试');
+      }
     }
   }
 
   function renderResult(data) {
-    document.getElementById('paper-info').textContent = data.paper_title;
-    document.getElementById('total-score').textContent = data.score !== null ? Math.round(data.score) : '--';
+    // 试卷信息
+    document.getElementById('paper-info').textContent = data.paper_title || '批改结果';
+    document.getElementById('question-info').textContent = data.question_type ? `${data.question_type} · 满分 ${data.score_max || 100} 分` : '';
 
-    // 用户答案
-    document.getElementById('user-answer').textContent = data.user_answer;
+    // 得分动画
+    const score = data.score !== null ? Math.round(data.score) : 0;
+    const maxScore = data.score_max || 100;
+    document.getElementById('max-score').textContent = maxScore;
+
+    // 使用 countUp 动画
+    const scoreEl = document.getElementById('total-score');
+    if (typeof countUp === 'function') {
+      countUp(scoreEl, score, 800);
+    } else {
+      // 简单动画
+      let current = 0;
+      const duration = 800;
+      const startTime = performance.now();
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        current = Math.round(score * eased);
+        scoreEl.textContent = current;
+        if (progress < 1) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // 设置得分颜色
+    if (score >= 80) {
+      scoreEl.style.color = 'var(--color-success)';
+    } else if (score >= 60) {
+      scoreEl.style.color = 'var(--color-accent)';
+    } else {
+      scoreEl.style.color = 'var(--color-error)';
+    }
 
     // 维度得分
     if (data.dimension_scores) {
-      const dims = data.dimension_scores;
+      const dims = typeof data.dimension_scores === 'string' ? JSON.parse(data.dimension_scores) : data.dimension_scores;
       const maxScores = { '踩点命中': 40, '逻辑结构': 25, '语言规范': 20, '字数控制': 10, '卷面整洁': 5 };
-      document.getElementById('dimension-scores').innerHTML = Object.entries(dims).map(([key, value]) => {
-        const safeKey = escapeHtml(key);
-        const safeValue = escapeHtml(value);
+      const colors = ['var(--color-primary)', 'var(--color-accent)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-error)'];
+
+      document.getElementById('dimension-scores').innerHTML = Object.entries(dims).map(([key, value], index) => {
         const max = maxScores[key] || 100;
         const pct = Math.min(100, Math.max(0, (value / max) * 100));
+        const color = colors[index % colors.length];
+
         return `
-        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
-          <span style="width: 100px;">${safeKey}</span>
-          <div style="flex: 1; height: 8px; background: var(--color-bg); border-radius: 4px; margin: 0 var(--space-2);">
-            <div style="width: ${pct}%; height: 100%; background: var(--color-primary); border-radius: 4px;"></div>
+          <div style="margin-bottom: var(--space-4);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
+              <span style="font-size: var(--text-sm); font-weight: 500; color: var(--color-text);">${escapeHtml(key)}</span>
+              <span style="font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--color-text-secondary);">${escapeHtml(String(value))}/${max}</span>
+            </div>
+            <div class="progress-bar" style="height: 8px;">
+              <div class="progress-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+            </div>
           </div>
-          <span style="width: 60px; text-align: right;">${safeValue}/${max}</span>
-        </div>
-      `;
+        `;
       }).join('');
+
+      // 动画：进度条依次出现
+      const fills = document.querySelectorAll('.progress-bar-fill');
+      fills.forEach((fill, i) => {
+        const targetWidth = fill.style.width;
+        fill.style.width = '0';
+        setTimeout(() => {
+          fill.style.transition = 'width 600ms cubic-bezier(0.16, 1, 0.3, 1)';
+          fill.style.width = targetWidth;
+        }, i * 100 + 300);
+      });
     }
+
+    // 用户答案
+    const answerText = data.user_answer || '';
+    document.getElementById('user-answer').textContent = answerText;
+    document.getElementById('answer-word-count').textContent = `${answerText.length} 字`;
 
     // 命中要点
-    if (data.hit_points && data.hit_points.length > 0) {
-      document.getElementById('hit-points').innerHTML = data.hit_points.map(p => `<li>${escapeHtml(p)}</li>`).join('');
-    } else {
-      document.getElementById('hit-points').innerHTML = '<li>无</li>';
-    }
+    const hitPoints = data.hit_points ? (typeof data.hit_points === 'string' ? JSON.parse(data.hit_points) : data.hit_points) : [];
+    document.getElementById('hit-points').innerHTML = hitPoints.length > 0
+      ? hitPoints.map(p => `<li style="margin-bottom: 4px;">${escapeHtml(p)}</li>`).join('')
+      : '<li style="color: var(--color-text-muted);">无</li>';
 
     // 遗漏要点
-    if (data.missing_points && data.missing_points.length > 0) {
-      document.getElementById('missing-points').innerHTML = data.missing_points.map(p => `<li>${escapeHtml(p)}</li>`).join('');
-    } else {
-      document.getElementById('missing-points').innerHTML = '<li>无</li>';
-    }
+    const missingPoints = data.missing_points ? (typeof data.missing_points === 'string' ? JSON.parse(data.missing_points) : data.missing_points) : [];
+    document.getElementById('missing-points').innerHTML = missingPoints.length > 0
+      ? missingPoints.map(p => `<li style="margin-bottom: 4px;">${escapeHtml(p)}</li>`).join('')
+      : '<li style="color: var(--color-text-muted);">无</li>';
 
-    // AI反馈
+    // AI 反馈
     document.getElementById('ai-feedback').textContent = data.ai_feedback || '暂无反馈';
 
     // 改进建议
     document.getElementById('improving-suggestions').textContent = data.improving_suggestions || '暂无建议';
 
-    lucide.createIcons();
+    // 初始化图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
   }
 
+  // 显示/隐藏纠错表单
   function submitFeedback() {
     const form = document.getElementById('feedback-form');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form.style.display === 'block') {
+      document.getElementById('feedback-text').focus();
+    }
   }
 
+  // 发送纠错
   async function sendFeedback() {
     const text = document.getElementById('feedback-text').value.trim();
     if (!text) {
-      alert('请输入纠错内容');
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.warning('请输入纠错内容');
+      }
       return;
     }
 
+    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/submissions/${sid}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + state.token
+          'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({ text })
       });
 
       if (res.ok) {
-        alert('感谢反馈，我们会尽快核实');
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.success('感谢反馈，我们会尽快核实');
+        }
         document.getElementById('feedback-form').style.display = 'none';
+        document.getElementById('feedback-text').value = '';
       } else {
-        alert('提交失败');
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.error('提交失败');
+        }
       }
     } catch (e) {
-      alert('提交失败');
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.error('提交失败，请稍后重试');
+      }
     }
   }
 
+  // 初始加载
   loadResult();
 </script>
 {% endblock %}
