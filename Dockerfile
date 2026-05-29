@@ -17,4 +17,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 8790
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8790", "--timeout", "120", "--access-logfile", "-", "app:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8790", "--timeout", "120", "--access-logfile", "-", "src.app:app"]

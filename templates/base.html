@@ -21,12 +21,16 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
   <!-- Lenis 平滑滚动 -->
   <script src="https://unpkg.com/lenis@latest/dist/lenis.min.js"></script>
 
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
 
@@ -36,6 +40,11 @@
   <!-- 导航栏 -->
   <nav class="navbar">
     <a href="/" class="navbar-brand">申论帮</a>
+
+    <!-- 移动端汉堡菜单按钮 -->
+    <button class="navbar-toggle" aria-label="菜单" aria-expanded="false">
+      <span class="navbar-toggle-icon"></span>
+    </button>
 
     <ul class="navbar-menu">
       <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a></li>
@@ -201,8 +210,8 @@
       if (state.user) {
         const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
         userInfo.innerHTML = `
-          <span>${state.user.nickname} ${vipBadge}</span>
-          <a href="#" onclick="logout()" class="btn btn-ghost btn-sm" style="margin-left: 8px;">退出</a>
+          <a href="/profile" class="btn btn-ghost btn-sm" style="margin-right: 4px;">${state.user.nickname} ${vipBadge}</a>
+          <a href="#" onclick="logout()" class="btn btn-ghost btn-sm" style="opacity:0.7">退出</a>
         `;
         if (signinArea) signinArea.style.display = 'inline-block';
         checkSignInStatus();
@@ -386,5 +395,16 @@
   </script>
 
   {% block extra_js %}{% endblock %}
+
+  <!-- 组件库 JS -->
+  <script src="{{ url_for('static', filename='js/components.js') }}"></script>
+
+  <!-- 返回顶部按钮 -->
+  <button class="back-to-top" aria-label="返回顶部">
+    <svg class="back-to-top-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M18 15l-6-6-6 6"/>
+    </svg>
+  </button>
+
 </body>
 </html>

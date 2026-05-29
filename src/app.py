@@ -119,6 +119,10 @@ def create_app():
     def community():
         return render_template('community.html')
 
+    @app.route('/profile')
+    def profile():
+        return render_template('profile.html')
+
     # Admin routes
     @app.route('/admin')
     def admin_index():
