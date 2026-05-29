@@ -320,14 +320,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--color-gray-900);
+    background: var(--color-brand-dark);
     flex-direction: column;
     padding: var(--space-4) var(--space-6);
     gap: var(--space-1);
     transform: translateX(100%);
     transition: transform var(--duration-normal) var(--ease-out);
     overflow-y: auto;
-    z-index: 99;
+    z-index: 101;
   }
 
   .navbar-menu.open {
