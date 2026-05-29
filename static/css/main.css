@@ -92,7 +92,7 @@ blockquote {
    导航栏
    ======================================== */
 .navbar {
-  background: var(--color-gray-900);
+  background: var(--color-brand-dark);
   color: var(--color-text-inverse);
   height: var(--navbar-height);
   padding: 0 var(--space-6);
@@ -175,7 +175,8 @@ blockquote {
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   margin-bottom: var(--space-4);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: none;
   transition: box-shadow var(--duration-normal) var(--ease-out),
               transform var(--duration-normal) var(--ease-out);
 }
@@ -207,11 +208,11 @@ a.card {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-2\.5) var(--space-5);
+  padding: var(--space-2\\.5) var(--space-5);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   font-family: var(--font-body);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-full);  /* 药丸形 */
   cursor: pointer;
   text-decoration: none;
   border: 1px solid transparent;
@@ -467,7 +468,7 @@ select.input-field {
    英雄区
    ======================================== */
 .hero {
-  background: var(--color-gray-900);
+  background: var(--color-brand-dark);
   color: var(--color-text-inverse);
   padding: var(--space-24) 0 var(--space-20);
   text-align: center;
@@ -480,8 +481,8 @@ select.input-field {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(30, 58, 95, 0.2) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(184, 148, 46, 0.1) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(83, 58, 253, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(155, 104, 41, 0.1) 0%, transparent 60%);
   pointer-events: none;
 }
 

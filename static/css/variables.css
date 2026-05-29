@@ -40,27 +40,34 @@
   --tracking-wider: 0.05em;
 
   /* ========================================
-     色彩系统
+     色彩系统 —— Stripe 风格
+     深海军蓝 + 靛蓝强调 + 金色点缀 = 金融级信任感
      ======================================== */
 
-  /* 主色 —— 藏蓝 */
-  --color-primary: #1e3a5f;
-  --color-primary-hover: #2a5280;
-  --color-primary-light: #e8eef6;
-  --color-primary-faint: #f4f7fb;
+  /* 主色 —— 靛蓝（功能强调色） */
+  --color-primary: #533afd;
+  --color-primary-hover: #665efd;
+  --color-primary-deep: #4434d4;
+  --color-primary-light: #f5f3ff;
+  --color-primary-faint: #fafafe;
 
-  /* 点缀色 —— 暖金 */
-  --color-accent: #b8942e;
-  --color-accent-hover: #a3821f;
-  --color-accent-light: #faf6e9;
+  /* 品牌色 —— 深海军蓝（用于导航栏、hero、深色背景） */
+  --color-brand-dark: #1c1e54;
+  --color-brand-ink: #0d253d;
+
+  /* 点缀色 —— 金色 */
+  --color-accent: #9b6829;
+  --color-accent-hover: #7d5420;
+  --color-accent-light: #f5e9d4;
+  --color-accent-cream: #faf6e9;
 
   /* 语义色 */
-  --color-success: #2d8a56;
-  --color-success-light: #ecf7f0;
-  --color-warning: #c47d1a;
-  --color-warning-light: #fef8ec;
-  --color-error: #c03636;
-  --color-error-light: #fdecec;
+  --color-success: #24a148;
+  --color-success-light: #f0fdf4;
+  --color-warning: #f5a623;
+  --color-warning-light: #fffbeb;
+  --color-error: #ee0000;
+  --color-error-light: #fef2f2;
 
   /* 中性色 —— 8 阶灰度 */
   --color-gray-50: #f8f9fb;
@@ -138,8 +145,8 @@
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
   --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --shadow-glow-primary: 0 0 0 3px rgba(30, 58, 95, 0.15);
-  --shadow-glow-accent: 0 0 0 3px rgba(184, 148, 46, 0.15);
+  --shadow-glow-primary: 0 0 0 3px rgba(83, 58, 253, 0.15);
+  --shadow-glow-accent: 0 0 0 3px rgba(155, 104, 41, 0.15);
 
   /* ========================================
      过渡 —— 三种节奏
