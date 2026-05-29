@@ -3,231 +3,169 @@
 {% block title %}申论帮 - AI智能批改平台{% endblock %}
 
 {% block content %}
-<!-- 英雄区 -->
-<section class="hero">
-  <div class="container">
-    <h1 class="reveal">申论帮</h1>
-    <p class="reveal" style="transition-delay: 100ms;">AI 智能批改 · 五题型专项训练 · 全真模拟考场<br>科学备考，精准提分</p>
-    <div style="display: flex; gap: var(--space-3); justify-content: center; position: relative;" class="reveal"  style="transition-delay: 200ms;">
-      <a href="/papers" class="btn btn-accent btn-lg">
-        <i data-lucide="book-open"></i>
-        开始练习
-      </a>
-      <a href="/demo" class="btn btn-ghost btn-lg">
-        <i data-lucide="play-circle"></i>
-        免注册试用
-      </a>
+<!-- Hero 区 —— Stripe 风格渐变 mesh -->
+<section class="hero" style="padding: var(--space-24) 0 var(--space-20); position: relative; overflow: hidden; background: var(--color-brand-dark);">
+  <!-- 渐变 mesh 背景 -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(83,58,253,0.2) 0%, rgba(28,30,84,0.8) 30%, rgba(13,37,61,0.9) 60%, rgba(155,104,41,0.15) 100%); pointer-events: none;"></div>
+  <div style="position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(83,58,253,0.15) 0%, transparent 70%); pointer-events: none;"></div>
+  <div style="position: absolute; bottom: -30%; left: -10%; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(155,104,41,0.1) 0%, transparent 70%); pointer-events: none;"></div>
+
+  <div class="container" style="position: relative; z-index: 1;">
+    <div style="text-align: center;">
+      <div class="reveal" style="display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.1); border-radius: 999px; font-size: var(--text-xs); color: rgba(255,255,255,0.7); margin-bottom: var(--space-6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);">
+        🎯 AI 驱动 · 393 套真题 · 五维度批改
+      </div>
+      <h1 class="reveal" style="font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 600; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: var(--space-5); color: #fff;">
+        申论<span style="background: linear-gradient(135deg, #533afd, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">帮</span>
+      </h1>
+      <p class="reveal" style="font-size: var(--text-lg); color: rgba(255,255,255,0.6); max-width: 520px; margin: 0 auto var(--space-8); line-height: 1.6; transition-delay: 100ms;">
+        AI 智能批改 · 五题型专项训练 · 全真模拟考场<br>科学备考，精准提分
+      </p>
+      <div class="reveal" style="display: flex; gap: var(--space-3); justify-content: center; transition-delay: 200ms;">
+        <a href="/papers" class="btn btn-lg" style="background: #533afd; color: #fff; padding: 14px 32px; font-size: var(--text-base); font-weight: 600; box-shadow: 0 4px 16px rgba(83,58,253,0.3);">
+          <i data-lucide="book-open" style="width: 18px; height: 18px;"></i>
+          开始练习
+        </a>
+        <a href="/demo" class="btn btn-lg" style="background: rgba(255,255,255,0.1); color: #fff; padding: 14px 32px; font-size: var(--text-base); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);">
+          <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
+          免注册试用
+        </a>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 闭环流程 -->
+<!-- 数据展示条 -->
+<section style="background: var(--color-bg-elevated); border-bottom: 1px solid var(--color-gray-200); padding: var(--space-6) 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: center; gap: var(--space-12); flex-wrap: wrap;" class="reveal-stagger">
+      <div style="text-align: center;">
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-brand-dark); font-variant-numeric: tabular-nums;">393</div>
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;">套真题</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-brand-dark); font-variant-numeric: tabular-nums;">34</div>
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;">个地区</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-brand-dark); font-variant-numeric: tabular-nums;">271</div>
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;">万字</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-primary); font-variant-numeric: tabular-nums;">5</div>
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;">维度批改</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 学习闭环 -->
 <section style="padding: var(--space-20) 0 var(--space-16);">
   <div class="container">
     <div class="reveal" style="text-align: center; margin-bottom: var(--space-12);">
-      <h2 style="margin-bottom: var(--space-3);">学习闭环</h2>
+      <h2 style="margin-bottom: var(--space-3); font-size: var(--text-2xl); letter-spacing: -0.5px;">学习闭环</h2>
       <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto;">
         每个板块都不是孤立功能，而是闭环上的一个环节
       </p>
     </div>
     <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-4); flex-wrap: wrap;" class="reveal-stagger">
+      {% set steps = [
+        (1, '能力诊断', '发现短板', 'var(--color-primary)'),
+        (2, '制定计划', '每日任务', 'var(--color-primary)'),
+        (3, '专项训练', '五题型拆解', 'var(--color-primary)'),
+        (4, 'AI 批改', '精准反馈', 'var(--color-primary)'),
+        (5, '素材补强', '间隔重复', 'var(--color-accent)')
+      ] %}
+      {% for num, title, desc, color in steps %}
       <div style="text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">1</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">能力诊断</div>
-        <div class="text-caption">发现短板</div>
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: {{ 'var(--color-accent-light)' if num == 5 else 'var(--color-primary-light)' }}; color: {{ color }}; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">{{ num }}</div>
+        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">{{ title }}</div>
+        <div class="text-caption">{{ desc }}</div>
       </div>
+      {% if not loop.last %}
       <i data-lucide="chevron-right" style="color: var(--color-gray-300); width: 20px;"></i>
-      <div style="text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">2</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">制定计划</div>
-        <div class="text-caption">每日任务</div>
-      </div>
-      <i data-lucide="chevron-right" style="color: var(--color-gray-300); width: 20px;"></i>
-      <div style="text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">3</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">专项训练</div>
-        <div class="text-caption">五题型拆解</div>
-      </div>
-      <i data-lucide="chevron-right" style="color: var(--color-gray-300); width: 20px;"></i>
-      <div style="text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">4</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">AI 批改</div>
-        <div class="text-caption">精准反馈</div>
-      </div>
-      <i data-lucide="chevron-right" style="color: var(--color-gray-300); width: 20px;"></i>
-      <div style="text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--color-accent-light); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-2); font-weight: var(--weight-semibold); font-size: var(--text-lg);">5</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-700);">素材补强</div>
-        <div class="text-caption">间隔重复</div>
-      </div>
+      {% endif %}
+      {% endfor %}
     </div>
   </div>
 </section>
 
-<!-- 功能板块 -->
-<section class="features">
+<!-- 核心功能 -->
+<section style="padding: var(--space-16) 0 var(--space-20); background: var(--color-bg);">
   <div class="container">
-    <h2 class="reveal">核心功能</h2>
-    <p class="reveal" style="transition-delay: 80ms;">从诊断到训练到批改，覆盖申论备考全链路</p>
-    <div class="grid grid-3 reveal-stagger">
-      <div class="card feature-card">
-        <i data-lucide="target"></i>
-        <h3>五题型专项训练</h3>
-        <p>归纳概括、综合分析、提出对策、贯彻执行、大作文，每种题型独立计分、独立追踪进步曲线</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="sparkles"></i>
-        <h3>AI 多维度批改</h3>
-        <p>踩点命中、逻辑结构、语言表达、格式规范、字数控制，五维度融合本地规则与 LLM 评分</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="timer"></i>
-        <h3>全真模拟考场</h3>
-        <p>限时倒计时、逐题作答、自动交卷、即时出分，模拟真实考试压力</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="bar-chart-3"></i>
-        <h3>能力诊断报告</h3>
-        <p>五维度雷达图、五题型得分、强弱项分析、个性化推荐建议</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="repeat"></i>
-        <h3>素材智能应用</h3>
-        <p>间隔重复记忆、主题素材包、AI 造段功能，背了会用才是真掌握</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="calendar-check"></i>
-        <h3>备考计划引擎</h3>
-        <p>根据考试日期和当前水平，自动生成分阶段每日任务，连续打卡追踪</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="newspaper"></i>
-        <h3>时政热点专题</h3>
-        <p>系统性热点积累、多方视角分析、AI 押题预测，告别碎片化浏览</p>
-      </div>
-      <div class="card feature-card">
-        <i data-lucide="users"></i>
-        <h3>社区互助</h3>
-        <p>晒答案、求助帖、范文精选、互相点评，形成学习氛围</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 题型介绍 -->
-<section style="padding: var(--space-20) 0; background: var(--color-bg-elevated);">
-  <div class="container">
-    <div class="reveal" style="text-align: center; margin-bottom: var(--space-10);">
-      <h2 style="margin-bottom: var(--space-3);">五种题型，五套标准</h2>
+    <div class="reveal" style="text-align: center; margin-bottom: var(--space-12);">
+      <h2 style="margin-bottom: var(--space-3); font-size: var(--text-2xl); letter-spacing: -0.5px;">核心功能</h2>
       <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto;">
-        每种题型有独立的评分维度和权重，不再用一套标准批改所有题
+        从诊断到训练到批改，覆盖申论备考全链路
       </p>
     </div>
-    <div class="grid grid-5 reveal-stagger" style="grid-template-columns: repeat(5, 1fr);">
-      <div class="card" style="text-align: center; padding: var(--space-5);">
-        <div style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-1); font-family: var(--font-title);">70%</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700); margin-bottom: var(--space-1);">归纳概括</div>
-        <div class="text-caption">踩点完整度</div>
-      </div>
-      <div class="card" style="text-align: center; padding: var(--space-5);">
-        <div style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-1); font-family: var(--font-title);">30%</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700); margin-bottom: var(--space-1);">综合分析</div>
-        <div class="text-caption">逻辑链完整性</div>
-      </div>
-      <div class="card" style="text-align: center; padding: var(--space-5);">
-        <div style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-1); font-family: var(--font-title);">25%</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700); margin-bottom: var(--space-1);">提出对策</div>
-        <div class="text-caption">针对性与可行性</div>
-      </div>
-      <div class="card" style="text-align: center; padding: var(--space-5);">
-        <div style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-1); font-family: var(--font-title);">20%</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700); margin-bottom: var(--space-1);">贯彻执行</div>
-        <div class="text-caption">格式规范性</div>
-      </div>
-      <div class="card" style="text-align: center; padding: var(--space-5);">
-        <div style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-accent); margin-bottom: var(--space-1); font-family: var(--font-title);">四档</div>
-        <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700); margin-bottom: var(--space-1);">大作文</div>
-        <div class="text-caption">分档赋分制</div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- 最新试卷 -->
-<section class="features">
-  <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-      <h2 class="reveal">最新试卷</h2>
-      <a href="/papers" class="btn btn-secondary btn-sm reveal">查看全部</a>
-    </div>
-    <div class="grid grid-3 reveal-stagger" id="latest-papers">
-      <div class="loading">
-        <div class="spinner"></div>
+    <div class="grid grid-3 reveal-stagger">
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="target" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">五题型专项训练</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">归纳概括、综合分析、提出对策、贯彻执行、大作文，每种题型独立计分</p>
+      </div>
+
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-accent-light); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">AI 多维度批改</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">踩点命中、逻辑结构、语言表达、格式规范、字数控制，五维度融合评分</p>
+      </div>
+
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="timer" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">全真模拟考场</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">限时倒计时、逐题作答、自动交卷、即时出分，模拟真实考试压力</p>
+      </div>
+
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="bar-chart-3" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">能力诊断报告</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">五维度雷达图、强弱项分析、个性化推荐建议</p>
+      </div>
+
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-accent-light); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="repeat" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">素材智能应用</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">间隔重复记忆、主题素材包、AI 造段功能，背了会用才是真掌握</p>
+      </div>
+
+      <div class="card" style="padding: var(--space-8); text-align: center; border-color: var(--color-gray-200);">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4);">
+          <i data-lucide="calendar-check" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">备考计划引擎</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">根据目标日期和薄弱项自动生成每日任务，科学分配练习量</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section style="padding: var(--space-20) 0; background: var(--color-gray-900);">
-  <div class="container" style="text-align: center;">
-    <h2 class="reveal" style="color: var(--color-text-inverse); margin-bottom: var(--space-3);">免费体验一个月</h2>
-    <p class="reveal" style="max-width: 440px; margin: 0 auto var(--space-6); color: rgba(255,255,255,0.45); font-size: var(--text-sm);">
-      注册即享一个月免费体验，完整功能包括 AI 批改、素材学习、备考计划、社区互助
-    </p>
-    <button class="btn btn-accent btn-lg reveal" onclick="openAuthModal('register')">
-      立即注册
-    </button>
+<section style="padding: var(--space-20) 0; text-align: center;">
+  <div class="container">
+    <div class="reveal" style="background: var(--color-brand-dark); border-radius: var(--radius-2xl); padding: var(--space-16) var(--space-8); position: relative; overflow: hidden;">
+      <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(83,58,253,0.15) 0%, transparent 50%, rgba(155,104,41,0.1) 100%); pointer-events: none;"></div>
+      <div style="position: relative; z-index: 1;">
+        <h2 style="color: #fff; font-size: var(--text-2xl); margin-bottom: var(--space-3); letter-spacing: -0.5px;">准备好开始了吗？</h2>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: var(--space-8);">免费试用，无需注册</p>
+        <a href="/demo" class="btn btn-lg" style="background: #533afd; color: #fff; padding: 14px 32px; font-size: var(--text-base); font-weight: 600; box-shadow: 0 4px 16px rgba(83,58,253,0.3);">
+          立即试用 →
+        </a>
+      </div>
+    </div>
   </div>
 </section>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-  async function loadLatestPapers() {
-    try {
-      const res = await fetch('/api/papers?limit=3');
-      const { data } = await res.json();
-
-      const container = document.getElementById('latest-papers');
-      if (data.papers && data.papers.length > 0) {
-        container.innerHTML = data.papers.map(paper => {
-          const safePid = escapeHtml(paper.pid);
-          const safeQid = getFirstQid(paper);
-          const safeExamType = escapeHtml(paper.exam_type);
-          const safeTitle = escapeHtml(paper.title);
-          const stars = '★'.repeat(paper.difficulty) + '☆'.repeat(5-paper.difficulty);
-          return `
-            <a href="/exam/${safePid}/${safeQid}" class="card" style="text-decoration: none; color: inherit; display: block;">
-              <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span class="badge badge-info">${safeExamType}</span>
-                <span class="badge badge-accent">${paper.year}</span>
-              </div>
-              <h3 class="card-title">${safeTitle}</h3>
-              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
-                难度：${stars}
-              </p>
-            </a>
-          `;
-        }).join('');
-      } else {
-        container.innerHTML = '<p class="empty-state">暂无试卷</p>';
-      }
-      lucide.createIcons();
-    } catch (e) {
-      document.getElementById('latest-papers').innerHTML = '<p class="empty-state">加载失败</p>';
-    }
-  }
-
-  function getFirstQid(paper) {
-    try {
-      const questions = JSON.parse(paper.questions);
-      return escapeHtml(questions[0]?.qid || 'q1');
-    } catch {
-      return 'q1';
-    }
-  }
-
-  loadLatestPapers();
-</script>
 {% endblock %}
