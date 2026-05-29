@@ -28,11 +28,11 @@
   <script src="https://unpkg.com/lenis@latest/dist/lenis.min.js"></script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css?v=2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css?v=2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css?v=2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css?v=2') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css?v=2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css', v=2) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css', v=2) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css', v=2) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=2) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css', v=2) }}">
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -397,7 +397,7 @@
   {% block extra_js %}{% endblock %}
 
   <!-- 组件库 JS -->
-  <script src="{{ url_for('static', filename='js/components.js?v=2') }}"></script>
+  <script src="{{ url_for('static', filename='js/components.js', v=2) }}"></script>
 
   <!-- 返回顶部按钮 -->
   <button class="back-to-top" aria-label="返回顶部">
