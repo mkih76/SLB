@@ -125,6 +125,15 @@ def create_app():
             abort(404)
         return render_template('topic_detail.html', topic=topic)
 
+    @app.route("/health")
+    @app.route("/api/health")
+    def health():
+        return {"status": "ok", "service": "slb"}, 200
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+
     @app.route('/community')
     def community():
         return render_template('community.html')

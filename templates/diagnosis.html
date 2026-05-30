@@ -49,9 +49,19 @@
     <div id="loadingState" class="empty-state"><div class="spinner"></div></div>
 
     <div id="emptyState" class="empty-state" style="display:none;">
-      <p>暂无诊断报告</p>
-      <p class="text-caption">完成一次练习后，系统将自动生成你的能力诊断报告</p>
-      <button class="btn btn-primary mt-4" onclick="generateReport()">立即生成报告</button>
+      <p style="font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-2);">暂无诊断报告</p>
+      <p class="text-caption" style="margin-bottom: var(--space-4);">完成一次练习后，系统将自动生成你的能力诊断报告</p>
+      <button class="btn btn-primary" onclick="generateReport()">立即生成报告</button>
+      <div style="margin-top: var(--space-8); max-width: 500px; text-align: left;">
+        <p style="font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); margin-bottom: var(--space-3);">报告将包含以下内容：</p>
+        <div style="display: grid; gap: var(--space-2);">
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted);"><i data-lucide="target" style="width:16px;height:16px;color:var(--color-primary);"></i> 五维度能力评估（踩点命中 / 逻辑结构 / 语言表达 / 格式规范 / 字数控制）</div>
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted);"><i data-lucide="bar-chart-3" style="width:16px;height:16px;color:var(--color-primary);"></i> 五种题型得分对比</div>
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted);"><i data-lucide="trending-up" style="width:16px;height:16px;color:var(--color-primary);"></i> 得分趋势变化</div>
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted);"><i data-lucide="check-circle" style="width:16px;height:16px;color:var(--color-success);"></i> 优势与短板分析</div>
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted);"><i data-lucide="compass" style="width:16px;height:16px;color:var(--color-primary);"></i> 个性化下一步建议</div>
+        </div>
+      </div>
     </div>
 
     <div id="reportContent" style="display:none;">

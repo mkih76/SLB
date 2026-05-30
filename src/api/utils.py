@@ -67,6 +67,18 @@ def init_db():
                     print(f"Warning: failed to load seed_topics.sql: {e}")
             db.commit()
 
+    # Load community seed if community_posts is empty
+    count = db.execute("SELECT COUNT(*) FROM community_posts").fetchone()[0]
+    if count == 0:
+        community_path = os.path.join(project_root, 'data', 'seed_community.sql')
+        if os.path.exists(community_path):
+            with open(community_path, 'r', encoding='utf-8') as f:
+                try:
+                    db.executescript(f.read())
+                except Exception as e:
+                    print(f"Warning: failed to load seed_community.sql: {e}")
+            db.commit()
+
     db.close()
 
 

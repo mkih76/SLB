@@ -119,7 +119,12 @@ async function loadCards() {
 function renderCard() {
   const area = document.getElementById('cardArea');
   if (!cards.length || cardIdx >= cards.length) {
-    area.innerHTML = '<div class="card empty-card"><p>今日素材已全部学完</p><p class="text-caption">明天再来复习吧</p></div>';
+    area.innerHTML = '<div class="card empty-card">' +
+      '<i data-lucide="check-circle" style="width:48px;height:48px;color:var(--color-success);margin-bottom:var(--space-3);"></i>' +
+      '<p style="font-size:var(--text-base);font-weight:600;">今日素材已全部学完</p>' +
+      '<p class="text-caption" style="margin-bottom:var(--space-4);">坚持每天学习，积累申论素材</p>' +
+      '<a href="/phrases/generate" class="btn btn-primary btn-sm">试试 AI 造段</a></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
   const c = cards[cardIdx];
@@ -153,7 +158,13 @@ async function loadPacks() {
   const data = await res.json();
   const grid = document.getElementById('packGrid');
   const items = data.data?.items || [];
-  if (!items.length) { grid.innerHTML = '<p class="text-muted">暂无素材包</p>'; return; }
+  if (!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:var(--space-6);">' +
+      '<i data-lucide="package" style="width:40px;height:40px;color:var(--color-gray-300);margin-bottom:var(--space-2);"></i>' +
+      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);">素材包正在准备中，请先体验 AI 造段功能</p></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
   grid.innerHTML = items.map(p =>
     '<div class="card pack-card" onclick="viewPack(' + p.id + ')">' +
       '<div class="pack-name">' + escapeHtml(p.name) + '</div>' +

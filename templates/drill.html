@@ -71,7 +71,28 @@ const token = localStorage.getItem('slb_token');
 let currentType = null;
 const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
 
+// 未登录时显示静态卡片
+function showStaticCards() {
+  const grid = document.getElementById('typeGrid');
+  const names = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+  const descs = {guina:'概括材料要点，提炼核心信息',zonghe:'多角度分析问题，揭示深层原因',duice:'针对问题提出可行对策方案',zhixing:'贯彻上级意图，执行写作任务',zuowen:'议论文写作，论证观点'};
+  const icons = {guina:'search',zonghe:'layers',duice:'lightbulb',zhixing:'check-circle',zuowen:'pen-tool'};
+  for (const [t, name] of Object.entries(names)) {
+    const card = document.createElement('div');
+    card.className = 'card type-card';
+    card.onclick = () => { if (!token) { openAuthModal('login'); } else { selectType(t); } };
+    card.innerHTML = '<div style="margin-bottom:8px;color:var(--color-primary);"><i data-lucide="'+icons[t]+'" style="width:24px;height:24px;"></i></div>' +
+      '<div class="type-name">' + name + '</div>' +
+      '<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:4px;">' + descs[t] + '</div>' +
+      '<div class="type-score" style="margin-top:8px;">--</div>' +
+      '<div class="type-attempts">登录后开始练习</div>';
+    grid.appendChild(card);
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 async function loadStats() {
+  if (!token) { showStaticCards(); return; }
   const res = await fetch(API + '/types', {headers: headers()});
   const data = await res.json();
   if (!data.data) return;
@@ -183,6 +204,6 @@ async function loadHistory(type) {
   }
 }
 
-loadStats();
+loadStats().catch(() => { showStaticCards(); });
 </script>
 {% endblock %}

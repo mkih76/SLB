@@ -146,7 +146,15 @@ async function loadPosts(page = 1) {
   const data = await res.json();
   const list = document.getElementById('postList');
   const items = data.data?.items || [];
-  if (!items.length) { list.innerHTML = '<div class="empty-state">暂无帖子</div>'; return; }
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:var(--space-8);">' +
+      '<i data-lucide="message-circle" style="width:48px;height:48px;color:var(--color-gray-300);margin-bottom:var(--space-3);"></i>' +
+      '<p style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-1);">还没有帖子</p>' +
+      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-4);">成为第一个分享的人吧！</p>' +
+      '<button class="btn btn-primary btn-sm" onclick="toggleCreate()">发布新帖</button></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
   list.innerHTML = items.map(p => {
     const badgeCls = 'type-' + p.post_type;
     return '<div class="card post-card" onclick="viewPost(' + p.post_id + ')">' +

@@ -90,7 +90,7 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
-      <p>&copy; 2024 申论帮 - AI智能批改平台 | 让申论学习更高效</p>
+      <p>&copy; 2024-2026 申论帮 - AI智能批改平台 | 让申论学习更高效</p>
     </div>
   </footer>
 
@@ -105,7 +105,7 @@
         <button class="modal-close" onclick="closeAuthModal()">&times;</button>
       </div>
       <div id="auth-form-container">
-        <form id="login-form" onsubmit="handleLogin(event)">
+        <form id="modal-login-form" onsubmit="handleLogin(event)">
           <div class="form-group">
             <label class="form-label">用户名</label>
             <input type="text" name="username" class="input-field" required>
@@ -121,7 +121,7 @@
           </p>
         </form>
 
-        <form id="register-form" style="display: none;" onsubmit="handleRegister(event)">
+        <form id="modal-register-form" style="display: none;" onsubmit="handleRegister(event)">
           <div class="form-group">
             <label class="form-label">用户名</label>
             <input type="text" name="username" class="input-field" required minlength="3">
@@ -384,15 +384,15 @@
 
     function switchToLogin(e) {
       if (e) e.preventDefault();
-      document.getElementById('login-form').style.display = 'block';
-      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('modal-login-form').style.display = 'block';
+      document.getElementById('modal-register-form').style.display = 'none';
       document.getElementById('auth-modal-title').textContent = '登录';
     }
 
     function switchToRegister(e) {
       if (e) e.preventDefault();
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('modal-login-form').style.display = 'none';
+      document.getElementById('modal-register-form').style.display = 'block';
       document.getElementById('auth-modal-title').textContent = '注册';
     }
 

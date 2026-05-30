@@ -3,8 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    ports:
-      - "8790:8790"
+    network_mode: host
     volumes:
       - ./data:/app/data
       - ./.env:/app/.env:ro

@@ -82,6 +82,14 @@
           </div>
         </div>
 
+        <!-- 未登录提示 -->
+        <div id="login-hint" class="card" style="margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--color-warning-light); border-color: var(--color-warning); display: none;">
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-warning);">
+            <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+            <span>你尚未登录，答案不会保存。<a href="/login" style="color: var(--color-primary); font-weight: 600; text-decoration: underline;">登录</a>后可获得 AI 批改并保存记录</span>
+          </div>
+        </div>
+
         <!-- 作答区 -->
         <div class="card">
           <form id="answer-form" onsubmit="handleSubmit(event)">
@@ -160,6 +168,11 @@
       // 初始化图标
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
+      }
+
+      // 显示登录提示
+      if (!localStorage.getItem('slb_token')) {
+        document.getElementById('login-hint').style.display = 'block';
       }
     } catch (e) {
       console.error(e);
