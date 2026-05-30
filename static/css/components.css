@@ -320,17 +320,18 @@
   .navbar-menu {
     position: fixed;
     top: var(--navbar-height);
-    left: 0;
     right: 0;
     bottom: 0;
+    width: 240px;
     background: var(--color-brand-dark);
     flex-direction: column;
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-4) var(--space-4);
     gap: var(--space-1);
     transform: translateX(100%);
     transition: transform var(--duration-normal) var(--ease-out);
     overflow-y: auto;
     z-index: 101;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
   }
 
   .navbar-menu.open {
@@ -339,8 +340,9 @@
 
   .navbar-menu a {
     padding: var(--space-3) var(--space-4);
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     border-radius: var(--radius-lg);
+    white-space: nowrap;
   }
 
   .navbar-user {
