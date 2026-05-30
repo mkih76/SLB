@@ -41,11 +41,6 @@
   <nav class="navbar">
     <a href="/" class="navbar-brand">申论帮</a>
 
-    <!-- 移动端汉堡菜单按钮 -->
-    <button class="navbar-toggle" aria-label="菜单" aria-expanded="false">
-      <span class="navbar-toggle-icon"></span>
-    </button>
-
     <ul class="navbar-menu">
       <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a></li>
       <li><a href="/papers" class="{% if request.path == '/papers' %}active{% endif %}">卷库</a></li>
@@ -56,8 +51,18 @@
       <li><a href="/topics" class="{% if request.path == '/topics' %}active{% endif %}">时政热点</a></li>
       <li><a href="/community" class="{% if request.path == '/community' %}active{% endif %}">社区</a></li>
       <li><a href="/demo" class="{% if request.path == '/demo' %}active{% endif %}">试用</a></li>
+      <!-- 移动端登录按钮（桌面端隐藏） -->
+      <li class="mobile-auth-item">
+        <span id="signin-area-mobile" style="display: none;">
+          <button id="signin-btn-mobile" class="btn btn-ghost" onclick="doSignIn()" style="width: 100%; justify-content: center;">签到</button>
+        </span>
+        <span id="user-info-mobile">
+          <a href="/login" id="login-btn-mobile" class="btn btn-ghost" style="width: 100%; justify-content: center;">登录</a>
+        </span>
+      </li>
     </ul>
 
+    <!-- 桌面端登录按钮 -->
     <div class="navbar-user">
       <span id="signin-area" style="display: none; margin-right: 12px;">
         <button id="signin-btn" class="btn btn-ghost btn-sm" onclick="doSignIn()">
@@ -65,11 +70,16 @@
         </button>
       </span>
       <span id="user-info">
-        <a href="#" id="login-btn" class="btn btn-ghost">
+        <a href="/login" id="login-btn" class="btn btn-ghost">
           登录
         </a>
       </span>
     </div>
+
+    <!-- 移动端汉堡菜单按钮（放在最右边） -->
+    <button class="navbar-toggle" aria-label="菜单" aria-expanded="false">
+      <span class="navbar-toggle-icon"></span>
+    </button>
   </nav>
 
   <!-- 主体内容 -->
@@ -206,17 +216,33 @@
     // 更新用户UI
     function updateUserUI() {
       const userInfo = document.getElementById('user-info');
+      const userInfoMobile = document.getElementById('user-info-mobile');
       const signinArea = document.getElementById('signin-area');
+      const signinAreaMobile = document.getElementById('signin-area-mobile');
+
       if (state.user) {
         const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
+
+        // 桌面端
         userInfo.innerHTML = `
           <a href="/profile" class="btn btn-ghost btn-sm" style="margin-right: 4px;">${state.user.nickname} ${vipBadge}</a>
           <a href="#" onclick="logout()" class="btn btn-ghost btn-sm" style="opacity:0.7">退出</a>
         `;
+
+        // 移动端
+        if (userInfoMobile) {
+          userInfoMobile.innerHTML = `
+            <a href="/profile" class="btn btn-ghost" style="width: 100%; justify-content: center;">${state.user.nickname} ${vipBadge}</a>
+            <a href="#" onclick="logout()" class="btn btn-ghost" style="width: 100%; justify-content: center; opacity:0.7; margin-top: 8px;">退出</a>
+          `;
+        }
+
         if (signinArea) signinArea.style.display = 'inline-block';
+        if (signinAreaMobile) signinAreaMobile.style.display = 'inline-block';
         checkSignInStatus();
       } else {
         if (signinArea) signinArea.style.display = 'none';
+        if (signinAreaMobile) signinAreaMobile.style.display = 'none';
       }
     }
 
