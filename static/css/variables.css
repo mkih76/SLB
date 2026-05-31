@@ -1,103 +1,107 @@
 :root {
   /* ========================================
-     字体系统
-     标题用宋体增加文化感，正文用黑体保证可读性
+     字体系统 —— Linear 风格
+     Inter Variable + Noto Sans SC (中文)
      ======================================== */
-  --font-title: 'Noto Serif SC', 'Source Han Serif CN', '思源宋体', 'Songti SC', serif;
-  --font-body: 'Geist', 'Noto Sans SC', 'Source Han Sans CN', -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-title: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* 字号阶梯 —— Major Third 1.250 比率，更协调 */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
+  /* 字号阶梯 */
+  --text-xs: 0.69rem;    /* 11px */
+  --text-sm: 0.8125rem;  /* 13px */
   --text-base: 1rem;     /* 16px */
   --text-lg: 1.125rem;   /* 18px */
   --text-xl: 1.25rem;    /* 20px */
   --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.5rem;    /* 40px */
-  --text-5xl: 3.25rem;   /* 52px — hero专用 */
+  --text-3xl: 2rem;      /* 32px */
+  --text-4xl: 3rem;      /* 48px */
+  --text-5xl: 4.5rem;    /* 72px — hero */
 
-  /* 字重 */
+  /* 字重 —— Linear 三档: 400/510/590 */
+  --weight-light: 300;
   --weight-normal: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
+  --weight-medium: 510;
+  --weight-semibold: 590;
 
-  /* 行高 —— 标题紧凑、正文舒适 */
+  /* 行高 */
   --leading-none: 1;
-  --leading-tight: 1.25;
-  --leading-snug: 1.375;
-  --leading-normal: 1.6;
-  --leading-relaxed: 1.75;
-  --leading-loose: 2;
+  --leading-tight: 1.13;
+  --leading-snug: 1.33;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  --leading-loose: 1.8;
 
-  /* 字间距 —— 微调节奏 */
-  --tracking-tighter: -0.025em;
-  --tracking-tight: -0.01em;
+  /* 字间距 —— Linear 负间距 */
+  --tracking-tighter: -0.022em;  /* -1.584px at 72px */
+  --tracking-tight: -0.015em;    /* -1.056px at 48px */
+  --tracking-snug: -0.008em;     /* -0.704px at 32px */
   --tracking-normal: 0;
-  --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
 
   /* ========================================
-     色彩系统 —— Stripe 风格
-     深海军蓝 + 靛蓝强调 + 金色点缀 = 金融级信任感
+     色彩系统 —— Linear 暗黑风格
+     近黑画布 + 紫罗兰强调 = 专注科技感
      ======================================== */
 
-  /* 主色 —— 靛蓝（功能强调色） */
-  --color-primary: #4338ca;
-  --color-primary-hover: #5b5bd6;
-  --color-primary-deep: #3730a3;
-  --color-primary-light: #eef2ff;
-  --color-primary-faint: #f5f7ff;
+  /* 主色 —— 紫罗兰 */
+  --color-primary: #5e6ad2;
+  --color-primary-hover: #828fff;
+  --color-primary-deep: #4a56b8;
+  --color-primary-light: rgba(94, 106, 210, 0.15);
+  --color-primary-faint: rgba(94, 106, 210, 0.08);
 
-  /* 品牌色 —— 深海军蓝（用于导航栏、hero、深色背景） */
-  --color-brand-dark: #1c1e54;
-  --color-brand-ink: #0d253d;
+  /* 品牌色 —— 深黑 */
+  --color-brand-dark: #08090a;
+  --color-brand-ink: #010102;
 
-  /* 点缀色 —— 金色 */
-  --color-accent: #9b6829;
-  --color-accent-hover: #7d5420;
-  --color-accent-light: #f5e9d4;
-  --color-accent-cream: #faf6e9;
+  /* 点缀色 —— 亮紫 */
+  --color-accent: #7170ff;
+  --color-accent-hover: #828fff;
+  --color-accent-light: rgba(113, 112, 255, 0.12);
+  --color-accent-cream: rgba(113, 112, 255, 0.06);
 
   /* 语义色 */
-  --color-success: #24a148;
-  --color-success-light: #f0fdf4;
-  --color-warning: #f5a623;
-  --color-warning-light: #fffbeb;
-  --color-error: #ee0000;
-  --color-error-light: #fef2f2;
+  --color-success: #10b981;
+  --color-success-light: rgba(16, 185, 129, 0.12);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.12);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.12);
 
-  /* 中性色 —— 8 阶灰度 */
-  --color-gray-50: #f8f9fb;
-  --color-gray-100: #f1f3f5;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  /* 暗色中性色 —— 6 阶 */
+  --color-gray-50: #f7f8f8;
+  --color-gray-100: #d0d6e0;
+  --color-gray-200: #8a8f98;
+  --color-gray-300: #62666d;
+  --color-gray-400: #3e3e44;
+  --color-gray-500: #28282c;
+  --color-gray-600: #191a1b;
+  --color-gray-700: #141516;
+  --color-gray-800: #0f1011;
+  --color-gray-900: #08090a;
 
-  /* 背景 */
-  --color-bg: #f5f6f8;
-  --color-bg-elevated: #ffffff;
-  --color-bg-sunken: #eef0f3;
+  /* 背景 —— 暗黑层次 */
+  --color-bg: #08090a;
+  --color-bg-elevated: #191a1b;
+  --color-bg-sunken: #0f1011;
 
   /* 文字 */
-  --color-text: var(--color-gray-800);
-  --color-text-secondary: var(--color-gray-500);
-  --color-text-muted: var(--color-gray-400);
-  --color-text-inverse: #ffffff;
+  --color-text: #f7f8f8;
+  --color-text-secondary: #d0d6e0;
+  --color-text-muted: #8a8f98;
+  --color-text-inverse: #08090a;
 
   /* 卡片 */
-  --color-card: #ffffff;
-  --color-card-hover: #fafbfc;
+  --color-card: rgba(255, 255, 255, 0.02);
+  --color-card-hover: rgba(255, 255, 255, 0.05);
+
+  /* 边框 */
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-border-accent: rgba(113, 112, 255, 0.3);
 
   /* ========================================
-     间距系统 —— 基于 4px 网格
+     间距系统 —— 8px 基准
      ======================================== */
   --space-0: 0;
   --space-px: 1px;
@@ -126,30 +130,30 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
-  --radius-2xl: 16px;
+  --radius-2xl: 22px;
   --radius-3xl: 24px;
   --radius-full: 9999px;
 
   /* ========================================
-     阴影 —— 更细腻的层次
+     阴影 —— 暗色表面用亮度阶梯代替阴影
      ======================================== */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-2xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
-  --shadow-inner: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-xs: rgba(0, 0, 0, 0.03) 0px 1.2px 0px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.06) 0px 1px 3px;
+  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  --shadow-lg: rgba(0, 0, 0, 0.4) 0px 2px 4px;
+  --shadow-xl: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.2) 0px 12px 40px;
+  --shadow-2xl: rgba(0, 0, 0, 0.85) 0px 0px 0px 1px, rgba(0, 0, 0, 0.4) 0px 2px 4px;
+  --shadow-inner: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
 
   /* 特殊阴影 */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --shadow-glow-primary: 0 0 0 3px rgba(67, 56, 202, 0.15);
-  --shadow-glow-accent: 0 0 0 3px rgba(155, 104, 41, 0.15);
+  --shadow-card: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  --shadow-card-hover: rgba(0, 0, 0, 0.3) 0px 8px 25px;
+  --shadow-float: rgba(0, 0, 0, 0.4) 0px 12px 40px;
+  --shadow-glow-primary: 0 0 0 2px rgba(94, 106, 210, 0.3);
+  --shadow-glow-accent: 0 0 0 2px rgba(113, 112, 255, 0.3);
 
   /* ========================================
-     过渡 —— 三种节奏
+     过渡
      ======================================== */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
@@ -162,9 +166,9 @@
   /* ========================================
      布局
      ======================================== */
-  --max-width: 1120px;
+  --max-width: 1200px;
   --max-width-narrow: 720px;
-  --max-width-wide: 1280px;
+  --max-width-wide: 1440px;
   --navbar-height: 56px;
   --sidebar-width: 240px;
 }

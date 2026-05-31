@@ -23,6 +23,7 @@ body {
   line-height: var(--leading-normal);
   min-height: 100vh;
   letter-spacing: var(--tracking-normal);
+  font-feature-settings: "cv01", "ss03";
 }
 
 /* ========================================
@@ -30,13 +31,13 @@ body {
    ======================================== */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   line-height: var(--leading-tight);
-  color: var(--color-gray-900);
+  color: var(--color-text);
   letter-spacing: var(--tracking-tight);
 }
 
-h1 { font-size: var(--text-4xl); line-height: var(--leading-none); letter-spacing: var(--tracking-tighter); }
+h1 { font-size: var(--text-4xl); line-height: var(--leading-none); letter-spacing: var(--tracking-tighter); font-weight: var(--weight-medium); }
 h2 { font-size: var(--text-2xl); }
 h3 { font-size: var(--text-xl); }
 h4 { font-size: var(--text-lg); }
@@ -92,8 +93,9 @@ blockquote {
    导航栏
    ======================================== */
 .navbar {
-  background: var(--color-brand-dark);
-  color: var(--color-text-inverse);
+  background: rgba(15, 16, 17, 0.85);
+  backdrop-filter: blur(12px);
+  color: var(--color-text);
   height: var(--navbar-height);
   padding: 0 var(--space-6);
   display: flex;
@@ -102,16 +104,16 @@ blockquote {
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .navbar-brand {
   font-family: var(--font-title);
   font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  color: var(--color-text-inverse);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
   text-decoration: none;
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-snug);
 }
 
 .navbar-menu {
@@ -175,10 +177,10 @@ blockquote {
    ======================================== */
 .card {
   background: var(--color-card);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--space-6);
   margin-bottom: var(--space-4);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-border);
   box-shadow: none;
   transition: box-shadow var(--duration-normal) var(--ease-out),
               transform var(--duration-normal) var(--ease-out);
@@ -186,13 +188,13 @@ blockquote {
 
 .card:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+  border-color: var(--color-border);
 }
 
 .card-title {
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-text);
   margin-bottom: var(--space-3);
 }
 
