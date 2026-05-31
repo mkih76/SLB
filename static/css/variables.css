@@ -1,104 +1,105 @@
 :root {
   /* ========================================
-     字体系统 —— Linear 风格
-     Inter Variable + Noto Sans SC (中文)
+     字体系统 —— Whimsical 风格
+     Manrope + Noto Sans SC (中文)
      ======================================== */
-  --font-title: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-title: 'Manrope', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Manrope', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* 字号阶梯 */
-  --text-xs: 0.69rem;    /* 11px */
-  --text-sm: 0.8125rem;  /* 13px */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
   --text-base: 1rem;     /* 16px */
   --text-lg: 1.125rem;   /* 18px */
   --text-xl: 1.25rem;    /* 20px */
   --text-2xl: 1.5rem;    /* 24px */
   --text-3xl: 2rem;      /* 32px */
-  --text-4xl: 3rem;      /* 48px */
-  --text-5xl: 4.5rem;    /* 72px — hero */
+  --text-4xl: 2.5rem;    /* 40px */
+  --text-5xl: 3.5rem;    /* 56px */
 
-  /* 字重 —— Linear 三档: 400/510/590 */
-  --weight-light: 300;
+  /* 字重 —— Manrope */
   --weight-normal: 400;
-  --weight-medium: 510;
-  --weight-semibold: 590;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 
   /* 行高 */
   --leading-none: 1;
-  --leading-tight: 1.13;
-  --leading-snug: 1.33;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.6;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.7;
   --leading-loose: 1.8;
 
-  /* 字间距 —— Linear 负间距 */
-  --tracking-tighter: -0.022em;  /* -1.584px at 72px */
-  --tracking-tight: -0.015em;    /* -1.056px at 48px */
-  --tracking-snug: -0.008em;     /* -0.704px at 32px */
+  /* 字间距 */
+  --tracking-tighter: -0.02em;
+  --tracking-tight: -0.015em;
+  --tracking-snug: -0.01em;
   --tracking-normal: 0;
+  --tracking-wide: 0.02em;
 
   /* ========================================
-     色彩系统 —— Linear 暗黑风格
-     近黑画布 + 紫罗兰强调 = 专注科技感
+     色彩系统 —— Whimsical 友好风格
+     温暖紫调 + 明亮画布 = 亲切专业感
      ======================================== */
 
-  /* 主色 —— 紫罗兰 */
-  --color-primary: #5e6ad2;
-  --color-primary-hover: #828fff;
-  --color-primary-deep: #4a56b8;
-  --color-primary-light: rgba(94, 106, 210, 0.15);
-  --color-primary-faint: rgba(94, 106, 210, 0.08);
+  /* 主色 —— 紫色 */
+  --color-primary: #9E39E5;
+  --color-primary-hover: #8230C4;
+  --color-primary-deep: #7C2DB8;
+  --color-primary-light: rgba(158, 57, 229, 0.08);
+  --color-primary-faint: rgba(158, 57, 229, 0.04);
 
-  /* 品牌色 —— 深黑 */
-  --color-brand-dark: #08090a;
-  --color-brand-ink: #010102;
+  /* 品牌色 */
+  --color-brand-dark: #220A33;
+  --color-brand-ink: #220A33;
 
-  /* 点缀色 —— 亮紫 */
-  --color-accent: #7170ff;
-  --color-accent-hover: #828fff;
-  --color-accent-light: rgba(113, 112, 255, 0.12);
-  --color-accent-cream: rgba(113, 112, 255, 0.06);
+  /* 点缀色 —— 浅紫 */
+  --color-accent: #C084FC;
+  --color-accent-hover: #A855F7;
+  --color-accent-light: rgba(192, 132, 252, 0.12);
+  --color-accent-cream: rgba(192, 132, 252, 0.06);
 
   /* 语义色 */
-  --color-success: #10b981;
-  --color-success-light: rgba(16, 185, 129, 0.12);
-  --color-warning: #f59e0b;
-  --color-warning-light: rgba(245, 158, 11, 0.12);
-  --color-error: #ef4444;
-  --color-error-light: rgba(239, 68, 68, 0.12);
+  --color-success: #22C55E;
+  --color-success-light: rgba(34, 197, 94, 0.1);
+  --color-warning: #F59E0B;
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+  --color-error: #EF4444;
+  --color-error-light: rgba(239, 68, 68, 0.1);
 
-  /* 暗色中性色 —— 6 阶 */
-  --color-gray-50: #f7f8f8;
-  --color-gray-100: #d0d6e0;
-  --color-gray-200: #8a8f98;
-  --color-gray-300: #62666d;
-  --color-gray-400: #3e3e44;
-  --color-gray-500: #28282c;
-  --color-gray-600: #191a1b;
-  --color-gray-700: #141516;
-  --color-gray-800: #0f1011;
-  --color-gray-900: #08090a;
+  /* 中性色 —— 紫调灰 */
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F7F7F8;
+  --color-gray-200: #EDEDF0;
+  --color-gray-300: #D4D4D8;
+  --color-gray-400: #A1A1AA;
+  --color-gray-500: #8F8497;
+  --color-gray-600: #685C70;
+  --color-gray-700: #52525B;
+  --color-gray-800: #3F3F46;
+  --color-gray-900: #220A33;
 
-  /* 背景 —— 暗黑层次 */
-  --color-bg: #08090a;
-  --color-bg-elevated: #191a1b;
-  --color-bg-sunken: #0f1011;
+  /* 背景 —— 明亮温暖 */
+  --color-bg: #FFFFFF;
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-sunken: #F7F7F8;
 
   /* 文字 */
-  --color-text: #f7f8f8;
-  --color-text-secondary: #d0d6e0;
-  --color-text-muted: #8a8f98;
-  --color-text-inverse: #08090a;
+  --color-text: #220A33;
+  --color-text-secondary: #685C70;
+  --color-text-muted: #8F8497;
+  --color-text-inverse: #FFFFFF;
 
   /* 卡片 */
-  --color-card: rgba(255, 255, 255, 0.02);
-  --color-card-hover: rgba(255, 255, 255, 0.05);
+  --color-card: #FFFFFF;
+  --color-card-hover: #FAFAFA;
 
   /* 边框 */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.05);
-  --color-border-accent: rgba(113, 112, 255, 0.3);
+  --color-border: rgba(34, 10, 51, 0.08);
+  --color-border-subtle: rgba(34, 10, 51, 0.04);
+  --color-border-accent: rgba(158, 57, 229, 0.2);
 
   /* ========================================
      间距系统 —— 8px 基准
@@ -123,34 +124,34 @@
   --space-24: 96px;
 
   /* ========================================
-     圆角
+     圆角 —— 友好圆润
      ======================================== */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 22px;
-  --radius-3xl: 24px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
   --radius-full: 9999px;
 
   /* ========================================
-     阴影 —— 暗色表面用亮度阶梯代替阴影
+     阴影 —— 紫调柔和
      ======================================== */
-  --shadow-xs: rgba(0, 0, 0, 0.03) 0px 1.2px 0px 0px;
-  --shadow-sm: rgba(0, 0, 0, 0.06) 0px 1px 3px;
-  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
-  --shadow-lg: rgba(0, 0, 0, 0.4) 0px 2px 4px;
-  --shadow-xl: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.2) 0px 12px 40px;
-  --shadow-2xl: rgba(0, 0, 0, 0.85) 0px 0px 0px 1px, rgba(0, 0, 0, 0.4) 0px 2px 4px;
-  --shadow-inner: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
+  --shadow-xs: 0 1px 2px rgba(34, 10, 51, 0.04);
+  --shadow-sm: 0 1px 3px rgba(34, 10, 51, 0.06), 0 1px 2px rgba(34, 10, 51, 0.04);
+  --shadow-md: 0 4px 12px rgba(34, 10, 51, 0.06);
+  --shadow-lg: 0 8px 24px rgba(34, 10, 51, 0.08);
+  --shadow-xl: 0 16px 48px rgba(34, 10, 51, 0.1);
+  --shadow-2xl: 0 24px 48px rgba(34, 10, 51, 0.12);
+  --shadow-inner: inset 0 1px 3px rgba(34, 10, 51, 0.06);
 
   /* 特殊阴影 */
-  --shadow-card: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
-  --shadow-card-hover: rgba(0, 0, 0, 0.3) 0px 8px 25px;
-  --shadow-float: rgba(0, 0, 0, 0.4) 0px 12px 40px;
-  --shadow-glow-primary: 0 0 0 2px rgba(94, 106, 210, 0.3);
-  --shadow-glow-accent: 0 0 0 2px rgba(113, 112, 255, 0.3);
+  --shadow-card: 0 1px 3px rgba(34, 10, 51, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(34, 10, 51, 0.08);
+  --shadow-float: 0 16px 48px rgba(34, 10, 51, 0.12);
+  --shadow-glow-primary: 0 0 0 3px rgba(158, 57, 229, 0.15);
+  --shadow-glow-accent: 0 0 0 3px rgba(192, 132, 252, 0.15);
 
   /* ========================================
      过渡

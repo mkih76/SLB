@@ -4,7 +4,7 @@
 
 /* ---- 卡片悬停 ---- */
 .card {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition:
     box-shadow var(--duration-normal) var(--ease-out),
