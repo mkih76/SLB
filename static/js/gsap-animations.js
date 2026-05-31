@@ -1,257 +1,193 @@
 /**
- * SLB GSAP Animations
- * Replaces CSS-only reveal system with GSAP ScrollTrigger
- * Respects prefers-reduced-motion
+ * SLB GSAP Animations — Safe version
+ * Uses gsap.to() with gsap.set() instead of gsap.from() to avoid FOUC
+ * Falls back to visible if anything goes wrong
  */
 (function() {
   'use strict';
 
-  // Bail if GSAP not loaded
-  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+  // Safety timeout: if GSAP doesn't init in 2s, show everything
+  var safetyTimer = setTimeout(function() {
+    document.querySelectorAll('.gsap-hidden').forEach(function(el) {
+      el.classList.remove('gsap-hidden');
+    });
+  }, 2000);
 
-  // Register plugin
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    clearTimeout(safetyTimer);
+    return;
+  }
+
   gsap.registerPlugin(ScrollTrigger);
 
-  // Respect reduced motion
-  const mm = gsap.matchMedia();
+  var mm = gsap.matchMedia();
+
   mm.add(
     {
       isDesktop: '(min-width: 769px)',
       isMobile: '(max-width: 768px)',
       reduceMotion: '(prefers-reduced-motion: reduce)'
     },
-    (context) => {
-      const { isDesktop, reduceMotion } = context.conditions;
+    function(context) {
+      var reduceMotion = context.conditions.reduceMotion;
+      var isDesktop = context.conditions.isDesktop;
 
-      // If user prefers reduced motion, skip all animations
-      if (reduceMotion) {
-        gsap.set('.reveal, .reveal-stagger > *, .reveal-left, .reveal-right, .reveal-scale', {
-          opacity: 1, y: 0, x: 0, scale: 1
-        });
-        return;
-      }
+      clearTimeout(safetyTimer);
 
-      // ==========================================
-      // 1. Replace CSS reveal with GSAP
-      // ==========================================
+      if (reduceMotion) return;
 
-      // Single reveal elements (fade up)
-      gsap.utils.toArray('.reveal').forEach((el, i) => {
-        gsap.from(el, {
-          y: 30,
-          opacity: 0,
-          duration: 0.7,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 88%',
-            toggleActions: 'play none none none',
-            once: true
+      // ========================================
+      // 1. Scroll reveal — use gsap.to() (safe)
+      // ========================================
+      gsap.utils.toArray('.reveal').forEach(function(el) {
+        gsap.set(el, { y: 30, autoAlpha: 0 });
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 90%',
+          once: true,
+          onEnter: function() {
+            gsap.to(el, { y: 0, autoAlpha: 1, duration: 0.7, ease: 'power2.out' });
           }
         });
       });
 
-      // Stagger reveal (children fade up in sequence)
-      gsap.utils.toArray('.reveal-stagger').forEach((container) => {
-        const children = container.children;
+      // Stagger children
+      gsap.utils.toArray('.reveal-stagger').forEach(function(container) {
+        var children = gsap.utils.toArray(container.children);
         if (!children.length) return;
 
-        gsap.from(children, {
-          y: 40,
-          opacity: 0,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: container,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-            once: true
+        gsap.set(children, { y: 40, autoAlpha: 0 });
+        ScrollTrigger.create({
+          trigger: container,
+          start: 'top 88%',
+          once: true,
+          onEnter: function() {
+            gsap.to(children, { y: 0, autoAlpha: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out' });
           }
         });
       });
 
-      // ==========================================
-      // 2. Homepage Hero — cinematic entrance
-      // ==========================================
-      const hero = document.querySelector('.hero');
+      // ========================================
+      // 2. Hero entrance
+      // ========================================
+      var hero = document.querySelector('.hero');
       if (hero) {
-        const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-        heroTl
-          .from('.hero [style*="inline-block"]', { y: -20, opacity: 0, duration: 0.6 })
-          .from('.hero h1', { y: 40, opacity: 0, duration: 0.8 }, '-=0.3')
-          .from('.hero p', { y: 30, opacity: 0, duration: 0.6 }, '-=0.4')
-          .from('.hero .btn, .hero a.btn', { y: 20, opacity: 0, duration: 0.5, stagger: 0.15 }, '-=0.3');
-
-        // Subtle parallax on gradient orbs
-        if (isDesktop) {
-          gsap.to('.hero [style*="radial-gradient"]:first-of-type', {
-            y: -60,
-            scrollTrigger: {
-              trigger: '.hero',
-              start: 'top top',
-              end: 'bottom top',
-              scrub: 1
-            }
+        var heroItems = hero.querySelectorAll('h1, p, .btn, [style*="inline-block"]');
+        if (heroItems.length) {
+          gsap.set(heroItems, { y: 30, autoAlpha: 0 });
+          var heroTl = gsap.timeline({ delay: 0.2 });
+          heroTl.to(heroItems, {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.7,
+            stagger: 0.12,
+            ease: 'power3.out'
           });
         }
       }
 
-      // ==========================================
-      // 3. Stat counter animation
-      // ==========================================
-      gsap.utils.toArray('[style*="tabular-nums"]').forEach((el) => {
-        const target = parseInt(el.textContent);
+      // ========================================
+      // 3. Stat counter
+      // ========================================
+      gsap.utils.toArray('[style*="tabular-nums"]').forEach(function(el) {
+        var target = parseInt(el.textContent);
         if (isNaN(target) || target === 0) return;
 
-        const obj = { val: 0 };
-        gsap.to(obj, {
-          val: target,
-          duration: 1.5,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 90%',
-            once: true
-          },
-          onUpdate: () => {
-            el.textContent = Math.round(obj.val);
+        var obj = { val: 0 };
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 92%',
+          once: true,
+          onEnter: function() {
+            gsap.to(obj, {
+              val: target,
+              duration: 1.5,
+              ease: 'power2.out',
+              onUpdate: function() { el.textContent = Math.round(obj.val); }
+            });
           }
         });
       });
 
-      // ==========================================
-      // 4. Cards — hover tilt effect (desktop only)
-      // ==========================================
+      // ========================================
+      // 4. Card hover (desktop)
+      // ========================================
       if (isDesktop) {
-        gsap.utils.toArray('.card').forEach((card) => {
-          card.addEventListener('mouseenter', () => {
-            gsap.to(card, { y: -4, duration: 0.3, ease: 'power2.out' });
-          });
-          card.addEventListener('mouseleave', () => {
-            gsap.to(card, { y: 0, duration: 0.4, ease: 'power2.out' });
-          });
-        });
+        document.addEventListener('mouseenter', function(e) {
+          var card = e.target.closest('.card');
+          if (card) gsap.to(card, { y: -4, duration: 0.3, ease: 'power2.out' });
+        }, true);
+        document.addEventListener('mouseleave', function(e) {
+          var card = e.target.closest('.card');
+          if (card) gsap.to(card, { y: 0, duration: 0.4, ease: 'power2.out' });
+        }, true);
       }
 
-      // ==========================================
-      // 5. Score reveal animation (result page)
-      // ==========================================
-      const scoreEl = document.querySelector('.score-circle, [style*="font-size: 64px"]');
+      // ========================================
+      // 5. Score counter
+      // ========================================
+      var scoreEl = document.querySelector('.score-circle, [style*="font-size: 64px"]');
       if (scoreEl) {
-        const scoreVal = parseInt(scoreEl.textContent);
-        if (!isNaN(scoreVal)) {
+        var scoreVal = parseInt(scoreEl.textContent);
+        if (!isNaN(scoreVal) && scoreVal > 0) {
           scoreEl.textContent = '0';
-          const scoreObj = { val: 0 };
+          var scoreObj = { val: 0 };
           gsap.to(scoreObj, {
             val: scoreVal,
             duration: 2,
             ease: 'power2.out',
-            delay: 0.3,
-            onUpdate: () => {
-              scoreEl.textContent = Math.round(scoreObj.val);
-            },
-            onComplete: () => {
-              // Pulse effect on completion
-              gsap.fromTo(scoreEl, { scale: 1 }, { scale: 1.1, duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.inOut' });
+            delay: 0.5,
+            onUpdate: function() { scoreEl.textContent = Math.round(scoreObj.val); },
+            onComplete: function() {
+              gsap.fromTo(scoreEl, { scale: 1 }, { scale: 1.1, duration: 0.15, yoyo: true, repeat: 1 });
             }
           });
         }
       }
 
-      // ==========================================
-      // 6. Diagnosis page — dimension bars animate
-      // ==========================================
-      gsap.utils.toArray('.dim-fill').forEach((bar) => {
-        const width = bar.style.width;
+      // ========================================
+      // 6. Dimension bars
+      // ========================================
+      gsap.utils.toArray('.dim-fill').forEach(function(bar) {
+        var w = bar.style.width;
+        if (!w || w === '0%') return;
         bar.style.width = '0%';
-        gsap.to(bar, {
-          width: width,
-          duration: 1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: bar,
-            start: 'top 90%',
-            once: true
-          }
-        });
-      });
-
-      // ==========================================
-      // 7. Page transition — smooth content entry
-      // ==========================================
-      gsap.from('main', {
-        opacity: 0,
-        duration: 0.4,
-        ease: 'power1.out'
-      });
-
-      // ==========================================
-      // 8. Back to top button animation
-      // ==========================================
-      const backToTop = document.querySelector('.back-to-top');
-      if (backToTop) {
         ScrollTrigger.create({
-          start: 'top -300',
-          onUpdate: (self) => {
-            if (self.direction === 1 && self.progress > 0.1) {
-              gsap.to(backToTop, { opacity: 1, y: 0, duration: 0.3, pointerEvents: 'auto' });
-            } else if (self.direction === -1 && self.progress < 0.05) {
-              gsap.to(backToTop, { opacity: 0, y: 20, duration: 0.3, pointerEvents: 'none' });
-            }
+          trigger: bar,
+          start: 'top 92%',
+          once: true,
+          onEnter: function() {
+            gsap.to(bar, { width: w, duration: 1, ease: 'power2.out' });
           }
         });
-      }
+      });
 
-      // ==========================================
-      // 9. Navbar scroll effect
-      // ==========================================
-      const navbar = document.querySelector('.navbar');
+      // ========================================
+      // 7. Navbar shadow
+      // ========================================
+      var navbar = document.querySelector('.navbar');
       if (navbar) {
         ScrollTrigger.create({
           start: 'top -80',
-          onUpdate: (self) => {
+          onUpdate: function(self) {
             if (self.progress > 0) {
               navbar.style.boxShadow = '0 1px 8px rgba(0,0,0,0.08)';
-              navbar.style.backdropFilter = 'blur(12px)';
             } else {
               navbar.style.boxShadow = '';
-              navbar.style.backdropFilter = '';
             }
           }
         });
       }
 
-      // ==========================================
-      // 10. CTA section — scale in
-      // ==========================================
-      const ctaSection = document.querySelector('[style*="border-radius: var(--radius-2xl)"][style*="brand-dark"]');
-      if (ctaSection) {
-        gsap.from(ctaSection, {
-          scale: 0.95,
-          opacity: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: ctaSection,
-            start: 'top 80%',
-            once: true
-          }
-        });
-      }
+      // ========================================
+      // 8. Button click feedback
+      // ========================================
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn');
+        if (btn) gsap.fromTo(btn, { scale: 0.97 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' });
+      });
 
-      // Refresh ScrollTrigger after all setup
       ScrollTrigger.refresh();
     }
   );
-
-  // Click feedback — subtle scale on button press
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn');
-    if (btn && typeof gsap !== 'undefined') {
-      gsap.fromTo(btn, { scale: 0.97 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' });
-    }
-  });
-
 })();
