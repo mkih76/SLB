@@ -4,10 +4,10 @@ name: Stripi-Inspired-design-analysis
 description: An inspired interpretation of Stripi's design language — a financial-infrastructure brand built on a deep navy ink, an electric indigo primary, and a recurring atmospheric gradient mesh that occupies the upper third of nearly every marketing page. The system pairs the proprietary Sohne family at thin (300) weights with negative letter-spacing for editorial-density display headlines, and uses tabular-figure body type where money and numerics matter. Buttons are tight-radius pills, cards live on near-white surfaces, and the dashboard track flips polarity to a familiar dark-app shell.
 
 colors:
-  primary: "#533afd"
-  primary-deep: "#4434d4"
+  primary: "#4338ca"
+  primary-deep: "#3730a3"
   primary-press: "#2e2b8c"
-  primary-soft: "#665efd"
+  primary-soft: "#5b5bd6"
   primary-bg-subdued-hover: "#b9b9f9"
   brand-dark-900: "#1c1e54"
   ink: "#0d253d"
@@ -247,7 +247,7 @@ components:
 
 Stripi's design language opens with the gradient mesh. A wide horizontal band of pastel cream, sherbet orange, lavender, electric indigo, and ruby pink occupies the upper third of nearly every marketing page — the brand's instantly-recognizable atmospheric backdrop. Type and product UI mockups float above it on `{colors.canvas}` (white), with the gradient acting as both decoration and visual anchor. The lower portion of the page returns to white, with feature explanations on `{colors.canvas-soft}` (a barely-tinted cool off-white) and dashboard product mockups composited as faux IDE/console panels in deep navy.
 
-The color system has two primary roles. **Indigo** (`{colors.primary}` — `#533afd`) is the brand's signature CTA color, used sparingly: one filled pill per band. **Deep navy** (`{colors.ink}` — `#0d253d`) is the universal body text color and the fill of dashboard mockups, the featured pricing tier, and the dark-app surfaces on the dashboard track. Ruby (`{colors.ruby}`) and magenta (`{colors.magenta}`) appear inside the gradient mesh and as accent dots in product UI mockups; they are not used as button colors.
+The color system has two primary roles. **Indigo** (`{colors.primary}` — `#4338ca`) is the brand's signature CTA color, used sparingly: one filled pill per band. **Deep navy** (`{colors.ink}` — `#0d253d`) is the universal body text color and the fill of dashboard mockups, the featured pricing tier, and the dark-app surfaces on the dashboard track. Ruby (`{colors.ruby}`) and magenta (`{colors.magenta}`) appear inside the gradient mesh and as accent dots in product UI mockups; they are not used as button colors.
 
 Typography is built around **Sohne** at weight 300 with negative letter-spacing — the brand's editorial-density display signature. Display sizes (32–56px) use -1.4px to -0.64px tracking; body sizes use 0; tabular caption sizes (where money and numerics matter) use the OpenType `tnum` feature plus a tightening -0.36 to -0.42px tracking. The `ss01` stylistic set is enabled across all roles.
 
@@ -265,10 +265,10 @@ Typography is built around **Sohne** at weight 300 with negative letter-spacing 
 > **Source pages:** home (`/`), `/payments`, `/pricing`, `dashboard.stripe.com/register/payments`.
 
 ### Brand & Accent
-- **Indigo** (`{colors.primary}` — `#533afd`): The brand's signature CTA color. Filled-pill button, link emphasis, gradient anchor.
-- **Indigo Deep** (`{colors.primary-deep}` — `#4434d4`): A deeper indigo used in gradient mid-stops and as the press-state warmer alternative.
+- **Indigo** (`{colors.primary}` — `#4338ca`): The brand's signature CTA color. Filled-pill button, link emphasis, gradient anchor.
+- **Indigo Deep** (`{colors.primary-deep}` — `#3730a3`): A deeper indigo used in gradient mid-stops and as the press-state warmer alternative.
 - **Indigo Press** (`{colors.primary-press}` — `#2e2b8c`): Pressed-state lift of the primary.
-- **Indigo Soft** (`{colors.primary-soft}` — `#665efd`): A lighter indigo used in product-UI accents and chart highlights.
+- **Indigo Soft** (`{colors.primary-soft}` — `#5b5bd6`): A lighter indigo used in product-UI accents and chart highlights.
 - **Indigo Subdued** (`{colors.primary-bg-subdued-hover}` — `#b9b9f9`): Pale indigo fill used as soft tag background.
 - **Brand Dark 900** (`{colors.brand-dark-900}` — `#1c1e54`): The deep navy used on the featured pricing tier and dashboard chrome.
 - **Ruby** (`{colors.ruby}` — `#ea2261`): Gradient accent and chart highlight; never a button.

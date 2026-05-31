@@ -8,3 +8,6 @@ uploads/
 venv/
 .venv/
 *.log
+node_modules/
+package-lock.json
+package.json

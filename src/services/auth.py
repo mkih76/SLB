@@ -1,4 +1,5 @@
 import sqlite3
+import html
 
 import bcrypt
 import jwt
@@ -33,7 +34,7 @@ def register_user(username: str, password: str, nickname: str = None):
 
     uid = generate_uuid()
     password_hash = hash_password(password)
-    nickname = nickname or username
+    nickname = html.escape(nickname or username)
 
     try:
         db.execute(

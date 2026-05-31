@@ -474,7 +474,7 @@ select.input-field {
   background: var(--color-brand-dark);
   color: var(--color-text-inverse);
   padding: var(--space-24) 0 var(--space-20);
-  text-align: center;
+  text-align: left;
   position: relative;
   overflow: hidden;
 }

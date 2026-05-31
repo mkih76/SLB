@@ -4,7 +4,7 @@
      标题用宋体增加文化感，正文用黑体保证可读性
      ======================================== */
   --font-title: 'Noto Serif SC', 'Source Han Serif CN', '思源宋体', 'Songti SC', serif;
-  --font-body: 'Noto Sans SC', 'Source Han Sans CN', '思源黑体', -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Geist', 'Noto Sans SC', 'Source Han Sans CN', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   /* 字号阶梯 —— Major Third 1.250 比率，更协调 */
@@ -45,11 +45,11 @@
      ======================================== */
 
   /* 主色 —— 靛蓝（功能强调色） */
-  --color-primary: #533afd;
-  --color-primary-hover: #665efd;
-  --color-primary-deep: #4434d4;
-  --color-primary-light: #f5f3ff;
-  --color-primary-faint: #fafafe;
+  --color-primary: #4338ca;
+  --color-primary-hover: #5b5bd6;
+  --color-primary-deep: #3730a3;
+  --color-primary-light: #eef2ff;
+  --color-primary-faint: #f5f7ff;
 
   /* 品牌色 —— 深海军蓝（用于导航栏、hero、深色背景） */
   --color-brand-dark: #1c1e54;
@@ -145,7 +145,7 @@
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
   --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --shadow-glow-primary: 0 0 0 3px rgba(83, 58, 253, 0.15);
+  --shadow-glow-primary: 0 0 0 3px rgba(67, 56, 202, 0.15);
   --shadow-glow-accent: 0 0 0 3px rgba(155, 104, 41, 0.15);
 
   /* ========================================

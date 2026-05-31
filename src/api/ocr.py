@@ -1,13 +1,14 @@
 from flask import Blueprint, request
 import os
 import tempfile
-from src.api.utils import api_success, api_error
+from src.api.utils import api_success, api_error, token_required
 
 ocr_bp = Blueprint('ocr', __name__, url_prefix='/api/ocr')
 
 
 @ocr_bp.route('', methods=['POST'])
-def ocr_recognize():
+@token_required
+def ocr_recognize(current_user):
     """OCR 图片文字识别"""
     # 检查是否有文件
     if 'image' not in request.files:

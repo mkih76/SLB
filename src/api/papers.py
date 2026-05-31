@@ -23,6 +23,10 @@ def list_papers():
         page=page,
         per_page=per_page
     )
+    # Remove answer_keys from list response to prevent cheating
+    if isinstance(result, dict) and 'papers' in result:
+        for paper in result['papers']:
+            paper.pop('answer_keys', None)
     return api_success(result)
 
 

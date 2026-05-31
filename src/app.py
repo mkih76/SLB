@@ -4,7 +4,7 @@ import sys
 # Add src to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, render_template, send_from_directory, abort
+from flask import Flask, render_template, send_from_directory, abort, redirect, request
 
 from src.config import Config
 from src.api.utils import init_db
@@ -134,6 +134,10 @@ def create_app():
     def page_not_found(e):
         return render_template('404.html'), 404
 
+    @app.errorhandler(500)
+    def internal_error(e):
+        return render_template('404.html'), 500
+
     @app.route('/community')
     def community():
         return render_template('community.html')
@@ -143,38 +147,71 @@ def create_app():
         return render_template('profile.html')
 
     # Admin routes
+    def _admin_guard():
+        """Check admin auth for page routes (same logic as admin_required but for templates)"""
+        from src.api.utils import _extract_user_from_token
+        user, err = _extract_user_from_token()
+        if not user or user.get('role') not in ('super_admin', 'admin', 'reviewer', 'operator'):
+            return False
+        return True
+
     @app.route('/admin')
     def admin_index():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/dashboard.html')
 
     @app.route('/admin/users')
     def admin_users():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/users.html')
 
     @app.route('/admin/papers')
     def admin_papers():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/papers.html')
 
     @app.route('/admin/phrases')
     def admin_phrases():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/phrases.html')
 
     @app.route('/admin/reviews')
     def admin_reviews():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/reviews.html')
 
     @app.route('/admin/stats')
     def admin_stats():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/stats.html')
 
     @app.route('/admin/logs')
     def admin_logs():
+        if not _admin_guard():
+            return redirect('/login')
         return render_template('admin/logs.html')
 
     # Favicon
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(app.static_folder, 'favicon.ico')
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+        if request.is_secure:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
 
     return app
 
