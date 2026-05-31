@@ -90,85 +90,30 @@
 }
 
 /* ========================================
-   滚动进场动画 —— IntersectionObserver 驱动
+   滚动进场动画 —— 由 GSAP ScrollTrigger 驱动 (gsap-animations.js)
+   CSS 保留类名用于标记，初始状态由 GSAP gsap.from() 控制
    ======================================== */
 
-/* 基础淡入 */
-.reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity var(--duration-slower) var(--ease-out),
-    transform var(--duration-slower) var(--ease-out);
-  will-change: opacity, transform;
-}
-.reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* 从左滑入 */
-.reveal-left {
-  opacity: 0;
-  transform: translateX(-24px);
-  transition:
-    opacity var(--duration-slower) var(--ease-out),
-    transform var(--duration-slower) var(--ease-out);
-  will-change: opacity, transform;
-}
-.reveal-left.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* 从右滑入 */
-.reveal-right {
-  opacity: 0;
-  transform: translateX(24px);
-  transition:
-    opacity var(--duration-slower) var(--ease-out),
-    transform var(--duration-slower) var(--ease-out);
-  will-change: opacity, transform;
-}
-.reveal-right.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* 缩放进场 */
-.reveal-scale {
-  opacity: 0;
-  transform: scale(0.95);
-  transition:
-    opacity var(--duration-slower) var(--ease-out),
-    transform var(--duration-slower) var(--ease-out);
-  will-change: opacity, transform;
-}
-.reveal-scale.revealed {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* 交错延迟 —— 配合 reveal 类 */
+/* GSAP 驱动的 reveal 元素 — 不再需要 CSS 初始隐藏 */
+.reveal,
+.reveal-left,
+.reveal-right,
+.reveal-scale,
 .reveal-stagger > * {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity var(--duration-slower) var(--ease-out),
-    transform var(--duration-slower) var(--ease-out);
+  /* GSAP handles opacity/transform via gsap.from() */
 }
-.reveal-stagger.revealed > * {
-  opacity: 1;
-  transform: translateY(0);
+
+/* reduced-motion fallback: 如果 GSAP 未加载，元素保持可见 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
-.reveal-stagger.revealed > *:nth-child(1) { transition-delay: 0ms; }
-.reveal-stagger.revealed > *:nth-child(2) { transition-delay: 60ms; }
-.reveal-stagger.revealed > *:nth-child(3) { transition-delay: 120ms; }
-.reveal-stagger.revealed > *:nth-child(4) { transition-delay: 180ms; }
-.reveal-stagger.revealed > *:nth-child(5) { transition-delay: 240ms; }
-.reveal-stagger.revealed > *:nth-child(6) { transition-delay: 300ms; }
-.reveal-stagger.revealed > *:nth-child(7) { transition-delay: 360ms; }
-.reveal-stagger.revealed > *:nth-child(8) { transition-delay: 420ms; }
 
 /* ========================================
    页面进场
