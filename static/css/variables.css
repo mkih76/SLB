@@ -1,175 +1,304 @@
+/* ================================================================
+   SLB Design Tokens — Linear Dark Theme
+   3-tier: Primitive → Semantic → Component
+   ================================================================ */
+
+/* ---- Tier 1: Primitives (raw values, never used directly) ---- */
 :root {
-  /* ========================================
-     字体系统 —— Whimsical 风格
-     Manrope + Noto Sans SC (中文)
-     ======================================== */
-  --font-title: 'Manrope', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
-  --font-body: 'Manrope', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  /* Background primitives */
+  --bg-900: #08090a;
+  --bg-850: #0c0d0e;
+  --bg-800: #0f1011;
+  --bg-700: #141516;
+  --bg-600: #191a1b;
+  --bg-500: #1e1f21;
+  --bg-400: #28282c;
+  --bg-300: #2e2f33;
+
+  /* Text primitives */
+  --white-95: #f7f8f8;
+  --white-85: #e2e4e7;
+  --white-70: #d0d6e0;
+  --white-50: #a0a4ab;
+  --white-35: #8a8f98;
+  --white-25: #62666d;
+
+  /* Brand primitives */
+  --indigo-400: #5e6ad2;
+  --indigo-500: #7170ff;
+  --indigo-600: #828fff;
+  --indigo-700: #9aa0ff;
+  --purple-400: #9E39E5;
+
+  /* Status primitives */
+  --green-500: #10b981;
+  --green-400: #34d399;
+  --amber-500: #f59e0b;
+  --amber-400: #fbbf24;
+  --red-500: #ef4444;
+  --red-400: #f87171;
+
+  /* Border alpha primitives */
+  --white-03: rgba(255, 255, 255, 0.03);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.10);
+  --white-15: rgba(255, 255, 255, 0.15);
+
+  /* Spacing primitives (base-4) */
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* Radius primitives */
+  --rad-sm: 4px;
+  --rad-md: 6px;
+  --rad-lg: 8px;
+  --rad-xl: 12px;
+  --rad-2xl: 16px;
+  --rad-3xl: 24px;
+  --rad-full: 9999px;
+
+  /* Shadow primitives (luminance stepping for dark mode) */
+  --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --sh-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --sh-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --sh-focus: 0 0 0 2px var(--indigo-500), 0 0 0 4px rgba(113, 112, 255, 0.15);
+
+  /* Typography primitives */
+  --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* 字号阶梯 */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 2rem;      /* 32px */
-  --text-4xl: 2.5rem;    /* 40px */
-  --text-5xl: 3.5rem;    /* 56px */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
 
-  /* 字重 —— Manrope */
-  --weight-normal: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.65;
+  --lh-loose: 1.8;
 
-  /* 行高 */
-  --leading-none: 1;
-  --leading-tight: 1.15;
-  --leading-snug: 1.3;
-  --leading-normal: 1.6;
-  --leading-relaxed: 1.7;
-  --leading-loose: 1.8;
+  --ls-tight: -0.02em;
+  --ls-snug: -0.01em;
+  --ls-normal: 0;
+  --ls-wide: 0.02em;
+  --ls-wider: 0.05em;
 
-  /* 字间距 */
-  --tracking-tighter: -0.02em;
-  --tracking-tight: -0.015em;
-  --tracking-snug: -0.01em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.02em;
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
 
-  /* ========================================
-     色彩系统 —— Whimsical 友好风格
-     温暖紫调 + 明亮画布 = 亲切专业感
-     ======================================== */
-
-  /* 主色 —— 紫色 */
-  --color-primary: #9E39E5;
-  --color-primary-hover: #8230C4;
-  --color-primary-deep: #7C2DB8;
-  --color-primary-light: rgba(158, 57, 229, 0.08);
-  --color-primary-faint: rgba(158, 57, 229, 0.04);
-
-  /* 品牌色 */
-  --color-brand-dark: #220A33;
-  --color-brand-ink: #220A33;
-
-  /* 点缀色 —— 浅紫 */
-  --color-accent: #C084FC;
-  --color-accent-hover: #A855F7;
-  --color-accent-light: rgba(192, 132, 252, 0.12);
-  --color-accent-cream: rgba(192, 132, 252, 0.06);
-
-  /* 语义色 */
-  --color-success: #22C55E;
-  --color-success-light: rgba(34, 197, 94, 0.1);
-  --color-warning: #F59E0B;
-  --color-warning-light: rgba(245, 158, 11, 0.1);
-  --color-error: #EF4444;
-  --color-error-light: rgba(239, 68, 68, 0.1);
-
-  /* 中性色 —— 紫调灰 */
-  --color-gray-50: #FAFAFA;
-  --color-gray-100: #F7F7F8;
-  --color-gray-200: #EDEDF0;
-  --color-gray-300: #D4D4D8;
-  --color-gray-400: #A1A1AA;
-  --color-gray-500: #8F8497;
-  --color-gray-600: #685C70;
-  --color-gray-700: #52525B;
-  --color-gray-800: #3F3F46;
-  --color-gray-900: #220A33;
-
-  /* 背景 —— 明亮温暖 */
-  --color-bg: #FFFFFF;
-  --color-bg-elevated: #FFFFFF;
-  --color-bg-sunken: #F7F7F8;
-
-  /* 文字 */
-  --color-text: #220A33;
-  --color-text-secondary: #685C70;
-  --color-text-muted: #8F8497;
-  --color-text-inverse: #FFFFFF;
-
-  /* 卡片 */
-  --color-card: #FFFFFF;
-  --color-card-hover: #FAFAFA;
-
-  /* 边框 */
-  --color-border: rgba(34, 10, 51, 0.08);
-  --color-border-subtle: rgba(34, 10, 51, 0.04);
-  --color-border-accent: rgba(158, 57, 229, 0.2);
-
-  /* ========================================
-     间距系统 —— 8px 基准
-     ======================================== */
-  --space-0: 0;
-  --space-px: 1px;
-  --space-0\.5: 2px;
-  --space-1: 4px;
-  --space-1\.5: 6px;
-  --space-2: 8px;
-  --space-2\.5: 10px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-14: 56px;
-  --space-16: 64px;
-  --space-20: 80px;
-  --space-24: 96px;
-
-  /* ========================================
-     圆角 —— 友好圆润
-     ======================================== */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
-  --radius-3xl: 32px;
-  --radius-full: 9999px;
-
-  /* ========================================
-     阴影 —— 紫调柔和
-     ======================================== */
-  --shadow-xs: 0 1px 2px rgba(34, 10, 51, 0.04);
-  --shadow-sm: 0 1px 3px rgba(34, 10, 51, 0.06), 0 1px 2px rgba(34, 10, 51, 0.04);
-  --shadow-md: 0 4px 12px rgba(34, 10, 51, 0.06);
-  --shadow-lg: 0 8px 24px rgba(34, 10, 51, 0.08);
-  --shadow-xl: 0 16px 48px rgba(34, 10, 51, 0.1);
-  --shadow-2xl: 0 24px 48px rgba(34, 10, 51, 0.12);
-  --shadow-inner: inset 0 1px 3px rgba(34, 10, 51, 0.06);
-
-  /* 特殊阴影 */
-  --shadow-card: 0 1px 3px rgba(34, 10, 51, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(34, 10, 51, 0.08);
-  --shadow-float: 0 16px 48px rgba(34, 10, 51, 0.12);
-  --shadow-glow-primary: 0 0 0 3px rgba(158, 57, 229, 0.15);
-  --shadow-glow-accent: 0 0 0 3px rgba(192, 132, 252, 0.15);
-
-  /* ========================================
-     过渡
-     ======================================== */
+  /* Transition primitives */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 120ms;
-  --duration-normal: 200ms;
-  --duration-slow: 350ms;
-  --duration-slower: 500ms;
+  --dur-fast: 120ms;
+  --dur-normal: 200ms;
+  --dur-slow: 350ms;
+  --dur-slower: 500ms;
+}
 
-  /* ========================================
-     布局
-     ======================================== */
+/* ---- Tier 2: Semantic tokens (purpose-based, used in components) ---- */
+:root {
+  /* Surface */
+  --color-bg: var(--bg-900);
+  --color-bg-panel: var(--bg-800);
+  --color-bg-surface: var(--bg-600);
+  --color-bg-elevated: var(--bg-500);
+  --color-bg-hover: var(--bg-400);
+  --color-bg-subtle: var(--bg-700);
+
+  /* Text */
+  --color-text: var(--white-95);
+  --color-text-secondary: var(--white-70);
+  --color-text-tertiary: var(--white-35);
+  --color-text-muted: var(--white-25);
+  --color-text-inverse: var(--bg-900);
+
+  /* Brand */
+  --color-primary: var(--indigo-500);
+  --color-primary-hover: var(--indigo-600);
+  --color-primary-bg: var(--indigo-400);
+  --color-primary-soft: rgba(113, 112, 255, 0.08);
+  --color-primary-medium: rgba(113, 112, 255, 0.15);
+
+  /* Status */
+  --color-success: var(--green-500);
+  --color-success-soft: rgba(16, 185, 129, 0.12);
+  --color-warning: var(--amber-500);
+  --color-warning-soft: rgba(245, 158, 11, 0.12);
+  --color-error: var(--red-500);
+  --color-error-soft: rgba(239, 68, 68, 0.12);
+
+  /* Border */
+  --color-border: var(--white-08);
+  --color-border-subtle: var(--white-05);
+  --color-border-strong: var(--white-15);
+  --color-border-accent: rgba(113, 112, 255, 0.25);
+
+  /* Shadow (semantic) */
+  --shadow-xs: var(--sh-xs);
+  --shadow-sm: var(--sh-sm);
+  --shadow-md: var(--sh-md);
+  --shadow-lg: var(--sh-lg);
+  --shadow-xl: var(--sh-xl);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--white-05);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--white-08);
+  --shadow-glow: var(--sh-focus);
+
+  /* Spacing (semantic) */
+  --space-xs: var(--sp-1);
+  --space-sm: var(--sp-2);
+  --space-md: var(--sp-4);
+  --space-lg: var(--sp-6);
+  --space-xl: var(--sp-8);
+  --space-2xl: var(--sp-12);
+  --space-3xl: var(--sp-16);
+  --space-4xl: var(--sp-24);
+
+  /* Section gaps */
+  --section-gap: var(--sp-20);
+  --section-gap-mobile: var(--sp-12);
+
+  /* Radius (semantic) */
+  --radius-sm: var(--rad-sm);
+  --radius-md: var(--rad-md);
+  --radius-lg: var(--rad-lg);
+  --radius-xl: var(--rad-xl);
+  --radius-2xl: var(--rad-2xl);
+  --radius-full: var(--rad-full);
+
+  /* Layout */
   --max-width: 1200px;
   --max-width-narrow: 720px;
   --max-width-wide: 1440px;
   --navbar-height: 56px;
-  --sidebar-width: 240px;
+  --sidebar-width: 260px;
+  --container-pad: var(--sp-4);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-pad: var(--sp-6);
+    --section-gap: var(--sp-24);
+  }
+}
+
+/* ---- Tier 3: Component tokens (scoped to specific elements) ---- */
+:root {
+  /* Button */
+  --btn-height-sm: 32px;
+  --btn-height-md: 40px;
+  --btn-height-lg: 48px;
+  --btn-font-size: var(--text-sm);
+  --btn-radius: var(--rad-md);
+  --btn-pad-x: var(--sp-4);
+  --btn-pad-y: var(--sp-2);
+  --btn-gap: var(--sp-2);
+
+  /* Card */
+  --card-pad: var(--sp-6);
+  --card-radius: var(--rad-xl);
+  --card-bg: var(--white-03);
+  --card-border: 1px solid var(--color-border);
+  --card-shadow: var(--shadow-card);
+
+  /* Input */
+  --input-height: 40px;
+  --input-pad-x: var(--sp-3);
+  --input-pad-y: var(--sp-2);
+  --input-radius: var(--rad-md);
+  --input-font-size: var(--text-sm);
+
+  /* Badge */
+  --badge-pad-x: var(--sp-2);
+  --badge-pad-y: 2px;
+  --badge-font-size: var(--text-xs);
+  --badge-radius: var(--rad-full);
+
+  /* Table */
+  --table-header-size: var(--text-xs);
+  --table-cell-size: var(--text-sm);
+  --table-row-height: 48px;
+  --table-row-height-compact: 40px;
+
+  /* KPI */
+  --kpi-value-size: var(--text-3xl);
+  --kpi-label-size: var(--text-xs);
+  --kpi-pad: var(--sp-5);
+}
+
+/* ---- Backward compat aliases (interactions.css + existing templates) ---- */
+:root {
+  --color-brand-dark: var(--bg-900);
+  --color-bg-elevated: var(--color-bg-surface);
+  --color-bg-sunken: var(--bg-800);
+  --color-card: var(--card-bg);
+  --color-card-hover: var(--white-05);
+  --color-accent: var(--purple-400);
+  --color-accent-hover: #a855f7;
+  --color-accent-light: rgba(158, 57, 229, 0.12);
+  --color-gray-50: var(--bg-700);
+  --color-gray-100: var(--bg-600);
+  --color-gray-200: var(--bg-400);
+  --color-gray-300: var(--white-25);
+  --color-gray-400: var(--white-35);
+  --color-gray-500: var(--white-50);
+  --color-gray-600: var(--white-70);
+  --color-gray-700: var(--white-85);
+  --color-gray-800: var(--white-95);
+  --color-gray-900: var(--white-95);
+  --font-title: var(--font-sans);
+  --font-body: var(--font-sans);
+  --weight-normal: var(--fw-normal);
+  --weight-medium: var(--fw-medium);
+  --weight-semibold: var(--fw-semibold);
+  --weight-bold: var(--fw-bold);
+  --leading-tight: var(--lh-tight);
+  --leading-snug: var(--lh-snug);
+  --leading-normal: var(--lh-normal);
+  --leading-relaxed: var(--lh-relaxed);
+  --tracking-tight: var(--ls-tight);
+  --tracking-snug: var(--ls-snug);
+  --tracking-normal: var(--ls-normal);
+  --tracking-wide: var(--ls-wide);
+  --shadow-glow-primary: var(--sh-focus);
+  --shadow-glow-accent: var(--sh-focus);
+  --shadow-float: var(--shadow-xl);
+  --ease-spring: var(--ease-spring);
+  --duration-fast: var(--dur-fast);
+  --duration-normal: var(--dur-normal);
+  --duration-slow: var(--dur-slow);
+  --duration-slower: var(--dur-slower);
+  --radius-xs: var(--rad-sm);
+  --radius-3xl: var(--rad-3xl);
+  --space-0: var(--sp-0);
+  --space-5: var(--sp-5);
+  --space-10: var(--sp-10);
+  --space-14: 56px;
+  --max-width: 1200px;
+  --max-width-narrow: 720px;
+  --max-width-wide: 1440px;
+  --navbar-height: 56px;
+  --sidebar-width: 260px;
 }
