@@ -521,7 +521,7 @@ INSERT OR IGNORE INTO users (uid, username, password_hash, nickname, role, statu
 VALUES (
     'admin_001',
     'admin',
-    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyNiAYxMHHO3Oq',
+    '$2b$12$3SgOuIxbtK.A.qTcM3vbq.7nbqoEUJqvf6LkeBX.g8oLWw2ZOpQR2',
     '管理员',
     'admin',
     'active'

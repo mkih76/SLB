@@ -1,13 +1,19 @@
+# venv
+.venv/
+venv/
 __pycache__/
 *.pyc
-*.db
-*.db-journal
-*.db-wal
-.env
-uploads/
-venv/
-.venv/
+
+# 数据库（不入仓）
+data/slb.db
+data/*.db
+data/test.db
+data/backups/
+
+# 临时
+_probe*.py
 *.log
-node_modules/
-package-lock.json
-package.json
+
+# IDE
+.vscode/
+.idea/

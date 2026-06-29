@@ -94,6 +94,10 @@ def create_app():
     def phrases_study():
         return render_template('phrases_study.html')
 
+    @app.route('/phrases')
+    def phrases_page():
+        return render_template('phrases.html')
+
     @app.route('/phrases/generate')
     def phrases_generate():
         return render_template('phrases_generate.html')
@@ -134,6 +138,20 @@ def create_app():
     def page_not_found(e):
         return render_template('404.html'), 404
 
+    @app.route('/favicon.ico')
+    def favicon():
+        """Inline SVG favicon (申 character) — avoids 404 in browsers and is theme-aware"""
+        svg = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+            '<rect width="64" height="64" rx="12" fill="#1c1e54"/>'
+            '<text x="32" y="44" font-family="serif" font-size="36" '
+            'font-weight="700" text-anchor="middle" fill="#f5e9d4">申</text>'
+            '</svg>'
+        )
+        from flask import Response
+        return Response(svg, mimetype='image/svg+xml')
+
     @app.errorhandler(500)
     def internal_error(e):
         return render_template('404.html'), 500
@@ -160,6 +178,10 @@ def create_app():
         if not _admin_guard():
             return redirect('/login')
         return render_template('admin/dashboard.html')
+
+    @app.route('/admin/login')
+    def admin_login():
+        return render_template('admin/login.html')
 
     @app.route('/admin/users')
     def admin_users():
@@ -197,10 +219,7 @@ def create_app():
             return redirect('/login')
         return render_template('admin/logs.html')
 
-    # Favicon
-    @app.route('/favicon.ico')
-    def favicon():
-        return send_from_directory(app.static_folder, 'favicon.ico')
+    # Favicon — handled by SVG inline route above (avoid 404 + add brand mark)
 
     @app.after_request
     def add_security_headers(response):
