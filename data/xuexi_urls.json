@@ -1,0 +1,26 @@
+{
+  "last_updated": "2026-07-13T00:00:00Z",
+  "source": "xuexi.cn + news aggregators",
+  "description": "待抓取的新文章 URL 索引（去重基线 = /tmp/existing_files.txt 中的 37 个 .md 文件）",
+  "note": "所有 URL 须与现有文件名比对去重，文件名格式：YYYY-MM-DD-{safe_title}.md",
+  "articles": [
+    {
+      "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=11753429454728309691&item_id=11753429454728309691",
+      "expected_date": "2026-07-12",
+      "title_hint": "习近平就推进新型工业化作出重要指示",
+      "source": "xuexi.cn lgpage/detail"
+    },
+    {
+      "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=9733332534415207587&item_id=9733332534415207587",
+      "expected_date": "2026-07-12",
+      "title_hint": "向着到2035年建成科技强国的目标坚定迈进（论学习贯彻习近平在国家科学技术奖励大会、两院院士大会、中国科协十一大上重要讲话）",
+      "source": "xuexi.cn lgpage/detail"
+    },
+    {
+      "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=15434340724821254978&item_id=15434340724821254978",
+      "expected_date": "2026-07-11",
+      "title_hint": "习书记提出上海党建工作要成为中央的一个点（强党兴党的故事|上海的党建重点是楼宇）",
+      "source": "xuexi.cn lgpage/detail"
+    }
+  ]
+}
