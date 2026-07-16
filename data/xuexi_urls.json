@@ -1,20 +1,23 @@
 {
-  "last_updated": "2026-07-15T00:00:00Z",
+  "last_updated": "2026-07-16T00:00:00Z",
   "source": "xuexi.cn + news aggregators",
-  "description": "待抓取的新文章 URL 索引（去重基线 = /opt/slb/data/xuexi_articles/ 下的 .md 文件名）",
+  "description": "已抓取的文章 URL 索引（去重基线）",
   "note": "所有 URL 须与现有文件名比对去重，文件名格式：YYYY-MM-DD-{safe_title}.md",
   "articles": [
-    {
-      "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=17248576273431952885&item_id=17248576273431952885",
-      "expected_date": "2026-07-15",
-      "title_hint": "习近平对网络安全和信息化工作作出重要指示",
-      "source": "xuexi.cn lgpage/detail"
-    },
-    {
-      "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=6029211727091947883&item_id=6029211727091947883",
-      "expected_date": "2026-07-13",
-      "title_hint": "习近平将出席2026世界人工智能大会暨人工智能全球治理高级别会议开幕式并发表主旨讲话",
-      "source": "xuexi.cn lgpage/detail"
-    }
+    {"id": "17248576273431952885", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=17248576273431952885&item_id=17248576273431952885", "date": "2026-07-15"},
+    {"id": "6029211727091947883", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=6029211727091947883&item_id=6029211727091947883", "date": "2026-07-13"},
+    {"id": "9209632644016601007", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=9209632644016601007&item_id=9209632644016601007", "date": "2025-11-30"},
+    {"id": "1598648109273407324", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=1598648109273407324&item_id=1598648109273407324", "date": "2026-05-31"},
+    {"id": "5713366211397675705", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=5713366211397675705&item_id=5713366211397675705", "date": "2025-02-15"},
+    {"id": "16908455328546923631", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=16908455328546923631&item_id=16908455328546923631", "date": "2026-05-25"},
+    {"id": "10890947922387222310", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=10890947922387222310&item_id=10890947922387222310", "date": "2024-11-30"},
+    {"id": "5151706010402221712", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=5151706010402221712&item_id=5151706010402221712", "date": "2025-05-31"},
+    {"id": "5874903822768198601", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=5874903822768198601&item_id=5874903822768198601", "date": "2025-06-15"},
+    {"id": "8259793824339479917", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=8259793824339479917&item_id=8259793824339479917", "date": "2024-02-01"},
+    {"id": "3964286162500390396", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=3964286162500390396&item_id=3964286162500390396", "date": "2025-12-08"},
+    {"id": "15735176810503106575", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=15735176810503106575&item_id=15735176810503106575", "date": "2026-01-05"},
+    {"id": "11984300378093888050", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=11984300378093888050&item_id=11984300378093888050", "date": "2026-06-25"},
+    {"id": "6108141825412764926", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=6108141825412764926&item_id=6108141825412764926", "date": "2026-02-14"},
+    {"id": "3782111718141342452", "url": "https://www.xuexi.cn/lgpage/detail/index.html?id=3782111718141342452&item_id=3782111718141342452", "date": "2025-08-04"}
   ]
 }
