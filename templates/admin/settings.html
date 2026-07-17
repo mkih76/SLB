@@ -1,0 +1,293 @@
+{% extends "admin/base.html" %}
+
+{% block title %}系统设置 - 申论帮管理后台{% endblock %}
+{% block page_title %}系统设置{% endblock %}
+
+{% block admin_content %}
+<div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+  <!-- 基础设置 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">
+      <i data-lucide="settings"></i>
+      基础设置
+    </h3>
+    <form id="basic-form" onsubmit="saveBasicSettings(event)">
+      <div class="admin-form-group">
+        <label class="admin-form-label">网站名称</label>
+        <input type="text" id="site-name" class="input-field" value="申论帮">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">网站描述</label>
+        <textarea id="site-description" class="input-field" style="height: 80px;">AI驱动的申论批改平台</textarea>
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">联系邮箱</label>
+        <input type="email" id="contact-email" class="input-field" placeholder="admin@slb.com">
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i>
+        保存设置
+      </button>
+    </form>
+  </div>
+
+  <!-- 批改设置 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">
+      <i data-lucide="check-square"></i>
+      批改设置
+    </h3>
+    <form id="grading-form" onsubmit="saveGradingSettings(event)">
+      <div class="admin-form-group">
+        <label class="admin-form-label">免费批改次数</label>
+        <input type="number" id="free-grades" class="input-field" value="3" min="0">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">VIP每日批改次数</label>
+        <input type="number" id="vip-daily-grades" class="input-field" value="10" min="1">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">启用AI复核</label>
+        <select id="ai-review-enabled" class="input-field">
+          <option value="true">启用</option>
+          <option value="false">禁用</option>
+        </select>
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">低分阈值 (需复核)</label>
+        <input type="number" id="low-score-threshold" class="input-field" value="60" min="0" max="100">
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i>
+        保存设置
+      </button>
+    </form>
+  </div>
+
+  <!-- 会员设置 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">
+      <i data-lucide="credit-card"></i>
+      会员设置
+    </h3>
+    <form id="membership-form" onsubmit="saveMembershipSettings(event)">
+      <div class="admin-form-group">
+        <label class="admin-form-label">免费体验天数</label>
+        <input type="number" id="free-trial-days" class="input-field" value="30" min="0">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">月卡价格 (元)</label>
+        <input type="number" id="monthly-price" class="input-field" value="99" min="0">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">年卡价格 (元)</label>
+        <input type="number" id="yearly-price" class="input-field" value="399" min="0">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">积分兑换比例 (元/积分)</label>
+        <input type="number" id="credit-ratio" class="input-field" value="0.1" min="0" step="0.01">
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i>
+        保存设置
+      </button>
+    </form>
+  </div>
+
+  <!-- LLM设置 -->
+  <div class="card">
+    <h3 style="margin-bottom: var(--space-3);">
+      <i data-lucide="cpu"></i>
+      AI模型设置
+    </h3>
+    <form id="llm-form" onsubmit="saveLLMSettings(event)">
+      <div class="admin-form-group">
+        <label class="admin-form-label">模型提供商</label>
+        <select id="llm-provider" class="input-field">
+          <option value="deepseek">DeepSeek</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+        </select>
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">API Key</label>
+        <input type="password" id="llm-api-key" class="input-field" placeholder="sk-...">
+        <small style="color: var(--color-text-secondary);">留空则保持不变</small>
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">模型名称</label>
+        <input type="text" id="llm-model" class="input-field" value="deepseek-chat">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label">API Base URL</label>
+        <input type="text" id="llm-base-url" class="input-field" value="https://api.deepseek.com">
+      </div>
+      <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i>
+          保存设置
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="testLLM()">
+          <i data-lucide="zap"></i>
+          测试连接
+        </button>
+      </div>
+    </form>
+    <div id="llm-test-result" style="margin-top: var(--space-2); display: none;"></div>
+  </div>
+</div>
+
+<!-- 危险操作区 -->
+<div class="card" style="margin-top: var(--space-4); border: 1px solid var(--color-error);">
+  <h3 style="margin-bottom: var(--space-3); color: var(--color-error);">
+    <i data-lucide="alert-triangle"></i>
+    危险操作
+  </h3>
+  <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+    <button class="btn btn-secondary" onclick="exportData()">
+      <i data-lucide="download"></i>
+      导出所有数据
+    </button>
+    <button class="btn btn-secondary" onclick="clearCache()">
+      <i data-lucide="trash-2"></i>
+      清除缓存
+    </button>
+    <button class="btn btn-secondary" onclick="syncPhrases()">
+      <i data-lucide="refresh-cw"></i>
+      同步好词库
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function loadSettings() {
+    try {
+      const data = await adminFetch('/settings');
+      const settings = data.data || {};
+
+      // 基础设置
+      document.getElementById('site-name').value = settings.site_name || '申论帮';
+      document.getElementById('site-description').value = settings.site_description || '';
+      document.getElementById('contact-email').value = settings.contact_email || '';
+
+      // 批改设置
+      document.getElementById('free-grades').value = settings.free_grades || 3;
+      document.getElementById('vip-daily-grades').value = settings.vip_daily_grades || 10;
+      document.getElementById('ai-review-enabled').value = String(settings.ai_review_enabled ?? true);
+      document.getElementById('low-score-threshold').value = settings.low_score_threshold || 60;
+
+      // 会员设置
+      document.getElementById('free-trial-days').value = settings.free_trial_days || 30;
+      document.getElementById('monthly-price').value = settings.monthly_price || 99;
+      document.getElementById('yearly-price').value = settings.yearly_price || 399;
+      document.getElementById('credit-ratio').value = settings.credit_ratio || 0.1;
+
+      // LLM设置
+      document.getElementById('llm-provider').value = settings.llm_provider || 'deepseek';
+      document.getElementById('llm-model').value = settings.llm_model || 'deepseek-chat';
+      document.getElementById('llm-base-url').value = settings.llm_base_url || 'https://api.deepseek.com';
+
+      lucide.createIcons();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function saveBasicSettings(e) {
+    e.preventDefault();
+    const settings = {
+      site_name: document.getElementById('site-name').value,
+      site_description: document.getElementById('site-description').value,
+      contact_email: document.getElementById('contact-email').value
+    };
+    await saveSettings(settings);
+  }
+
+  async function saveGradingSettings(e) {
+    e.preventDefault();
+    const settings = {
+      free_grades: parseInt(document.getElementById('free-grades').value),
+      vip_daily_grades: parseInt(document.getElementById('vip-daily-grades').value),
+      ai_review_enabled: document.getElementById('ai-review-enabled').value === 'true',
+      low_score_threshold: parseInt(document.getElementById('low-score-threshold').value)
+    };
+    await saveSettings(settings);
+  }
+
+  async function saveMembershipSettings(e) {
+    e.preventDefault();
+    const settings = {
+      free_trial_days: parseInt(document.getElementById('free-trial-days').value),
+      monthly_price: parseFloat(document.getElementById('monthly-price').value),
+      yearly_price: parseFloat(document.getElementById('yearly-price').value),
+      credit_ratio: parseFloat(document.getElementById('credit-ratio').value)
+    };
+    await saveSettings(settings);
+  }
+
+  async function saveLLMSettings(e) {
+    e.preventDefault();
+    const apiKey = document.getElementById('llm-api-key').value;
+    const settings = {
+      llm_provider: document.getElementById('llm-provider').value,
+      llm_model: document.getElementById('llm-model').value,
+      llm_base_url: document.getElementById('llm-base-url').value
+    };
+    if (apiKey) {
+      settings.llm_api_key = apiKey;
+    }
+    await saveSettings(settings);
+  }
+
+  async function saveSettings(settings) {
+    try {
+      await adminFetch('/settings', {
+        method: 'PUT',
+        body: JSON.stringify(settings)
+      });
+      showToast('保存成功');
+    } catch (e) {
+      showToast('保存失败', 'error');
+    }
+  }
+
+  async function testLLM() {
+    const resultDiv = document.getElementById('llm-test-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<span style="color: var(--color-text-secondary);">测试中...</span>';
+    try {
+      const data = await adminFetch('/settings/test-llm', { method: 'POST' });
+      const info = data.data;
+      resultDiv.innerHTML = `<div style="padding: var(--space-2); background: var(--color-success-bg, #e6f9e6); border-radius: 6px; color: var(--color-success, #2e7d32);">
+        <strong>连接成功</strong> | 提供商: ${info.provider} | 模型: ${info.model}<br>
+        <small>AI回复: ${info.response}</small>
+      </div>`;
+    } catch (e) {
+      resultDiv.innerHTML = `<div style="padding: var(--space-2); background: var(--color-error-bg, #fdecea); border-radius: 6px; color: var(--color-error, #c62828);">
+        <strong>连接失败</strong>: ${e.message || '请检查 API Key 和 Base URL'}
+      </div>`;
+    }
+  }
+
+  function exportData() {
+    if (!confirm('确定要导出所有数据吗？这可能需要一些时间。')) return;
+    showToast('导出功能开发中...');
+  }
+
+  function clearCache() {
+    if (!confirm('确定要清除所有缓存吗？')) return;
+    adminFetch('/settings/cache', { method: 'DELETE' })
+      .then(() => showToast('缓存已清除'))
+      .catch(() => showToast('操作失败', 'error'));
+  }
+
+  function syncPhrases() {
+    if (!confirm('确定要同步好词库吗？')) return;
+    showToast('同步功能开发中...');
+  }
+
+  loadSettings();
+</script>
+{% endblock %}

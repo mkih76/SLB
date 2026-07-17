@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% block title %}全真模拟 - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 隐藏 base 的 navbar 和 footer，模拟考场用自定义布局 */
+  .navbar, .footer { display: none !important; }
+  main { animation: none; }
+
+  .sim-topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(17, 24, 39, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    color: #fff; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--space-6); border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .sim-topbar .paper-title { font-size: var(--text-base); font-weight: var(--weight-semibold); }
+  .timer-section { display: flex; align-items: center; gap: var(--space-4); }
+  .timer-display {
+    font-size: var(--text-3xl); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.1); padding: var(--space-1) var(--space-4); border-radius: var(--radius-md);
+  }
+  .timer-display.warning { color: #faad14; }
+  .timer-display.danger { color: #ff4d4f; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: 0.7; } }
+  .sim-body { margin-top: 56px; display: flex; height: calc(100vh - 56px); }
+  .material-panel {
+    width: 45%; overflow-y: auto; padding: var(--space-5) var(--space-6);
+    background: var(--color-bg-elevated); border-right: 1px solid var(--color-gray-200);
+  }
+  .material-panel h3 { font-size: var(--text-base); color: var(--color-primary); margin-bottom: var(--space-4); border-bottom: 2px solid var(--color-primary); padding-bottom: var(--space-2); }
+  .material-block { margin-bottom: var(--space-5); }
+  .material-block .mat-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-accent); margin-bottom: var(--space-1); }
+  .material-block .mat-text { font-size: var(--text-sm); line-height: var(--leading-relaxed); color: var(--color-gray-700); white-space: pre-wrap; }
+  .answer-panel { flex: 1; overflow-y: auto; padding: var(--space-5) var(--space-6); }
+  .question-card {
+    background: var(--color-bg-elevated); border: 1px solid var(--color-gray-200); border-radius: var(--radius-xl);
+    padding: var(--space-5); margin-bottom: var(--space-4); scroll-margin-top: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .question-card.active { border-color: var(--color-primary); box-shadow: var(--shadow-glow-primary); }
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+  .q-badge { display: inline-block; padding: 2px 10px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: #fff; background: var(--color-primary); }
+  .q-score { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .q-stem { font-size: var(--text-sm); line-height: var(--leading-relaxed); margin-bottom: var(--space-2); color: var(--color-gray-800); }
+  .q-requirement { font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-1); }
+  .q-word-limit { font-size: var(--text-xs); color: var(--color-accent); margin-bottom: var(--space-3); }
+  .q-textarea {
+    width: 100%; min-height: 200px; border: 1px solid var(--color-gray-300); border-radius: var(--radius-lg);
+    padding: var(--space-3); font-size: var(--text-sm); line-height: var(--leading-relaxed); resize: vertical;
+    font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .q-textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: var(--shadow-glow-primary); }
+  .q-footer { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2); }
+  .word-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .word-count.ok { color: var(--color-success); }
+  .word-count.warn { color: var(--color-warning); }
+  .q-nav {
+    position: fixed; right: var(--space-4); top: 72px; z-index: 50;
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-gray-200); border-radius: var(--radius-xl);
+    padding: var(--space-3); box-shadow: var(--shadow-lg);
+  }
+  .q-nav-title { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-2); text-align: center; }
+  .q-nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-1); }
+  .q-nav-btn {
+    width: 36px; height: 36px; border: 1px solid var(--color-gray-300); border-radius: var(--radius-md);
+    background: var(--color-bg-elevated); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-700);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .q-nav-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .q-nav-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  .q-nav-btn.answered { background: var(--color-success-light); border-color: var(--color-success); color: var(--color-success); }
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; z-index: 200;
+    flex-direction: column; gap: var(--space-4);
+  }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 300;
+  }
+  .modal-box {
+    background: var(--color-bg-elevated); border-radius: var(--radius-2xl); padding: var(--space-8); max-width: 480px; width: 90%;
+    box-shadow: var(--shadow-2xl); animation: modalIn 300ms var(--ease-out);
+  }
+  .modal-box h3 { font-size: var(--text-lg); margin-bottom: var(--space-3); }
+  .modal-box p { font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-5); line-height: var(--leading-relaxed); }
+  .modal-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
+  .result-panel { max-width: 800px; margin: 80px auto 40px; padding: 0 var(--space-6); }
+  .result-card { background: var(--color-bg-elevated); border-radius: var(--radius-2xl); padding: var(--space-8); margin-bottom: var(--space-5); box-shadow: var(--shadow-card); }
+  .result-header { text-align: center; margin-bottom: var(--space-6); }
+  .result-score { font-size: 64px; font-weight: var(--weight-bold); color: var(--color-primary); }
+  .result-max { font-size: var(--text-lg); color: var(--color-text-muted); }
+  .result-meta { display: flex; justify-content: center; gap: var(--space-8); margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary); }
+  .result-table { width: 100%; border-collapse: collapse; }
+  .result-table th, .result-table td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--color-gray-100); font-size: var(--text-sm); }
+  .result-table th { background: var(--color-gray-50); color: var(--color-text-secondary); font-weight: var(--weight-medium); }
+  .score-bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--color-gray-200); width: 80px; vertical-align: middle; margin-left: var(--space-2); }
+  .score-bar-fill { height: 100%; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sim-topbar" id="topbar">
+  <div class="paper-title" id="paperTitle">加载中...</div>
+  <div class="timer-section">
+    <div class="timer-display" id="timerDisplay">--:--:--</div>
+    <button class="btn btn-accent" onclick="confirmSubmit()">交卷</button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p class="text-muted">正在加载试卷...</p>
+</div>
+
+<div class="sim-body" id="simBody" style="display:none;">
+  <div class="material-panel" id="materialPanel">
+    <h3>给定材料</h3>
+    <div id="materialContent"></div>
+  </div>
+  <div class="answer-panel" id="answerPanel"></div>
+</div>
+
+<div class="q-nav" id="qNav" style="display:none;">
+  <div class="q-nav-title">题目导航</div>
+  <div class="q-nav-grid" id="qNavGrid"></div>
+</div>
+
+<div class="modal-overlay" id="submitModal" style="display:none;">
+  <div class="modal-box">
+    <h3>确认交卷？</h3>
+    <p id="submitSummary">你还有 X 题未作答，确定要交卷吗？交卷后无法修改。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">继续作答</button>
+      <button class="btn btn-primary" onclick="submitExam()">确认交卷</button>
+    </div>
+  </div>
+</div>
+
+<div class="result-panel" id="resultPanel" style="display:none;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('slb_token');
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+const pid = '{{ pid }}';
+let simId = null;
+let questions = [];
+let timeLimit = 150 * 60;
+let remainSeconds = 0;
+let timerInterval = null;
+let submitted = false;
+
+async function startSimulation() {
+  try {
+    const res = await fetch('/api/simulation/start', { method: 'POST', headers: headers(), body: JSON.stringify({ pid: pid }) });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, 'error'); window.location.href = '/papers'; return; }
+    const sim = data.data;
+    simId = sim.sim_id;
+    questions = sim.questions || [];
+    timeLimit = (sim.time_limit || 150) * 60;
+    remainSeconds = timeLimit;
+    document.getElementById('paperTitle').textContent = sim.paper_title || '模拟考试';
+    renderMaterial(sim.material || []);
+    renderQuestions(questions);
+    renderNav(questions);
+    startTimer();
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('simBody').style.display = 'flex';
+    document.getElementById('qNav').style.display = 'block';
+  } catch (e) { showToast('加载失败：' + e.message, 'error'); }
+}
+
+function renderMaterial(materials) {
+  const container = document.getElementById('materialContent');
+  if (!materials || !materials.length) { container.innerHTML = '<p class="text-muted">本试卷无材料</p>'; return; }
+  container.innerHTML = materials.map((m, i) => {
+    const label = m.label || ('材料' + (i + 1));
+    const text = typeof m === 'string' ? m : (m.text || m.content || '');
+    return '<div class="material-block"><div class="mat-label">' + label + '</div><div class="mat-text">' + escapeHtml(text) + '</div></div>';
+  }).join('');
+}
+
+function renderQuestions(qs) {
+  const panel = document.getElementById('answerPanel');
+  panel.innerHTML = '';
+  const typeNames = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+  qs.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = 'qcard-' + idx;
+    card.innerHTML =
+      '<div class="q-header"><span class="q-badge">' + (typeNames[q.type] || q.type_name || '未知') + '</span><span class="q-score">满分 ' + (q.score || 0) + ' 分</span></div>' +
+      '<div class="q-stem">' + escapeHtml(q.stem || '') + '</div>' +
+      (q.requirement ? '<div class="q-requirement">' + escapeHtml(q.requirement) + '</div>' : '') +
+      (q.word_limit ? '<div class="q-word-limit">字数要求：' + escapeHtml(q.word_limit) + '</div>' : '') +
+      '<textarea class="q-textarea" id="ans-' + idx + '" placeholder="请在此输入你的答案..." oninput="onInput(' + idx + ')"></textarea>' +
+      '<div class="q-footer"><span class="word-count" id="wc-' + idx + '">0 字</span></div>';
+    panel.appendChild(card);
+  });
+}
+
+function renderNav(qs) {
+  const grid = document.getElementById('qNavGrid');
+  grid.innerHTML = '';
+  qs.forEach((q, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'q-nav-btn';
+    btn.id = 'nav-' + idx;
+    btn.textContent = idx + 1;
+    btn.onclick = () => scrollToQ(idx);
+    grid.appendChild(btn);
+  });
+}
+
+function scrollToQ(idx) {
+  const card = document.getElementById('qcard-' + idx);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+  if (card) card.classList.add('active');
+}
+
+function onInput(idx) {
+  const ta = document.getElementById('ans-' + idx);
+  const len = ta.value.length;
+  const wc = document.getElementById('wc-' + idx);
+  wc.textContent = len + ' 字';
+  wc.className = 'word-count' + (len > 0 ? ' ok' : '');
+  const nav = document.getElementById('nav-' + idx);
+  if (nav && len > 0) nav.classList.add('answered');
+  else if (nav) nav.classList.remove('answered');
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    remainSeconds--;
+    updateTimerDisplay();
+    if (remainSeconds === 900) { showToast('距离考试结束还有15分钟，请抓紧时间！', 'warning'); }
+    if (remainSeconds <= 0) {
+      clearInterval(timerInterval);
+      showToast('考试时间到，系统将自动交卷！', 'warning');
+      submitExam();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const h = Math.floor(remainSeconds / 3600);
+  const m = Math.floor((remainSeconds % 3600) / 60);
+  const s = remainSeconds % 60;
+  const display = document.getElementById('timerDisplay');
+  display.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+  display.className = 'timer-display';
+  if (remainSeconds <= 300) display.classList.add('danger');
+  else if (remainSeconds <= 1800) display.classList.add('warning');
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function confirmSubmit() {
+  let unanswered = 0;
+  questions.forEach((q, idx) => { const ta = document.getElementById('ans-' + idx); if (!ta || !ta.value.trim()) unanswered++; });
+  const summary = document.getElementById('submitSummary');
+  summary.innerHTML = unanswered > 0 ? '你还有 <b>' + unanswered + '</b> 题未作答，确定要交卷吗？交卷后无法修改。' : '所有题目均已作答。确定交卷吗？交卷后无法修改。';
+  document.getElementById('submitModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('submitModal').style.display = 'none'; }
+
+async function submitExam() {
+  if (submitted) return;
+  submitted = true;
+  closeModal();
+  clearInterval(timerInterval);
+  const answers = {};
+  questions.forEach((q, idx) => { const ta = document.getElementById('ans-' + idx); if (ta && ta.value.trim()) answers[q.qid] = ta.value.trim(); });
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+  overlay.querySelector('p').textContent = '正在交卷并批改中，请稍候...';
+  try {
+    const res = await fetch('/api/simulation/submit', { method: 'POST', headers: headers(), body: JSON.stringify({ sim_id: simId, answers: answers }) });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, 'error'); submitted = false; overlay.style.display = 'none'; return; }
+    renderResult(data.data);
+  } catch (e) { showToast('提交失败：' + e.message, 'error'); submitted = false; overlay.style.display = 'none'; }
+}
+
+function renderResult(result) {
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('simBody').style.display = 'none';
+  document.getElementById('qNav').style.display = 'none';
+  document.getElementById('topbar').style.display = 'none';
+  const panel = document.getElementById('resultPanel');
+  panel.style.display = 'block';
+  const timeMin = Math.floor((result.time_spent || 0) / 60);
+  const timeSec = (result.time_spent || 0) % 60;
+  const rankText = result.rank_percentile != null ? '超过 ' + result.rank_percentile + '% 的考生' : '暂无排名';
+  let html = '<div class="result-card"><div class="result-header">' +
+    '<div class="result-score">' + (result.total_score || 0) + '</div>' +
+    '<div class="result-max">/ ' + (result.total_max || 0) + ' 分</div>' +
+    '<div class="result-meta"><span>用时：' + timeMin + '分' + timeSec + '秒</span><span>' + rankText + '</span></div></div></div>';
+  html += '<div class="result-card"><h3 style="margin-bottom:var(--space-4);font-size:var(--text-base);color:var(--color-primary);">各题得分</h3>';
+  html += '<table class="result-table"><thead><tr><th>题号</th><th>得分</th><th>满分</th><th>得分率</th></tr></thead><tbody>';
+  (result.results || []).forEach((r, idx) => {
+    const pct = r.max_score > 0 ? Math.round(r.score / r.max_score * 100) : 0;
+    const color = pct >= 75 ? 'var(--color-success)' : pct >= 50 ? 'var(--color-warning)' : 'var(--color-error)';
+    html += '<tr><td>第' + (idx+1) + '题</td><td>' + r.score + '</td><td>' + r.max_score + '</td>' +
+      '<td><span style="color:' + color + ';font-weight:600;">' + pct + '%</span>' +
+      '<span class="score-bar"><span class="score-bar-fill" style="width:' + pct + '%;background:' + color + '"></span></span></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="text-align:center;margin-top:var(--space-6);">' +
+    '<a href="/papers" class="btn btn-primary" style="margin-right:var(--space-3);">返回卷库</a>' +
+    '<a href="/diagnosis" class="btn btn-accent">查看诊断报告</a></div>';
+  panel.innerHTML = html;
+}
+
+window.addEventListener('beforeunload', function(e) { if (!submitted && simId) { e.preventDefault(); e.returnValue = ''; } });
+
+if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); } else { startSimulation(); }
+</script>
+{% endblock %}

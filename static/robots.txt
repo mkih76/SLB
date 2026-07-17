@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /demo
+
+Sitemap: https://slb.19990419.top/sitemap.xml

@@ -1,0 +1,147 @@
+{% extends "admin/base.html" %}
+
+{% block title %}操作日志 - 申论帮管理后台{% endblock %}
+{% block page_title %}操作日志{% endblock %}
+
+{% block admin_content %}
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <div class="filter-item">
+    <label>操作类型</label>
+    <select id="filter-action" onchange="loadLogs()">
+      <option value="">全部</option>
+      <option value="create">创建</option>
+      <option value="update">更新</option>
+      <option value="delete">删除</option>
+      <option value="login">登录</option>
+      <option value="logout">登出</option>
+      <option value="ban">封禁</option>
+      <option value="unban">解封</option>
+      <option value="approve">通过</option>
+      <option value="reject">拒绝</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>操作人</label>
+    <input type="text" id="filter-admin" placeholder="操作人ID/昵称" onkeyup="if(event.key==='Enter')loadLogs()">
+  </div>
+  <div class="filter-item">
+    <label>时间范围</label>
+    <input type="date" id="filter-start" onchange="loadLogs()">
+    <span style="margin: 0 var(--space-1);">至</span>
+    <input type="date" id="filter-end" onchange="loadLogs()">
+  </div>
+  <button class="btn btn-primary" onclick="loadLogs()">
+    <i data-lucide="search"></i>
+    搜索
+  </button>
+</div>
+
+<!-- 日志列表 -->
+<div class="admin-table-container">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">操作日志</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>日志ID</th>
+        <th>时间</th>
+        <th>操作人</th>
+        <th>操作类型</th>
+        <th>目标对象</th>
+        <th>详情</th>
+        <th>IP地址</th>
+      </tr>
+    </thead>
+    <tbody id="logs-table">
+      <tr><td colspan="7" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+  <div class="admin-pagination">
+    <div class="pagination-info" id="pagination-info">共 0 条</div>
+    <div class="pagination-buttons" id="pagination-buttons"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  async function loadLogs(page = 1) {
+    currentPage = page;
+    const action = document.getElementById('filter-action').value;
+    const admin = document.getElementById('filter-admin').value;
+    const start = document.getElementById('filter-start').value;
+    const end = document.getElementById('filter-end').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (action) params.append('action', action);
+    if (admin) params.append('admin', admin);
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+
+    try {
+      const data = await adminFetch(`/logs?${params}`);
+      renderLogs(data.data);
+    } catch (e) {
+      document.getElementById('logs-table').innerHTML =
+        '<tr><td colspan="7" style="text-align: center;">加载失败</td></tr>';
+    }
+  }
+
+  function renderLogs(data) {
+    const tbody = document.getElementById('logs-table');
+
+    if (!data.logs || data.logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    const actionMap = {
+      'create': '<span class="badge badge-accent">创建</span>',
+      'update': '<span class="badge badge-info">更新</span>',
+      'delete': '<span class="badge badge-error">删除</span>',
+      'login': '<span class="badge">登录</span>',
+      'logout': '<span class="badge">登出</span>',
+      'ban': '<span class="badge badge-error">封禁</span>',
+      'unban': '<span class="badge badge-accent">解封</span>',
+      'approve': '<span class="badge badge-success">通过</span>',
+      'reject': '<span class="badge badge-error">拒绝</span>'
+    };
+
+    tbody.innerHTML = data.logs.map(log => `
+      <tr>
+        <td>${log.id || '-'}</td>
+        <td>${formatDate(log.created_at)}</td>
+        <td>${log.admin_uid || '-'}</td>
+        <td>${actionMap[log.action] || log.action}</td>
+        <td>${log.target_type || '-'} / ${log.target_id || '-'}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title='${log.detail || ''}'>${log.detail || '-'}</td>
+        <td>-</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pagination-info').textContent = `共 ${data.total} 条`;
+    renderPagination(data);
+    lucide.createIcons();
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination-buttons');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      html += `<button class="pagination-btn ${i === data.page ? 'active' : ''}" onclick="loadLogs(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+  }
+
+  loadLogs();
+</script>
+{% endblock %}

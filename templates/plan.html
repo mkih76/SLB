@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}备考计划 - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  .plan-container { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .plan-header { text-align: center; margin-bottom: var(--space-8); }
+  .plan-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
+  .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
+  .overview-card { background: linear-gradient(135deg, var(--color-gray-900), var(--color-primary)); color: #fff; border-radius: var(--radius-2xl); padding: var(--space-7); margin-bottom: var(--space-6); position: relative; overflow: hidden; }
+  .overview-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 80% 20%, rgba(184,148,46,0.12) 0%, transparent 60%); pointer-events: none; }
+  .overview-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); position: relative; }
+  .overview-title { font-size: var(--text-xl); font-weight: var(--weight-bold); }
+  .countdown { font-size: var(--text-4xl); font-weight: var(--weight-bold); }
+  .countdown small { font-size: var(--text-sm); font-weight: var(--weight-normal); opacity: 0.7; }
+  .overview-stats { display: flex; gap: var(--space-8); position: relative; }
+  .ov-stat { text-align: center; }
+  .ov-stat .num { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
+  .ov-stat .label { font-size: var(--text-xs); opacity: 0.7; margin-top: 2px; }
+  .progress-bar { height: 8px; background: rgba(255,255,255,0.15); border-radius: var(--radius-full); overflow: hidden; margin-top: var(--space-4); position: relative; }
+  .progress-fill { height: 100%; background: var(--color-accent); border-radius: var(--radius-full); transition: width 0.3s; }
+  .phase-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); }
+  .phase-seg { flex: 1; text-align: center; padding: var(--space-2) var(--space-2); border-radius: var(--radius-md); background: var(--color-gray-100); font-size: var(--text-xs); color: var(--color-text-secondary); }
+  .phase-seg.active { background: var(--color-primary); color: #fff; font-weight: var(--weight-semibold); }
+  .phase-seg .phase-name { font-weight: var(--weight-semibold); }
+  .phase-seg .phase-focus { font-size: 11px; margin-top: 2px; opacity: 0.8; }
+  .task-list { margin-bottom: var(--space-6); }
+  .task-item { padding: var(--space-4); margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-3); transition: all 0.2s; }
+  .task-item:hover { border-color: var(--color-primary); }
+  .task-item.completed { opacity: 0.6; background: var(--color-gray-50); }
+  .task-item.skipped { opacity: 0.4; }
+  .task-check { width: 28px; height: 28px; border: 2px solid var(--color-gray-300); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: var(--text-base); color: transparent; transition: all 0.2s; flex-shrink: 0; }
+  .task-check:hover { border-color: var(--color-success); }
+  .task-item.completed .task-check { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+  .task-info { flex: 1; }
+  .task-type-badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: var(--weight-semibold); color: #fff; margin-bottom: var(--space-1); }
+  .badge-drill { background: var(--color-primary); }
+  .badge-phrase_read { background: var(--color-accent); }
+  .badge-simulation { background: #722ed1; }
+  .badge-review { background: var(--color-success); }
+  .badge-essay_write { background: var(--color-warning); }
+  .task-title { font-size: var(--text-sm); color: var(--color-gray-800); }
+  .task-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+  .task-actions { display: flex; gap: var(--space-2); }
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-6); }
+  .week-day { text-align: center; padding: var(--space-3) var(--space-2); border-radius: var(--radius-lg); background: var(--color-bg-elevated); border: 1px solid var(--color-gray-200); }
+  .week-day .day-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .week-day .day-status { font-size: var(--text-xl); margin-top: var(--space-1); }
+  .week-day.done { border-color: var(--color-success); background: var(--color-success-light); }
+  .week-day.today { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .week-day.future { opacity: 0.5; }
+  .create-form { padding: var(--space-7); margin-bottom: var(--space-6); }
+  .form-row { display: flex; gap: var(--space-4); margin-bottom: var(--space-4); }
+  @media (max-width: 768px) { .form-row { flex-direction: column; } .overview-stats { flex-wrap: wrap; gap: var(--space-4); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="plan-container">
+    <div class="plan-header reveal">
+      <h1>备考计划</h1>
+      <p class="text-muted">科学规划，高效备考</p>
+    </div>
+
+    <div id="loadingState" class="empty-state"><div class="spinner"></div></div>
+
+    <div id="createView" style="display:none;">
+      <div class="card create-form reveal">
+        <div class="section-title">创建备考计划</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;"><label class="form-label">计划名称</label><input type="text" class="input-field" id="planName" placeholder="例如：2026国考冲刺" value="我的备考计划"></div>
+          <div class="form-group" style="flex:1;"><label class="form-label">考试类型</label><select class="input-field" id="examType"><option value="guokao">国考</option><option value="shengkao">省考</option><option value="xuandiao">选调</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;"><label class="form-label">考试日期</label><input type="date" class="input-field" id="examDate"></div>
+          <div class="form-group" style="flex:1;"><label class="form-label">每天学习时间（分钟）</label><input type="number" class="input-field" id="dailyMinutes" value="120" min="30" max="480"></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="createPlan()">生成备考计划</button>
+      </div>
+    </div>
+
+    <div id="planView" style="display:none;">
+      <div class="overview-card reveal glass-glow">
+        <div class="overview-top"><div class="overview-title" id="planTitle">--</div><div class="countdown" id="countdown">--<small> 天</small></div></div>
+        <div class="overview-stats">
+          <div class="ov-stat"><div class="num" id="streakDays">0</div><div class="label">连续打卡</div></div>
+          <div class="ov-stat"><div class="num" id="progressPct">0%</div><div class="label">完成进度</div></div>
+          <div class="ov-stat"><div class="num" id="dailyMin">0</div><div class="label">分钟/天</div></div>
+          <div class="ov-stat"><div class="num" id="levelName">--</div><div class="label">当前水平</div></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="section-title reveal">阶段进度</div>
+      <div class="phase-bar reveal" id="phaseBar"></div>
+
+      <div class="section-title reveal">今日任务 <span id="taskSummary" style="font-size:var(--text-sm);font-weight:var(--weight-normal);color:var(--color-text-muted);"></span></div>
+      <div class="task-list reveal-stagger" id="taskList"></div>
+
+      <div class="section-title reveal">本周进度</div>
+      <div class="week-grid reveal" id="weekGrid"></div>
+
+      <div style="text-align:center; margin-top: var(--space-5);" class="reveal">
+        <button class="btn btn-secondary" onclick="pauseResume()">暂停/恢复计划</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = '/api/plan';
+const token = localStorage.getItem('slb_token');
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+let activePlan = null;
+
+async function init() {
+  document.getElementById('loadingState').style.display = 'block';
+  try {
+    const res = await fetch(API + '/active', {headers: headers()});
+    const data = await res.json();
+    if (data.data) {
+      activePlan = data.data;
+      renderPlan(data.data);
+      await loadTodayTasks();
+    } else {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('createView').style.display = 'block';
+      const d = new Date(); d.setMonth(d.getMonth() + 3);
+      document.getElementById('examDate').value = d.toISOString().split('T')[0];
+    }
+  } catch (e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('createView').style.display = 'block';
+  }
+}
+
+function renderPlan(plan) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('createView').style.display = 'none';
+  document.getElementById('planView').style.display = 'block';
+  document.getElementById('planTitle').textContent = plan.plan_name + ' · ' + plan.exam_type_name;
+  document.getElementById('countdown').innerHTML = plan.days_remaining + '<small> 天</small>';
+  document.getElementById('streakDays').textContent = plan.streak_days;
+  document.getElementById('progressPct').textContent = plan.progress_pct + '%';
+  document.getElementById('dailyMin').textContent = plan.daily_minutes;
+  document.getElementById('levelName').textContent = plan.level_name;
+  document.getElementById('progressBar').style.width = plan.progress_pct + '%';
+  const phaseBar = document.getElementById('phaseBar');
+  const phases = plan.phases || [];
+  phaseBar.innerHTML = phases.map((p, i) => {
+    const isActive = i === 0;
+    return '<div class="phase-seg' + (isActive ? ' active' : '') + '">' +
+      '<div class="phase-name">' + escapeHtml(p.name) + '</div>' +
+      '<div class="phase-focus">' + p.days + '天 · ' + escapeHtml(p.focus || '') + '</div></div>';
+  }).join('');
+}
+
+async function loadTodayTasks() {
+  const res = await fetch(API + '/today', {headers: headers()});
+  const data = await res.json();
+  if (!data.data) return;
+  const tasks = data.data.tasks || [];
+  const completed = data.data.completed || 0;
+  document.getElementById('taskSummary').textContent = completed + '/' + tasks.length + ' 完成';
+  const list = document.getElementById('taskList');
+  if (!tasks.length) { list.innerHTML = '<div style="text-align:center;padding:var(--space-10);color:var(--color-text-muted);">今日暂无任务</div>'; return; }
+  list.innerHTML = tasks.map(t => {
+    const badgeCls = 'badge-' + t.task_type;
+    const statusCls = t.status === 'completed' ? ' completed' : t.status === 'skipped' ? ' skipped' : '';
+    const checkMark = t.status === 'completed' ? '✓' : '';
+    const actionBtns = t.status === 'pending' ?
+      '<button class="btn btn-primary btn-sm" onclick="startTask(\'' + t.task_type + '\')">开始</button>' +
+      '<button class="btn btn-secondary btn-sm" onclick="skipTask(' + t.task_id + ')">跳过</button>' :
+      t.status === 'completed' ? '<span class="text-sm" style="color:var(--color-success);">已完成</span>' :
+      '<span class="text-sm text-muted">已跳过</span>';
+    return '<div class="card task-item' + statusCls + '">' +
+      '<div class="task-check" onclick="completeTask(' + t.task_id + ')">' + checkMark + '</div>' +
+      '<div class="task-info">' +
+        '<span class="task-type-badge ' + badgeCls + '">' + escapeHtml(t.task_type_name) + '</span>' +
+        '<div class="task-title">' + escapeHtml(t.title) + '</div>' +
+        '<div class="task-meta">预计 ' + (t.estimated_minutes || 0) + ' 分钟</div>' +
+      '</div>' +
+      '<div class="task-actions">' + actionBtns + '</div>' +
+    '</div>';
+  }).join('');
+  renderWeekProgress();
+}
+
+async function renderWeekProgress() {
+  const grid = document.getElementById('weekGrid');
+  try {
+    const res = await fetch(API + '/week-progress', {headers: headers()});
+    const data = await res.json();
+    if (data.error || !data.data) {
+      grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">暂无数据</div>';
+      return;
+    }
+    grid.innerHTML = data.data.map(d => {
+      let cls = 'week-day';
+      let status = '';
+      if (d.status === 'done') { cls += ' done'; status = '✓'; }
+      else if (d.status === 'partial') { cls += ' today'; status = d.completed + '/' + d.total; }
+      else if (d.is_today) { cls += ' today'; status = '●'; }
+      else if (d.status === 'missed') { cls += ''; status = '✗'; }
+      else { cls += ' future'; status = '·'; }
+      return '<div class="' + cls + '"><div class="day-label">' + d.weekday + '</div><div class="day-status">' + status + '</div></div>';
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">加载失败</div>';
+  }
+}
+
+async function createPlan() {
+  const planName = document.getElementById('planName').value.trim();
+  const examType = document.getElementById('examType').value;
+  const examDate = document.getElementById('examDate').value;
+  const dailyMinutes = parseInt(document.getElementById('dailyMinutes').value) || 120;
+  if (!examDate) { showToast('请选择考试日期', 'error'); return; }
+  const res = await fetch(API + '/create', { method: 'POST', headers: headers(), body: JSON.stringify({plan_name: planName, exam_type: examType, exam_date: examDate, daily_minutes: dailyMinutes}) });
+  const data = await res.json();
+  if (data.error) { showToast(data.error, 'error'); return; }
+  activePlan = data.data;
+  renderPlan(data.data);
+  await loadTodayTasks();
+}
+
+async function completeTask(taskId) {
+  await fetch(API + '/task/' + taskId + '/complete', {method: 'POST', headers: headers()});
+  await loadTodayTasks();
+  const res = await fetch(API + '/active', {headers: headers()});
+  const data = await res.json();
+  if (data.data) { activePlan = data.data; renderPlan(data.data); }
+}
+
+async function skipTask(taskId) {
+  await fetch(API + '/task/' + taskId + '/skip', {method: 'POST', headers: headers()});
+  await loadTodayTasks();
+}
+
+function startTask(type) {
+  if (type === 'drill') window.location.href = '/drill';
+  else if (type === 'phrase_read') window.location.href = '/phrases/study';
+  else if (type === 'simulation') window.location.href = '/papers';
+  else if (type === 'essay_write') window.location.href = '/drill';
+  else if (type === 'review') window.location.href = '/diagnosis';
+}
+
+async function pauseResume() {
+  if (!activePlan) return;
+  const planId = activePlan.plan_id;
+  const endpoint = activePlan.status === 'active' ? 'pause' : 'resume';
+  await fetch(API + '/' + planId + '/' + endpoint, {method: 'POST', headers: headers()});
+  location.reload();
+}
+
+init();
+</script>
+{% endblock %}

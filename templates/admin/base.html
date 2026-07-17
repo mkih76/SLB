@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}管理后台 - 申论帮{% endblock %}</title>
+
+  <!-- Fonts: Geist for Latin, Noto for CJK -->
+  <link href="https://cdn.jsdelivr.net/npm/geist@1.4.1/dist/fonts/geist-sans/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- 侧边栏 -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <h1>申论帮</h1>
+        <span>管理后台</span>
+      </div>
+      <nav class="admin-nav">
+        <a href="/admin" class="admin-nav-item {% if request.path == '/admin' %}active{% endif %}">
+          <i data-lucide="layout-dashboard"></i>
+          工作台
+        </a>
+        <div class="admin-nav-divider"></div>
+        <a href="/admin/users" class="admin-nav-item {% if '/admin/users' in request.path %}active{% endif %}">
+          <i data-lucide="users"></i>
+          用户管理
+        </a>
+        <a href="/admin/papers" class="admin-nav-item {% if '/admin/papers' in request.path %}active{% endif %}">
+          <i data-lucide="file-text"></i>
+          试卷管理
+        </a>
+        <a href="/admin/phrases" class="admin-nav-item {% if '/admin/phrases' in request.path %}active{% endif %}">
+          <i data-lucide="book-marked"></i>
+          好词管理
+        </a>
+        <a href="/admin/reviews" class="admin-nav-item {% if '/admin/reviews' in request.path %}active{% endif %}">
+          <i data-lucide="check-square"></i>
+          批改复核
+        </a>
+        <div class="admin-nav-divider"></div>
+        <a href="/admin/stats" class="admin-nav-item {% if '/admin/stats' in request.path %}active{% endif %}">
+          <i data-lucide="bar-chart-2"></i>
+          数据统计
+        </a>
+        <a href="/admin/logs" class="admin-nav-item {% if '/admin/logs' in request.path %}active{% endif %}">
+          <i data-lucide="scroll-text"></i>
+          操作日志
+        </a>
+        <div class="admin-nav-divider"></div>
+        <a href="/" class="admin-nav-item">
+          <i data-lucide="external-link"></i>
+          返回前台
+        </a>
+      </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <div>
+          <h2>{% block page_title %}工作台{% endblock %}</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-2);">
+          <span id="admin-user">管理员</span>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        {% block admin_content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <!-- 模态框 -->
+  <div id="admin-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div class="admin-modal-header">
+        <h3 class="admin-modal-title" id="modal-title">标题</h3>
+        <button class="admin-modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div id="modal-body">
+        <!-- 动态内容 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // XSS防护：HTML转义工具函数
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(String(str)));
+      return div.innerHTML;
+    }
+
+    const API_BASE = '/api/admin';
+    let adminToken = localStorage.getItem('admin_token');
+
+    document.addEventListener('DOMContentLoaded', function() {
+      lucide.createIcons();
+    });
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 6px; color: white; z-index: 2000;';
+      toast.style.background = type === 'success' ? '#059669' : '#DC2626';
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function openModal(title, content) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = content;
+      document.getElementById('admin-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('admin-modal').classList.remove('active');
+    }
+
+    async function adminFetch(url, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+
+      const token = localStorage.getItem('slb_token') || localStorage.getItem('admin_token');
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+      }
+
+      const res = await fetch(API_BASE + url, {
+        ...options,
+        headers
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '请求失败');
+      }
+      return data;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleString('zh-CN');
+    }
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

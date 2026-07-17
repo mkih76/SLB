@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}个人中心 - 申论帮{% endblock %}
+{% block description %}查看学习数据、批改记录、薄弱点追踪和个人设置{% endblock %}
+
+{% block content %}
+<!-- 顶部信息卡 -->
+<div class="profile-header">
+  <div class="profile-header-content">
+    <div class="profile-avatar" id="profile-avatar">项</div>
+    <div class="profile-info">
+      <h1 class="profile-name" id="profile-name">加载中...</h1>
+      <p class="profile-role" id="profile-role">普通用户</p>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-value counter" data-target="0" id="stat-submissions">0</div>
+          <div class="profile-stat-label">累计批改</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value counter" data-target="0" id="stat-avg-score">0</div>
+          <div class="profile-stat-label">平均得分</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value counter" data-target="0" id="stat-streak">0</div>
+          <div class="profile-stat-label">连续天数</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 内容区 -->
+<div class="profile-body">
+  <!-- 侧边导航 -->
+  <aside class="profile-sidebar">
+    <nav class="profile-nav">
+      <a href="#overview" class="profile-nav-item active" data-panel="overview">
+        <svg class="profile-nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        学习概览
+      </a>
+      <a href="#history" class="profile-nav-item" data-panel="history">
+        <svg class="profile-nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+        批改记录
+      </a>
+      <a href="#weak" class="profile-nav-item" data-panel="weak">
+        <svg class="profile-nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        薄弱点
+        <span class="profile-nav-item-badge" id="weak-count">0</span>
+      </a>
+      <a href="#favorites" class="profile-nav-item" data-panel="favorites">
+        <svg class="profile-nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        我的收藏
+      </a>
+      <a href="#settings" class="profile-nav-item" data-panel="settings">
+        <svg class="profile-nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        账号设置
+      </a>
+    </nav>
+  </aside>
+
+  <!-- 主内容面板 -->
+  <div class="profile-main">
+
+    <!-- 概览面板 -->
+    <div class="profile-panel active" id="panel-overview">
+      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">学习概览</h2>
+
+      <!-- 统计卡片 -->
+      <div class="profile-stats-grid">
+        <div class="profile-stat-card">
+          <div class="profile-stat-card-label">本周批改</div>
+          <div class="profile-stat-card-value" id="week-count">0</div>
+          <div class="profile-stat-card-change positive" id="week-change">-</div>
+        </div>
+        <div class="profile-stat-card">
+          <div class="profile-stat-card-label">本周平均分</div>
+          <div class="profile-stat-card-value" id="week-avg">0</div>
+          <div class="profile-stat-card-change" id="week-avg-change">-</div>
+        </div>
+        <div class="profile-stat-card">
+          <div class="profile-stat-card-label">薄弱点待攻克</div>
+          <div class="profile-stat-card-value" id="weak-pending">0</div>
+        </div>
+        <div class="profile-stat-card">
+          <div class="profile-stat-card-label">收藏好词好句</div>
+          <div class="profile-stat-card-value" id="fav-count">0</div>
+        </div>
+      </div>
+
+      <!-- 得分趋势图 -->
+      <div class="chart-container" style="margin-bottom:var(--space-5)">
+        <div class="chart-container-header">
+          <div>
+            <div class="chart-container-title">得分趋势</div>
+            <div class="chart-container-subtitle">近 30 天批改得分变化</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrapper" style="height:240px">
+          <canvas id="chart-score-trend"></canvas>
+        </div>
+      </div>
+
+      <!-- 雷达图 + 环形图 -->
+      <div class="grid grid-2">
+        <div class="chart-container chart-radar">
+          <div class="chart-container-header">
+            <div>
+              <div class="chart-container-title">能力雷达</div>
+              <div class="chart-container-subtitle">五维度能力评估</div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="chart-ability-radar"></canvas>
+          </div>
+        </div>
+        <div class="chart-container chart-doughnut">
+          <div class="chart-container-header">
+            <div>
+              <div class="chart-container-title">题型分布</div>
+              <div class="chart-container-subtitle">各题型练习占比</div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="chart-type-doughnut"></canvas>
+          </div>
+          <div class="chart-legend" id="doughnut-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批改记录面板 -->
+    <div class="profile-panel" id="panel-history">
+      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">批改记录</h2>
+      <div id="history-list">
+        <div class="skeleton skeleton-card" style="margin-bottom:12px"></div>
+        <div class="skeleton skeleton-card" style="margin-bottom:12px"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- 薄弱点面板 -->
+    <div class="profile-panel" id="panel-weak">
+      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">薄弱点追踪</h2>
+      <div id="weak-list">
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- 收藏面板 -->
+    <div class="profile-panel" id="panel-favorites">
+      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">我的收藏</h2>
+      <div id="favorites-list">
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="profile-panel" id="panel-settings">
+      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">账号设置</h2>
+      <div class="card">
+        <h3 class="card-title">修改密码</h3>
+        <form id="password-form">
+          <div class="form-group">
+            <label class="form-label">当前密码</label>
+            <input type="password" name="old_password" class="input-field" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">新密码</label>
+            <input type="password" name="new_password" class="input-field" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">确认新密码</label>
+            <input type="password" name="confirm_password" class="input-field" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary">保存修改</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-panel { display: none; }
+  .profile-panel.active { display: block; animation: fadeIn 200ms var(--ease-out); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  // 侧边导航切换面板
+  document.querySelectorAll('.profile-nav-item[data-panel]').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const panelId = item.dataset.panel;
+
+      // 更新导航高亮
+      document.querySelectorAll('.profile-nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+
+      // 切换面板
+      document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById('panel-' + panelId);
+      if (panel) panel.classList.add('active');
+    });
+  });
+
+  // 加载用户信息
+  async function loadProfile() {
+    try {
+      const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      if (res.ok) {
+        const user = await res.json();
+        document.getElementById('profile-name').textContent = user.nickname || user.username;
+        document.getElementById('profile-avatar').textContent = (user.nickname || user.username).charAt(0);
+        document.getElementById('profile-role').textContent = user.role === 'vip' ? 'VIP 用户' : '普通用户';
+      }
+    } catch (e) { /* 未登录 */ }
+  }
+
+  // 加载统计数据
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/submissions/history?limit=100', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      if (res.ok) {
+        const data = await res.json();
+        const subs = data.submissions || [];
+        const totalEl = document.getElementById('stat-submissions');
+        totalEl.dataset.target = subs.length;
+        totalEl.textContent = subs.length;
+
+        if (subs.length > 0) {
+          const avg = subs.reduce((s, x) => s + (x.score || 0), 0) / subs.length;
+          const avgEl = document.getElementById('stat-avg-score');
+          avgEl.dataset.target = Math.round(avg);
+          avgEl.textContent = Math.round(avg);
+        }
+
+        // 渲染图表
+        renderCharts(subs);
+      }
+    } catch (e) { console.error('loadStats', e); }
+  }
+
+  // 渲染图表
+  function renderCharts(subs) {
+    if (typeof SLBCharts === 'undefined' || subs.length === 0) return;
+
+    // 得分趋势折线图
+    const recent = subs.slice(-30);
+    SLBCharts.line('chart-score-trend', {
+      labels: recent.map((s, i) => (i + 1) + '日'),
+      datasets: [{ label: '得分', data: recent.map(s => s.score || 0), color: '#1e3a5f' }],
+      max: 100
+    });
+
+    // 能力雷达图
+    const dims = { 踩点命中: [], 逻辑结构: [], 语言规范: [], 字数控制: [], 卷面整洁: [] };
+    subs.forEach(s => {
+      if (s.dimension_scores) {
+        try {
+          const ds = typeof s.dimension_scores === 'string' ? JSON.parse(s.dimension_scores) : s.dimension_scores;
+          Object.keys(dims).forEach(k => { if (ds[k] !== undefined) dims[k].push(ds[k]); });
+        } catch(e) {}
+      }
+    });
+    const avgDims = Object.values(dims).map(arr => arr.length ? Math.round(arr.reduce((a,b) => a+b, 0) / arr.length) : 0);
+    SLBCharts.radar('chart-ability-radar', {
+      labels: Object.keys(dims),
+      data: avgDims
+    });
+
+    // 题型分布环形图
+    const typeCount = {};
+    subs.forEach(s => {
+      const t = s.question_type || '其他';
+      typeCount[t] = (typeCount[t] || 0) + 1;
+    });
+    const typeLabels = Object.keys(typeCount);
+    const typeData = Object.values(typeCount);
+    SLBCharts.doughnut('chart-type-doughnut', {
+      labels: typeLabels,
+      data: typeData
+    });
+    // 自定义图例
+    const legend = document.getElementById('doughnut-legend');
+    if (legend && typeLabels.length) {
+      const colors = SLBCharts.colors.palette;
+      legend.innerHTML = typeLabels.map((l, i) =>
+        `<div class="chart-legend-item">
+          <span class="chart-legend-dot" style="background:${colors[i % colors.length]}"></span>
+          ${l} (${typeData[i]})
+        </div>`
+      ).join('');
+    }
+  }
+
+  // 加载薄弱点
+  async function loadWeak() {
+    try {
+      const res = await fetch('/api/weak', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      if (res.ok) {
+        const data = await res.json();
+        const points = data.weak_points || [];
+        document.getElementById('weak-count').textContent = points.length;
+        document.getElementById('weak-pending').textContent = points.length;
+
+        const container = document.getElementById('weak-list');
+        if (points.length === 0) {
+          container.innerHTML = '<div class="empty-state"><svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><div class="empty-state-title">暂无薄弱点</div><div class="empty-state-desc">继续练习，系统会自动追踪你的薄弱环节</div></div>';
+          return;
+        }
+        container.innerHTML = points.map(p => `
+          <div class="card" style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="card-title">${p.missing_key}</div>
+                <div class="text-caption">${p.topic_tag || '未分类'} · 遗漏 ${p.times_missed} 次</div>
+              </div>
+              <span class="badge badge-warning">待攻克</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (e) { console.error('loadWeak', e); }
+  }
+
+  // 初始化
+  loadProfile();
+  loadStats();
+  loadWeak();
+})();
+</script>
+{% endblock %}

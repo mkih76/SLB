@@ -1,0 +1,304 @@
+/* ================================================================
+   SLB Design Tokens — Linear Dark Theme
+   3-tier: Primitive → Semantic → Component
+   ================================================================ */
+
+/* ---- Tier 1: Primitives (raw values, never used directly) ---- */
+:root {
+  /* Background primitives */
+  --bg-900: #08090a;
+  --bg-850: #0c0d0e;
+  --bg-800: #0f1011;
+  --bg-700: #141516;
+  --bg-600: #191a1b;
+  --bg-500: #1e1f21;
+  --bg-400: #28282c;
+  --bg-300: #2e2f33;
+
+  /* Text primitives */
+  --white-95: #f7f8f8;
+  --white-85: #e2e4e7;
+  --white-70: #d0d6e0;
+  --white-50: #a0a4ab;
+  --white-35: #8a8f98;
+  --white-25: #62666d;
+
+  /* Brand primitives */
+  --indigo-400: #5e6ad2;
+  --indigo-500: #7170ff;
+  --indigo-600: #828fff;
+  --indigo-700: #9aa0ff;
+  --purple-400: #9E39E5;
+
+  /* Status primitives */
+  --green-500: #10b981;
+  --green-400: #34d399;
+  --amber-500: #f59e0b;
+  --amber-400: #fbbf24;
+  --red-500: #ef4444;
+  --red-400: #f87171;
+
+  /* Border alpha primitives */
+  --white-03: rgba(255, 255, 255, 0.03);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.10);
+  --white-15: rgba(255, 255, 255, 0.15);
+
+  /* Spacing primitives (base-4) */
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* Radius primitives */
+  --rad-sm: 4px;
+  --rad-md: 6px;
+  --rad-lg: 8px;
+  --rad-xl: 12px;
+  --rad-2xl: 16px;
+  --rad-3xl: 24px;
+  --rad-full: 9999px;
+
+  /* Shadow primitives (luminance stepping for dark mode) */
+  --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --sh-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --sh-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --sh-focus: 0 0 0 2px var(--indigo-500), 0 0 0 4px rgba(113, 112, 255, 0.15);
+
+  /* Typography primitives */
+  --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.65;
+  --lh-loose: 1.8;
+
+  --ls-tight: -0.02em;
+  --ls-snug: -0.01em;
+  --ls-normal: 0;
+  --ls-wide: 0.02em;
+  --ls-wider: 0.05em;
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Transition primitives */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur-normal: 200ms;
+  --dur-slow: 350ms;
+  --dur-slower: 500ms;
+}
+
+/* ---- Tier 2: Semantic tokens (purpose-based, used in components) ---- */
+:root {
+  /* Surface */
+  --color-bg: var(--bg-900);
+  --color-bg-panel: var(--bg-800);
+  --color-bg-surface: var(--bg-600);
+  --color-bg-elevated: var(--bg-500);
+  --color-bg-hover: var(--bg-400);
+  --color-bg-subtle: var(--bg-700);
+
+  /* Text */
+  --color-text: var(--white-95);
+  --color-text-secondary: var(--white-70);
+  --color-text-tertiary: var(--white-35);
+  --color-text-muted: var(--white-25);
+  --color-text-inverse: var(--bg-900);
+
+  /* Brand */
+  --color-primary: var(--indigo-500);
+  --color-primary-hover: var(--indigo-600);
+  --color-primary-bg: var(--indigo-400);
+  --color-primary-soft: rgba(113, 112, 255, 0.08);
+  --color-primary-medium: rgba(113, 112, 255, 0.15);
+
+  /* Status */
+  --color-success: var(--green-500);
+  --color-success-soft: rgba(16, 185, 129, 0.12);
+  --color-warning: var(--amber-500);
+  --color-warning-soft: rgba(245, 158, 11, 0.12);
+  --color-error: var(--red-500);
+  --color-error-soft: rgba(239, 68, 68, 0.12);
+
+  /* Border */
+  --color-border: var(--white-08);
+  --color-border-subtle: var(--white-05);
+  --color-border-strong: var(--white-15);
+  --color-border-accent: rgba(113, 112, 255, 0.25);
+
+  /* Shadow (semantic) */
+  --shadow-xs: var(--sh-xs);
+  --shadow-sm: var(--sh-sm);
+  --shadow-md: var(--sh-md);
+  --shadow-lg: var(--sh-lg);
+  --shadow-xl: var(--sh-xl);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--white-05);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--white-08);
+  --shadow-glow: var(--sh-focus);
+
+  /* Spacing (semantic) */
+  --space-xs: var(--sp-1);
+  --space-sm: var(--sp-2);
+  --space-md: var(--sp-4);
+  --space-lg: var(--sp-6);
+  --space-xl: var(--sp-8);
+  --space-2xl: var(--sp-12);
+  --space-3xl: var(--sp-16);
+  --space-4xl: var(--sp-24);
+
+  /* Section gaps */
+  --section-gap: var(--sp-20);
+  --section-gap-mobile: var(--sp-12);
+
+  /* Radius (semantic) */
+  --radius-sm: var(--rad-sm);
+  --radius-md: var(--rad-md);
+  --radius-lg: var(--rad-lg);
+  --radius-xl: var(--rad-xl);
+  --radius-2xl: var(--rad-2xl);
+  --radius-full: var(--rad-full);
+
+  /* Layout */
+  --max-width: 1200px;
+  --max-width-narrow: 720px;
+  --max-width-wide: 1440px;
+  --navbar-height: 56px;
+  --sidebar-width: 260px;
+  --container-pad: var(--sp-4);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-pad: var(--sp-6);
+    --section-gap: var(--sp-24);
+  }
+}
+
+/* ---- Tier 3: Component tokens (scoped to specific elements) ---- */
+:root {
+  /* Button */
+  --btn-height-sm: 32px;
+  --btn-height-md: 40px;
+  --btn-height-lg: 48px;
+  --btn-font-size: var(--text-sm);
+  --btn-radius: var(--rad-md);
+  --btn-pad-x: var(--sp-4);
+  --btn-pad-y: var(--sp-2);
+  --btn-gap: var(--sp-2);
+
+  /* Card */
+  --card-pad: var(--sp-6);
+  --card-radius: var(--rad-xl);
+  --card-bg: var(--white-03);
+  --card-border: 1px solid var(--color-border);
+  --card-shadow: var(--shadow-card);
+
+  /* Input */
+  --input-height: 40px;
+  --input-pad-x: var(--sp-3);
+  --input-pad-y: var(--sp-2);
+  --input-radius: var(--rad-md);
+  --input-font-size: var(--text-sm);
+
+  /* Badge */
+  --badge-pad-x: var(--sp-2);
+  --badge-pad-y: 2px;
+  --badge-font-size: var(--text-xs);
+  --badge-radius: var(--rad-full);
+
+  /* Table */
+  --table-header-size: var(--text-xs);
+  --table-cell-size: var(--text-sm);
+  --table-row-height: 48px;
+  --table-row-height-compact: 40px;
+
+  /* KPI */
+  --kpi-value-size: var(--text-3xl);
+  --kpi-label-size: var(--text-xs);
+  --kpi-pad: var(--sp-5);
+}
+
+/* ---- Backward compat aliases (interactions.css + existing templates) ---- */
+:root {
+  --color-brand-dark: var(--bg-900);
+  --color-bg-elevated: var(--color-bg-surface);
+  --color-bg-sunken: var(--bg-800);
+  --color-card: var(--card-bg);
+  --color-card-hover: var(--white-05);
+  --color-accent: var(--purple-400);
+  --color-accent-hover: #a855f7;
+  --color-accent-light: rgba(158, 57, 229, 0.12);
+  --color-gray-50: var(--bg-700);
+  --color-gray-100: var(--bg-600);
+  --color-gray-200: var(--bg-400);
+  --color-gray-300: var(--white-25);
+  --color-gray-400: var(--white-35);
+  --color-gray-500: var(--white-50);
+  --color-gray-600: var(--white-70);
+  --color-gray-700: var(--white-85);
+  --color-gray-800: var(--white-95);
+  --color-gray-900: var(--white-95);
+  --font-title: var(--font-sans);
+  --font-body: var(--font-sans);
+  --weight-normal: var(--fw-normal);
+  --weight-medium: var(--fw-medium);
+  --weight-semibold: var(--fw-semibold);
+  --weight-bold: var(--fw-bold);
+  --leading-tight: var(--lh-tight);
+  --leading-snug: var(--lh-snug);
+  --leading-normal: var(--lh-normal);
+  --leading-relaxed: var(--lh-relaxed);
+  --tracking-tight: var(--ls-tight);
+  --tracking-snug: var(--ls-snug);
+  --tracking-normal: var(--ls-normal);
+  --tracking-wide: var(--ls-wide);
+  --shadow-glow-primary: var(--sh-focus);
+  --shadow-glow-accent: var(--sh-focus);
+  --shadow-float: var(--shadow-xl);
+  --ease-spring: var(--ease-spring);
+  --duration-fast: var(--dur-fast);
+  --duration-normal: var(--dur-normal);
+  --duration-slow: var(--dur-slow);
+  --duration-slower: var(--dur-slower);
+  --radius-xs: var(--rad-sm);
+  --radius-3xl: var(--rad-3xl);
+  --space-0: var(--sp-0);
+  --space-5: var(--sp-5);
+  --space-10: var(--sp-10);
+  --space-14: 56px;
+  --max-width: 1200px;
+  --max-width-narrow: 720px;
+  --max-width-wide: 1440px;
+  --navbar-height: 56px;
+  --sidebar-width: 260px;
+}

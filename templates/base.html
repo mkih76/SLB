@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}申论帮 - AI智能申论批改平台{% endblock %}</title>
+  <meta name="description" content="{% block description %}申论帮，AI驱动的申论批改平台。提供五种题型智能批改、好词好句学习、薄弱点追踪、备考计划等功能，助你高效备考公务员申论考试。{% endblock %}">
+  <meta name="keywords" content="{% block keywords %}申论批改,AI批改,公务员考试,申论练习,申论评分,国考,省考{% endblock %}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://slb.19990419.top{{ request.path }}">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}申论帮 - AI智能申论批改平台{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}AI驱动的申论批改，五种题型智能评分，助你高效备考{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://slb.19990419.top{{ request.path }}">
+
+  <!-- Fonts: Manrope + Noto Sans SC -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Lenis 平滑滚动 -->
+  <script src="https://unpkg.com/lenis@latest/dist/lenis.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css', v=3) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css', v=3) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css', v=3) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=3) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css', v=3) }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">申论帮</a>
+
+    <ul class="navbar-menu">
+      <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a></li>
+      <li><a href="/papers" class="{% if request.path == '/papers' %}active{% endif %}">卷库</a></li>
+      <li><a href="/drill" class="{% if request.path == '/drill' %}active{% endif %}">题型训练</a></li>
+      <li><a href="/diagnosis" class="{% if request.path == '/diagnosis' %}active{% endif %}">能力诊断</a></li>
+      <li><a href="/phrases/study" class="{% if request.path.startswith('/phrases') %}active{% endif %}">素材学习</a></li>
+      <li><a href="/plan" class="{% if request.path == '/plan' %}active{% endif %}">备考计划</a></li>
+      <li><a href="/topics" class="{% if request.path == '/topics' %}active{% endif %}">时政热点</a></li>
+      <li><a href="/community" class="{% if request.path == '/community' %}active{% endif %}">社区</a></li>
+      <li><a href="/demo" class="{% if request.path == '/demo' %}active{% endif %}">试用</a></li>
+      <!-- 移动端登录按钮（桌面端隐藏） -->
+      <li class="mobile-auth-item">
+        <span id="signin-area-mobile" style="display: none;">
+          <button id="signin-btn-mobile" class="btn btn-ghost" onclick="doSignIn()" style="width: 100%; justify-content: center;">签到</button>
+        </span>
+        <span id="user-info-mobile">
+          <a href="/login" id="login-btn-mobile" class="btn btn-ghost" style="width: 100%; justify-content: center;">登录</a>
+        </span>
+      </li>
+    </ul>
+
+    <!-- 桌面端登录按钮 -->
+    <div class="navbar-user">
+      <span id="signin-area" style="display: none; margin-right: 12px;">
+        <button id="signin-btn" class="btn btn-ghost btn-sm" onclick="doSignIn()">
+          签到
+        </button>
+      </span>
+      <span id="user-info">
+        <a href="/login" id="login-btn" class="btn btn-ghost">
+          登录
+        </a>
+      </span>
+    </div>
+
+    <!-- 移动端汉堡菜单按钮（放在最右边） -->
+    <button class="navbar-toggle" aria-label="菜单" aria-expanded="false">
+      <span class="navbar-toggle-icon"></span>
+    </button>
+  </nav>
+
+  <!-- 主体内容 -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024-2026 申论帮 - AI智能批改平台 | 让申论学习更高效</p>
+    </div>
+  </footer>
+
+  <!-- Toast 容器 -->
+  <div id="toast-container"></div>
+
+  <!-- 登录模态框 -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="auth-modal-title">登录</h3>
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+      <div id="auth-form-container">
+        <form id="modal-login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="input-field" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" name="password" class="input-field" required>
+          </div>
+          <div id="login-error" class="form-error" style="color: var(--color-error); display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">登录</button>
+          <p style="text-align: center; margin-top: var(--space-2); font-size: var(--text-sm);">
+            还没有账号？<a href="#" onclick="switchToRegister(event)">立即注册</a>
+          </p>
+        </form>
+
+        <form id="modal-register-form" style="display: none;" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="input-field" required minlength="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">昵称</label>
+            <input type="text" name="nickname" class="input-field">
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" name="password" class="input-field" required minlength="6">
+          </div>
+          <div id="register-error" class="form-error" style="color: var(--color-error); display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">注册</button>
+          <p style="text-align: center; margin-top: var(--space-2); font-size: var(--text-sm);">
+            已有账号？<a href="#" onclick="switchToLogin(event)">立即登录</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Lenis 平滑滚动
+    try {
+      const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+      function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+          const id = a.getAttribute('href');
+          if (id.length > 1) { e.preventDefault(); lenis.scrollTo(id); }
+        });
+      });
+    } catch(e) { /* lenis 加载失败时静默降级 */ }
+
+    // 滚动进场 —— 由 GSAP ScrollTrigger 处理 (见 gsap-animations.js)
+    // 旧 IntersectionObserver 已禁用，避免与 GSAP 冲突
+
+    // XSS防护：HTML转义工具函数
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(String(str)));
+      return div.innerHTML;
+    }
+
+    // 全局状态
+    const state = {
+      user: null,
+      token: localStorage.getItem('slb_token')
+    };
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      if (state.token) {
+        fetchUserInfo();
+      }
+      lucide.createIcons();
+    });
+
+    // 获取用户信息
+    async function fetchUserInfo() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          state.user = data;
+          updateUserUI();
+        } else {
+          logout();
+        }
+      } catch (e) {
+        console.error('Failed to fetch user info:', e);
+      }
+    }
+
+    // 更新用户UI
+    function updateUserUI() {
+      const userInfo = document.getElementById('user-info');
+      const userInfoMobile = document.getElementById('user-info-mobile');
+      const signinArea = document.getElementById('signin-area');
+      const signinAreaMobile = document.getElementById('signin-area-mobile');
+
+      if (state.user) {
+        const vipBadge = state.user.is_vip ? '<span class="badge badge-accent">VIP</span>' : '';
+
+        // 桌面端
+        userInfo.innerHTML = `
+          <a href="/profile" class="btn btn-ghost btn-sm" style="margin-right: 4px;">${state.user.nickname} ${vipBadge}</a>
+          <a href="#" onclick="logout()" class="btn btn-ghost btn-sm" style="opacity:0.7">退出</a>
+        `;
+
+        // 移动端
+        if (userInfoMobile) {
+          userInfoMobile.innerHTML = `
+            <a href="/profile" class="btn btn-ghost" style="width: 100%; justify-content: center;">${state.user.nickname} ${vipBadge}</a>
+            <a href="#" onclick="logout()" class="btn btn-ghost" style="width: 100%; justify-content: center; opacity:0.7; margin-top: 8px;">退出</a>
+          `;
+        }
+
+        if (signinArea) signinArea.style.display = 'inline-block';
+        if (signinAreaMobile) signinAreaMobile.style.display = 'inline-block';
+        checkSignInStatus();
+      } else {
+        if (signinArea) signinArea.style.display = 'none';
+        if (signinAreaMobile) signinAreaMobile.style.display = 'none';
+      }
+    }
+
+    // 签到
+    async function doSignIn() {
+      if (!state.token) { openAuthModal('login'); return; }
+      try {
+        const res = await fetch('/api/auth/signin', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.data.message, 'success');
+          const btn = document.getElementById('signin-btn');
+          btn.textContent = '已签到';
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('签到失败', 'error');
+      }
+    }
+
+    // 检查签到状态
+    async function checkSignInStatus() {
+      if (!state.token) return;
+      try {
+        const res = await fetch('/api/auth/signin/status', {
+          headers: { 'Authorization': 'Bearer ' + state.token }
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          const btn = document.getElementById('signin-btn');
+          if (data.signed_today) {
+            btn.textContent = '已签到';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    // 登录
+    async function handleLogin(e) {
+      e.preventDefault();
+      const form = e.target;
+      const errorDiv = document.getElementById('login-error');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: form.username.value,
+            password: form.password.value
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          state.token = data.data.token;
+          state.user = data.data;
+          localStorage.setItem('slb_token', state.token);
+          closeAuthModal();
+          updateUserUI();
+          showToast('登录成功', 'success');
+        } else {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+        }
+      } catch (e) {
+        errorDiv.textContent = '登录失败，请稍后重试';
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // 注册
+    async function handleRegister(e) {
+      e.preventDefault();
+      const form = e.target;
+      const errorDiv = document.getElementById('register-error');
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: form.username.value,
+            password: form.password.value,
+            nickname: form.nickname.value
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          state.token = data.data.token;
+          state.user = data.data;
+          localStorage.setItem('slb_token', state.token);
+          closeAuthModal();
+          updateUserUI();
+          showToast('注册成功', 'success');
+        } else {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+        }
+      } catch (e) {
+        errorDiv.textContent = '注册失败，请稍后重试';
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // 登出
+    function logout() {
+      state.user = null;
+      state.token = null;
+      localStorage.removeItem('slb_token');
+      updateUserUI();
+      showToast('已退出登录', 'success');
+    }
+
+    // 模态框控制
+    function openAuthModal(mode = 'login') {
+      const modal = document.getElementById('auth-modal');
+      modal.classList.add('active');
+      if (mode === 'login') {
+        switchToLogin();
+      } else {
+        switchToRegister();
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      modal.classList.remove('active');
+    }
+
+    function switchToLogin(e) {
+      if (e) e.preventDefault();
+      document.getElementById('modal-login-form').style.display = 'block';
+      document.getElementById('modal-register-form').style.display = 'none';
+      document.getElementById('auth-modal-title').textContent = '登录';
+    }
+
+    function switchToRegister(e) {
+      if (e) e.preventDefault();
+      document.getElementById('modal-login-form').style.display = 'none';
+      document.getElementById('modal-register-form').style.display = 'block';
+      document.getElementById('auth-modal-title').textContent = '注册';
+    }
+
+    // Toast 提示
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 打开登录弹窗
+    document.getElementById('login-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      openAuthModal('login');
+    });
+
+    // 点击模态框外部关闭
+    document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'auth-modal') {
+        closeAuthModal();
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+
+  <!-- 组件库 JS -->
+  <script src="{{ url_for('static', filename='js/components.js', v=3) }}"></script>
+
+  <!-- GSAP 动画 -->
+  <script src="{{ url_for('static', filename='js/gsap-animations.js', v=3) }}"></script>
+
+  <!-- 返回顶部按钮 -->
+  <button class="back-to-top" aria-label="返回顶部">
+    <svg class="back-to-top-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M18 15l-6-6-6 6"/>
+    </svg>
+  </button>
+
+</body>
+</html>

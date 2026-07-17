@@ -1,0 +1,214 @@
+/* ========================================
+   交互系统 —— 克制、有目的、不炫技
+   ======================================== */
+
+/* ---- 卡片悬停 ---- */
+.card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+/* ---- 按钮反馈 ---- */
+.btn-primary {
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform 80ms var(--ease-out);
+}
+.btn-primary:hover {
+  box-shadow: var(--shadow-glow-primary);
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.btn-accent {
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+.btn-accent:hover {
+  box-shadow: var(--shadow-glow-accent);
+}
+
+/* ---- 输入框 ---- */
+.input-field {
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+.input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow-primary);
+  outline: none;
+}
+
+/* ---- 表单验证 shake ---- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.input-error {
+  animation: shake 350ms var(--ease-out);
+  border-color: var(--color-error) !important;
+}
+
+/* ---- 按钮加载态 ---- */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.65;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  top: 50%;
+  left: 50%;
+  margin: -7px 0 0 -7px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 500ms linear infinite;
+}
+
+/* ========================================
+   滚动进场动画 —— 由 GSAP ScrollTrigger 驱动 (gsap-animations.js)
+   CSS 保留类名用于标记，初始状态由 GSAP gsap.from() 控制
+   ======================================== */
+
+/* GSAP 驱动的 reveal 元素 — 不再需要 CSS 初始隐藏 */
+.reveal,
+.reveal-left,
+.reveal-right,
+.reveal-scale,
+.reveal-stagger > * {
+  /* GSAP handles opacity/transform via gsap.from() */
+}
+
+/* reduced-motion fallback: 如果 GSAP 未加载，元素保持可见 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ========================================
+   页面进场
+   ======================================== */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+main {
+  animation: pageIn 300ms var(--ease-out);
+}
+
+/* ========================================
+   数字滚动（配合 JS）
+   ======================================== */
+.counter {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
+}
+
+/* ========================================
+   Toast 进退场
+   ======================================== */
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+}
+.toast.toast-exit {
+  animation: toastOut 200ms var(--ease-out) forwards;
+}
+
+/* ========================================
+   链接下划线动画
+   ======================================== */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: currentColor;
+  transition: width var(--duration-normal) var(--ease-out);
+}
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ========================================
+   图标旋转 —— 展开/折叠指示
+   ======================================== */
+.icon-rotate {
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.icon-rotate.open {
+  transform: rotate(180deg);
+}
+
+/* ========================================
+   焦点环 —— 键盘可访问性
+   ======================================== */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========================================
+   减少动画偏好
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-stagger > * {
+    opacity: 1;
+    transform: none;
+  }
+}

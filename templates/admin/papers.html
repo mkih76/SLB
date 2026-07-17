@@ -1,0 +1,349 @@
+{% extends "admin/base.html" %}
+
+{% block title %}试卷管理 - 申论帮管理后台{% endblock %}
+{% block page_title %}试卷管理{% endblock %}
+
+{% block admin_content %}
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <div class="filter-item">
+    <label>考试类型</label>
+    <select id="filter-exam-type" onchange="loadPapers()">
+      <option value="">全部</option>
+      <option value="国考">国考</option>
+      <option value="省考">省考</option>
+      <option value="事业单位">事业单位</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>年份</label>
+    <select id="filter-year" onchange="loadPapers()">
+      <option value="">全部</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+      <option value="2022">2022</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>状态</label>
+    <select id="filter-status" onchange="loadPapers()">
+      <option value="">全部</option>
+      <option value="published">已发布</option>
+      <option value="draft">草稿</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>搜索</label>
+    <input type="text" id="filter-search" placeholder="试卷标题" onkeyup="if(event.key==='Enter')loadPapers()">
+  </div>
+  <button class="btn btn-primary" onclick="loadPapers()">
+    <i data-lucide="search"></i>
+    搜索
+  </button>
+  <button class="btn btn-secondary" onclick="openAddModal()" style="margin-left: auto;">
+    <i data-lucide="plus"></i>
+    添加试卷
+  </button>
+</div>
+
+<!-- 试卷列表 -->
+<div class="admin-table-container">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">试卷列表</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>标题</th>
+        <th>考试类型</th>
+        <th>年份</th>
+        <th>题目数</th>
+        <th>热度</th>
+        <th>状态</th>
+        <th>创建时间</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="papers-table">
+      <tr><td colspan="9" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+  <div class="admin-pagination">
+    <div class="pagination-info" id="pagination-info">共 0 条</div>
+    <div class="pagination-buttons" id="pagination-buttons"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  async function loadPapers(page = 1) {
+    currentPage = page;
+    const examType = document.getElementById('filter-exam-type').value;
+    const year = document.getElementById('filter-year').value;
+    const status = document.getElementById('filter-status').value;
+    const search = document.getElementById('filter-search').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (examType) params.append('exam_type', examType);
+    if (year) params.append('year', year);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+
+    try {
+      const data = await adminFetch(`/papers?${params}`);
+      renderPapers(data.data);
+    } catch (e) {
+      document.getElementById('papers-table').innerHTML =
+        '<tr><td colspan="9" style="text-align: center;">加载失败</td></tr>';
+    }
+  }
+
+  function renderPapers(data) {
+    const tbody = document.getElementById('papers-table');
+
+    if (!data.papers || data.papers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.papers.map(paper => `
+      <tr>
+        <td>${paper.pid.substring(0, 8)}...</td>
+        <td>${paper.title}</td>
+        <td>${paper.exam_type}</td>
+        <td>${paper.year}</td>
+        <td>${paper.questions_count || 0}</td>
+        <td>${paper.heat || 0}</td>
+        <td>
+          ${paper.status === 'published' ?
+            '<span class="status-badge status-active">已发布</span>' :
+            '<span class="status-badge status-pending">草稿</span>'}
+        </td>
+        <td>${formatDate(paper.created_at)}</td>
+        <td>
+          <button class="action-btn action-btn-view" onclick="viewPaper('${paper.pid}')">查看</button>
+          <button class="action-btn action-btn-edit" onclick="editPaper('${paper.pid}')">编辑</button>
+          ${paper.status === 'published' ?
+            `<button class="action-btn action-btn-delete" onclick="updateStatus('${paper.pid}', 'draft')">下架</button>` :
+            `<button class="action-btn action-btn-edit" onclick="updateStatus('${paper.pid}', 'published')">发布</button>`}
+        </td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pagination-info').textContent = `共 ${data.total} 条`;
+    renderPagination(data);
+    lucide.createIcons();
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination-buttons');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      html += `<button class="pagination-btn ${i === data.page ? 'active' : ''}" onclick="loadPapers(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+  }
+
+  async function viewPaper(pid) {
+    try {
+      const data = await adminFetch(`/papers/${pid}`);
+      const paper = data.data;
+      const questions = paper.questions || [];
+
+      openModal('试卷详情', `
+        <div class="admin-form-group">
+          <label class="admin-form-label">标题</label>
+          <p>${paper.title}</p>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">考试类型</label>
+            <p>${paper.exam_type}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">年份</label>
+            <p>${paper.year}</p>
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">题目数量</label>
+            <p>${questions.length}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">热度</label>
+            <p>${paper.heat || 0}</p>
+          </div>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">题目列表</label>
+          ${questions.map((q, i) => `<p style="margin: 4px 0;">${i + 1}. ${q.stem?.substring(0, 50)}...</p>`).join('') || '<p>暂无题目</p>'}
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">创建时间</label>
+          <p>${formatDate(paper.created_at)}</p>
+        </div>
+      `);
+    } catch (e) {
+      showToast('加载失败', 'error');
+    }
+  }
+
+  function openAddModal() {
+    openModal('添加试卷', `
+      <form id="paper-form" onsubmit="savePaper(event)">
+        <div class="admin-form-group">
+          <label class="admin-form-label">标题 *</label>
+          <input type="text" id="paper-title" class="input-field" required>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">考试类型</label>
+            <select id="paper-exam-type" class="input-field">
+              <option value="国考">国考</option>
+              <option value="省考">省考</option>
+              <option value="事业单位">事业单位</option>
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">年份</label>
+            <input type="number" id="paper-year" class="input-field" value="2024">
+          </div>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">题目 (JSON格式)</label>
+          <textarea id="paper-questions" class="input-field" style="height: 200px;" placeholder='[{"qid": "q1", "stem": "问题1...", "material": ["材料1", "材料2"], "word_limit": 1000}]'></textarea>
+        </div>
+        <div style="text-align: right; margin-top: var(--space-3);">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    `);
+  }
+
+  async function savePaper(e) {
+    e.preventDefault();
+
+    const title = document.getElementById('paper-title').value;
+    const exam_type = document.getElementById('paper-exam-type').value;
+    const year = document.getElementById('paper-year').value;
+    const questionsStr = document.getElementById('paper-questions').value;
+
+    let questions = [];
+    try {
+      questions = JSON.parse(questionsStr || '[]');
+    } catch {
+      showToast('题目格式错误', 'error');
+      return;
+    }
+
+    try {
+      await adminFetch('/papers', {
+        method: 'POST',
+        body: JSON.stringify({ title, exam_type, year: parseInt(year), questions })
+      });
+      showToast('保存成功');
+      closeModal();
+      loadPapers(currentPage);
+    } catch (e) {
+      showToast('保存失败', 'error');
+    }
+  }
+
+  async function editPaper(pid) {
+    try {
+      const data = await adminFetch(`/papers/${pid}`);
+      const paper = data.data;
+
+      openModal('编辑试卷', `
+        <form id="paper-form" onsubmit="updatePaper(event, '${pid}')">
+          <div class="admin-form-group">
+            <label class="admin-form-label">标题 *</label>
+            <input type="text" id="paper-title" class="input-field" value="${paper.title}" required>
+          </div>
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label class="admin-form-label">考试类型</label>
+              <select id="paper-exam-type" class="input-field">
+                <option value="国考" ${paper.exam_type === '国考' ? 'selected' : ''}>国考</option>
+                <option value="省考" ${paper.exam_type === '省考' ? 'selected' : ''}>省考</option>
+                <option value="事业单位" ${paper.exam_type === '事业单位' ? 'selected' : ''}>事业单位</option>
+              </select>
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-form-label">年份</label>
+              <input type="number" id="paper-year" class="input-field" value="${paper.year}">
+            </div>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">题目 (JSON格式)</label>
+            <textarea id="paper-questions" class="input-field" style="height: 200px;">${JSON.stringify(paper.questions || [], null, 2)}</textarea>
+          </div>
+          <div style="text-align: right; margin-top: var(--space-3);">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </form>
+      `);
+    } catch (e) {
+      showToast('加载失败', 'error');
+    }
+  }
+
+  async function updatePaper(e, pid) {
+    e.preventDefault();
+
+    const title = document.getElementById('paper-title').value;
+    const exam_type = document.getElementById('paper-exam-type').value;
+    const year = document.getElementById('paper-year').value;
+    const questionsStr = document.getElementById('paper-questions').value;
+
+    let questions = [];
+    try {
+      questions = JSON.parse(questionsStr || '[]');
+    } catch {
+      showToast('题目格式错误', 'error');
+      return;
+    }
+
+    try {
+      await adminFetch(`/papers/${pid}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title, exam_type, year: parseInt(year), questions })
+      });
+      showToast('更新成功');
+      closeModal();
+      loadPapers(currentPage);
+    } catch (e) {
+      showToast('更新失败', 'error');
+    }
+  }
+
+  async function updateStatus(pid, status) {
+    if (!confirm(`确定要${status === 'published' ? '发布' : '下架'}该试卷吗？`)) return;
+
+    try {
+      await adminFetch(`/papers/${pid}/publish`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+      showToast(status === 'published' ? '已发布' : '已下架');
+      loadPapers(currentPage);
+    } catch (e) {
+      showToast('操作失败', 'error');
+    }
+  }
+
+  loadPapers();
+</script>
+{% endblock %}

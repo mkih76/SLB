@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}素材学习 - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  .study-container { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .study-header { text-align: center; margin-bottom: var(--space-8); }
+  .study-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
+  .stats-bar { display: flex; justify-content: center; gap: var(--space-8); margin-bottom: var(--space-8); }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-primary); }
+  .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+  .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
+  .card-area { margin-bottom: var(--space-8); }
+  .phrase-card { padding: var(--space-7); margin-bottom: var(--space-4); position: relative; }
+  .phrase-card .new-badge { position: absolute; top: var(--space-3); right: var(--space-3); background: var(--color-accent); color: #fff; padding: 2px 10px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-semibold); }
+  .phrase-text { font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-gray-800); line-height: var(--leading-relaxed); margin-bottom: var(--space-3); }
+  .phrase-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-2); }
+  .phrase-translation { font-size: var(--text-sm); color: var(--color-gray-600); line-height: var(--leading-relaxed); margin-bottom: var(--space-2); }
+  .phrase-usage { font-size: var(--text-sm); color: var(--color-text-secondary); padding: var(--space-2) var(--space-3); background: var(--color-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+  .mastery-btns { display: flex; gap: var(--space-2); }
+  .mastery-btns button { flex: 1; padding: var(--space-2); border: 2px solid var(--color-gray-200); border-radius: var(--radius-lg); background: var(--color-bg-elevated); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; transition: all 0.2s; }
+  .mastery-btns button:hover { border-color: var(--color-primary); }
+  .mastery-btns .btn-new { color: var(--color-error); border-color: var(--color-error-light); }
+  .mastery-btns .btn-know { color: var(--color-warning); border-color: var(--color-warning-light); }
+  .mastery-btns .btn-familiar { color: var(--color-primary); border-color: var(--color-primary-light); }
+  .mastery-btns .btn-mastered { color: var(--color-success); border-color: var(--color-success-light); }
+  .empty-card { text-align: center; padding: var(--space-16) var(--space-6); color: var(--color-text-muted); }
+  .dist-bar { display: flex; height: 12px; border-radius: var(--radius-full); overflow: hidden; margin: var(--space-3) 0; }
+  .dist-bar .d0 { background: var(--color-error); }
+  .dist-bar .d1 { background: var(--color-warning); }
+  .dist-bar .d2 { background: var(--color-primary); }
+  .dist-bar .d3 { background: var(--color-success); }
+  .dist-legend { display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-5); }
+  .dist-legend span { display: flex; align-items: center; gap: var(--space-1); }
+  .dist-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .pack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-8); }
+  .pack-card { padding: var(--space-4); cursor: pointer; transition: all 0.2s; }
+  .pack-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+  .pack-name { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-800); margin-bottom: var(--space-1); }
+  .pack-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="study-container">
+    <div class="study-header reveal">
+      <h1>素材学习</h1>
+      <p class="text-muted">间隔重复，科学记忆</p>
+    </div>
+
+    <div class="stats-bar reveal" id="statsBar">
+      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statDue">-</div><div class="stat-label">今日待学</div></div>
+      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statMastered">-</div><div class="stat-label">已掌握</div></div>
+      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statTotal">-</div><div class="stat-label">总库存</div></div>
+    </div>
+
+    <div id="distSection" style="display:none;" class="reveal">
+      <div class="section-title">掌握度分布</div>
+      <div class="dist-bar" id="distBar"></div>
+      <div class="dist-legend">
+        <span><span class="dist-dot" style="background:var(--color-error);"></span> 新学</span>
+        <span><span class="dist-dot" style="background:var(--color-warning);"></span> 认识</span>
+        <span><span class="dist-dot" style="background:var(--color-primary);"></span> 熟悉</span>
+        <span><span class="dist-dot" style="background:var(--color-success);"></span> 掌握</span>
+      </div>
+    </div>
+
+    <div class="section-title reveal">今日学习</div>
+    <div class="card-area" id="cardArea"><div class="empty-card"><div class="spinner"></div></div></div>
+    <div style="text-align:center; margin-bottom:var(--space-8);">
+      <button class="btn btn-secondary" onclick="loadCards()">换一批</button>
+    </div>
+
+    <div class="section-title reveal">素材包</div>
+    <div class="pack-grid reveal-stagger" id="packGrid"></div>
+
+    <div style="text-align:center; margin: var(--space-8) 0;" class="reveal">
+      <a href="/phrases/generate" class="btn btn-accent btn-lg">AI 造段 - 输入论点生成示范段落</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = '/api/phrases';
+const token = localStorage.getItem('slb_token');
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+let cards = [];
+let cardIdx = 0;
+
+async function loadStats() {
+  const res = await fetch(API + '/study/stats', {headers: headers()});
+  const data = await res.json();
+  if (!data.data) return;
+  const s = data.data;
+  document.getElementById('statDue').textContent = s.due_today;
+  document.getElementById('statMastered').textContent = s.mastered;
+  document.getElementById('statTotal').textContent = s.total_phrases;
+  const dist = s.distribution || {};
+  const vals = [dist['新学']||0, dist['认识']||0, dist['熟悉']||0, dist['掌握']||0];
+  const total = vals.reduce((a,b) => a+b, 0);
+  if (total > 0) {
+    document.getElementById('distSection').style.display = 'block';
+    document.getElementById('distBar').innerHTML = vals.map((v, i) => '<div class="d' + i + '" style="width:' + (v/total*100) + '%;"></div>').join('');
+  }
+}
+
+async function loadCards() {
+  const res = await fetch(API + '/study/cards?limit=5', {headers: headers()});
+  const data = await res.json();
+  cards = data.data?.cards || [];
+  cardIdx = 0;
+  renderCard();
+}
+
+function renderCard() {
+  const area = document.getElementById('cardArea');
+  if (!cards.length || cardIdx >= cards.length) {
+    area.innerHTML = '<div class="card empty-card">' +
+      '<i data-lucide="check-circle" style="width:48px;height:48px;color:var(--color-success);margin-bottom:var(--space-3);"></i>' +
+      '<p style="font-size:var(--text-base);font-weight:600;">今日素材已全部学完</p>' +
+      '<p class="text-caption" style="margin-bottom:var(--space-4);">坚持每天学习，积累申论素材</p>' +
+      '<a href="/phrases/generate" class="btn btn-primary btn-sm">试试 AI 造段</a></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+  const c = cards[cardIdx];
+  const tags = tryParseJson(c.tag);
+  area.innerHTML =
+    '<div class="card phrase-card glass-gradient">' +
+      (c.is_new ? '<span class="new-badge">新素材</span>' : '') +
+      '<div class="phrase-text">' + escapeHtml(c.phrase) + '</div>' +
+      '<div class="phrase-meta">' + escapeHtml(c.source||'') + (c.source_date ? ' · ' + escapeHtml(c.source_date) : '') + (tags.length ? ' · ' + tags.join(' / ') : '') + '</div>' +
+      (c.translation ? '<div class="phrase-translation">' + escapeHtml(c.translation) + '</div>' : '') +
+      (c.usage ? '<div class="phrase-usage">适用：' + escapeHtml(c.usage) + '</div>' : '') +
+      '<div class="mastery-btns">' +
+        '<button class="btn-new" onclick="answer(0)">不认识</button>' +
+        '<button class="btn-know" onclick="answer(1)">认识</button>' +
+        '<button class="btn-familiar" onclick="answer(2)">熟悉</button>' +
+        '<button class="btn-mastered" onclick="answer(3)">掌握</button>' +
+      '</div>' +
+    '</div>';
+}
+
+async function answer(level) {
+  const c = cards[cardIdx];
+  await fetch(API + '/study/record', { method: 'POST', headers: headers(), body: JSON.stringify({phrase_id: c.phrase_id, mastery_level: level}) });
+  cardIdx++;
+  renderCard();
+  loadStats();
+}
+
+async function loadPacks() {
+  const res = await fetch(API + '/packs?limit=10', {headers: headers()});
+  const data = await res.json();
+  const grid = document.getElementById('packGrid');
+  const items = data.data?.items || [];
+  if (!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:var(--space-6);">' +
+      '<i data-lucide="package" style="width:40px;height:40px;color:var(--color-gray-300);margin-bottom:var(--space-2);"></i>' +
+      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);">素材包正在准备中，请先体验 AI 造段功能</p></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+  grid.innerHTML = items.map(p =>
+    '<div class="card pack-card" onclick="viewPack(' + p.id + ')">' +
+      '<div class="pack-name">' + escapeHtml(p.name) + '</div>' +
+      '<div class="pack-count">' + (p.phrase_count||0) + ' 条素材</div>' +
+    '</div>'
+  ).join('');
+}
+
+function viewPack(id) { window.open('/api/phrases/packs/' + id, '_blank'); }
+function tryParseJson(s) { try { return JSON.parse(s || '[]'); } catch { return []; } }
+
+loadStats(); loadCards(); loadPacks();
+</script>
+{% endblock %}

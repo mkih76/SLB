@@ -1,0 +1,19 @@
+# venv
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# 数据库（不入仓）
+data/slb.db
+data/*.db
+data/test.db
+data/backups/
+
+# 临时
+_probe*.py
+*.log
+
+# IDE
+.vscode/
+.idea/

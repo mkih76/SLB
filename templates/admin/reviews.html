@@ -1,0 +1,282 @@
+{% extends "admin/base.html" %}
+
+{% block title %}批改复核 - 申论帮管理后台{% endblock %}
+{% block page_title %}批改复核{% endblock %}
+
+{% block admin_content %}
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <div class="filter-item">
+    <label>状态</label>
+    <select id="filter-status" onchange="loadReviews()">
+      <option value="">全部</option>
+      <option value="pending">待复核</option>
+      <option value="approved">已确认</option>
+      <option value="rejected">已拒绝</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>分数段</label>
+    <select id="filter-score" onchange="loadReviews()">
+      <option value="">全部</option>
+      <option value="0-60">60分以下</option>
+      <option value="60-75">60-75分</option>
+      <option value="75-90">75-90分</option>
+      <option value="90-100">90分以上</option>
+    </select>
+  </div>
+  <div class="filter-item">
+    <label>搜索</label>
+    <input type="text" id="filter-search" placeholder="用户名/试卷标题" onkeyup="if(event.key==='Enter')loadReviews()">
+  </div>
+  <button class="btn btn-primary" onclick="loadReviews()">
+    <i data-lucide="search"></i>
+    搜索
+  </button>
+</div>
+
+<!-- 复核列表 -->
+<div class="admin-table-container">
+  <div class="admin-table-header">
+    <h3 class="admin-table-title">批改复核</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>提交ID</th>
+        <th>用户</th>
+        <th>试卷</th>
+        <th>题目</th>
+        <th>AI得分</th>
+        <th>复核得分</th>
+        <th>状态</th>
+        <th>提交时间</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="reviews-table">
+      <tr><td colspan="9" style="text-align: center;">加载中...</td></tr>
+    </tbody>
+  </table>
+  <div class="admin-pagination">
+    <div class="pagination-info" id="pagination-info">共 0 条</div>
+    <div class="pagination-buttons" id="pagination-buttons"></div>
+  </div>
+</div>
+
+<!-- 复核详情模态框 -->
+<div id="review-modal" class="admin-modal">
+  <div class="admin-modal-content" style="max-width: 800px;">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title" id="modal-title">复核详情</h3>
+      <button class="admin-modal-close" onclick="closeReviewModal()">&times;</button>
+    </div>
+    <div id="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <!-- 动态内容 -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+  let currentSubmission = null;
+
+  async function loadReviews(page = 1) {
+    currentPage = page;
+    const status = document.getElementById('filter-status').value;
+    const score = document.getElementById('filter-score').value;
+    const search = document.getElementById('filter-search').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (status) params.append('status', status);
+    if (score) params.append('score', score);
+    if (search) params.append('search', search);
+
+    try {
+      const data = await adminFetch(`/submissions/pending_review?${params}`);
+      renderReviews(data.data);
+    } catch (e) {
+      document.getElementById('reviews-table').innerHTML =
+        '<tr><td colspan="9" style="text-align: center;">加载失败</td></tr>';
+    }
+  }
+
+  function renderReviews(data) {
+    const tbody = document.getElementById('reviews-table');
+
+    if (!data.submissions || data.submissions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+      return;
+    }
+
+    const statusMap = {
+      'pending': '<span class="status-badge status-pending">待复核</span>',
+      'approved': '<span class="status-badge status-active">已确认</span>',
+      'rejected': '<span class="status-badge status-rejected">已拒绝</span>'
+    };
+
+    tbody.innerHTML = data.submissions.map(s => `
+      <tr>
+        <td>${s.sid.substring(0, 8)}...</td>
+        <td>${s.nickname || s.uid?.substring(0, 8) || '-'}</td>
+        <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.paper_title || '-'}</td>
+        <td>${s.question_stem?.substring(0, 20)}...</td>
+        <td>${s.score !== null ? s.score : '-'}</td>
+        <td>${s.review_score !== null ? s.review_score : '-'}</td>
+        <td>${statusMap[s.review_status] || statusMap['pending']}</td>
+        <td>${formatDate(s.created_at)}</td>
+        <td>
+          <button class="action-btn action-btn-view" onclick="viewReview('${s.sid}')">查看</button>
+          ${s.review_status === 'pending' ? `
+            <button class="action-btn action-btn-edit" onclick="openReviewForm('${s.sid}')">复核</button>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pagination-info').textContent = `共 ${data.total} 条`;
+    renderPagination(data);
+    lucide.createIcons();
+  }
+
+  function renderPagination(data) {
+    const container = document.getElementById('pagination-buttons');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= data.pages; i++) {
+      html += `<button class="pagination-btn ${i === data.page ? 'active' : ''}" onclick="loadReviews(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+  }
+
+  async function viewReview(sid) {
+    try {
+      const data = await adminFetch(`/submissions/${sid}`);
+      currentSubmission = data.data;
+      const s = currentSubmission;
+
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = `
+        <div class="admin-form-group">
+          <label class="admin-form-label">用户信息</label>
+          <p>${s.nickname || '-'} (${s.uid?.substring(0, 8) || '-'})</p>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">试卷</label>
+            <p>${s.paper_title || '-'}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">题目</label>
+            <p>${s.question_stem?.substring(0, 50)}...</p>
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">AI评分</label>
+            <p style="font-size: 24px; font-weight: 700; color: var(--color-primary);">${s.score ?? '-'}分</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">复核评分</label>
+            ${s.review_score !== null ?
+              `<p style="font-size: 24px; font-weight: 700; color: var(--color-success);">${s.review_score}分</p>` :
+              '<p>-</p>'}
+          </div>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">用户答案</label>
+          <div style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md); white-space: pre-wrap;">${s.user_answer || '-'}</div>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">AI反馈</label>
+          <div style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md);">${s.ai_feedback || '-'}</div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label class="admin-form-label">提交时间</label>
+            <p>${formatDate(s.created_at)}</p>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label">复核状态</label>
+            <p>${s.review_status || 'pending'}</p>
+          </div>
+        </div>
+        ${s.review_feedback ? `
+        <div class="admin-form-group">
+          <label class="admin-form-label">复核意见</label>
+          <div style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md);">${s.review_feedback}</div>
+        </div>
+        ` : ''}
+      `;
+
+      document.getElementById('review-modal').classList.add('active');
+      lucide.createIcons();
+    } catch (e) {
+      showToast('加载失败', 'error');
+    }
+  }
+
+  function openReviewForm(sid) {
+    const s = currentSubmission;
+    if (!s || s.sid !== sid) {
+      showToast('数据错误', 'error');
+      return;
+    }
+
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `
+      <form id="review-form" onsubmit="submitReview(event, '${sid}')">
+        <div class="admin-form-group">
+          <label class="admin-form-label">复核评分 *</label>
+          <input type="number" id="review-score" class="input-field" min="0" max="100" value="${s.score || 0}" required>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">复核意见</label>
+          <textarea id="review-feedback" class="input-field" style="height: 120px;" placeholder="请输入复核意见...">${s.review_feedback || ''}</textarea>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label">操作</label>
+          <div style="display: flex; gap: var(--space-2);">
+            <button type="submit" name="action" value="approve" class="btn btn-primary">确认评分</button>
+            <button type="submit" name="action" value="reject" class="btn btn-secondary">拒绝</button>
+          </div>
+        </div>
+      </form>
+    `;
+
+    document.getElementById('review-modal').classList.add('active');
+  }
+
+  async function submitReview(e, sid) {
+    e.preventDefault();
+    const action = e.submitter.value;
+    const score = parseInt(document.getElementById('review-score').value);
+    const feedback = document.getElementById('review-feedback').value;
+
+    try {
+      await adminFetch(`/submissions/${sid}/review`, {
+        method: 'PUT',
+        body: JSON.stringify({ action, score, feedback })
+      });
+      showToast(action === 'approve' ? '已确认' : '已拒绝');
+      closeReviewModal();
+      loadReviews(currentPage);
+    } catch (e) {
+      showToast('操作失败', 'error');
+    }
+  }
+
+  function closeReviewModal() {
+    document.getElementById('review-modal').classList.remove('active');
+    currentSubmission = null;
+  }
+
+  loadReviews();
+</script>
+{% endblock %}

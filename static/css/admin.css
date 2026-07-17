@@ -1,0 +1,437 @@
+/* 后台管理专用样式 */
+
+:root {
+  --admin-sidebar-bg: #1A3A6B;
+  --admin-sidebar-active: #2B5BA8;
+  --admin-sidebar-text: #FFFFFF;
+  --admin-header-bg: #FFFFFF;
+  --admin-content-bg: #F5F7FA;
+  --admin-card-bg: #FFFFFF;
+
+  --table-border: #E5E7EB;
+  --table-header-bg: #F9FAFB;
+  --table-row-hover: #F3F4F6;
+
+  --status-pending: #F59E0B;
+  --status-active: #10B981;
+  --status-rejected: #EF4444;
+  --status-draft: #6B7280;
+}
+
+/* 侧边栏 */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: 220px;
+  background: var(--admin-sidebar-bg);
+  color: var(--admin-sidebar-text);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+.admin-sidebar-header {
+  padding: var(--space-3);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.admin-sidebar-header h1 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.admin-sidebar-header span {
+  font-size: var(--text-xs);
+  opacity: 0.7;
+}
+
+.admin-nav {
+  padding: var(--space-2) 0;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 12px 24px;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  transition: all 200ms ease;
+  border-left: 4px solid transparent;
+}
+
+.admin-nav-item:hover,
+.admin-nav-item.active {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-left-color: var(--color-accent);
+}
+
+.admin-nav-item i {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-nav-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: var(--space-2) 0;
+}
+
+/* 主内容区 */
+.admin-main {
+  flex: 1;
+  margin-left: 220px;
+  background: var(--admin-content-bg);
+}
+
+.admin-header {
+  background: var(--admin-header-bg);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--table-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-header h2 {
+  font-size: var(--text-xl);
+}
+
+.admin-breadcrumb {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.admin-breadcrumb a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.admin-content {
+  padding: var(--space-4);
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.stat-card {
+  background: white;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.stat-card-value {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.stat-card-change {
+  font-size: var(--text-xs);
+  color: var(--color-success);
+}
+
+/* 数据表格 */
+.admin-table-container {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.admin-table-header {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--table-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-table-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--table-header-bg);
+  border-bottom: 1px solid var(--table-border);
+}
+
+.admin-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--table-border);
+  font-size: var(--text-sm);
+}
+
+.admin-table tr:hover {
+  background: var(--table-row-hover);
+}
+
+/* 操作按钮 */
+.action-btn {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  border: none;
+  margin-right: 4px;
+}
+
+.action-btn-view {
+  background: rgba(26, 58, 107, 0.1);
+  color: var(--color-primary);
+}
+
+.action-btn-edit {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-warning);
+}
+
+.action-btn-delete {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-error);
+}
+
+/* 状态标签 */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--status-pending);
+}
+
+.status-active,
+.status-approved {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--status-active);
+}
+
+.status-rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--status-rejected);
+}
+
+.status-draft {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--status-draft);
+}
+
+/* 筛选表单 */
+.filter-bar {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  background: white;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.filter-item label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.filter-item select,
+.filter-item input {
+  padding: 6px 12px;
+  border: 1px solid var(--table-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+/* 分页 */
+.admin-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  border-top: 1px solid var(--table-border);
+}
+
+.pagination-info {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.pagination-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--table-border);
+  background: white;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.pagination-btn:hover {
+  background: var(--table-row-hover);
+}
+
+.pagination-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* 模态框 */
+.admin-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.admin-modal.active {
+  display: flex;
+}
+
+.admin-modal-content {
+  background: white;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.admin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--table-border);
+}
+
+.admin-modal-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.admin-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+/* 表单 */
+.admin-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.admin-form-group {
+  margin-bottom: var(--space-3);
+}
+
+.admin-form-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.admin-form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--table-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.admin-form-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--table-border);
+}
+
+/* 响应式 */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    transform: translateX(-220px);
+  }
+
+  .admin-main {
+    margin-left: 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-row {
+    grid-template-columns: 1fr;
+  }
+}

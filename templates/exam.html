@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}作答 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container" style="padding: 0;">
+  <!-- 顶部导航 -->
+  <div style="background: var(--color-bg-elevated); border-bottom: 1px solid var(--color-gray-200); padding: var(--space-3) var(--space-6); position: sticky; top: var(--navbar-height); z-index: 50;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: var(--space-4);">
+        <a href="/papers" style="color: var(--color-text-secondary); text-decoration: none; font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-1);">
+          <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+          返回卷库
+        </a>
+        <div style="width: 1px; height: 20px; background: var(--color-gray-200);"></div>
+        <h1 id="paper-title" style="font-size: var(--text-lg); font-weight: 600; margin: 0;">加载中...</h1>
+      </div>
+      <div id="question-info" style="display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary);">
+        <!-- 题目信息 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="container" style="padding: var(--space-6);">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: start;">
+      <!-- 左侧：材料区 -->
+      <div class="card" style="position: sticky; top: calc(var(--navbar-height) + 60px); max-height: calc(100vh - 120px); overflow-y: auto;">
+        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-gray-200);">
+          <i data-lucide="file-text" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
+          <h3 style="margin: 0; font-size: var(--text-base);">给定材料</h3>
+        </div>
+        <div id="material-content" style="line-height: 1.8; white-space: pre-wrap; font-size: var(--text-sm); color: var(--color-text);">
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text" style="width: 60%;"></div>
+        </div>
+      </div>
+
+      <!-- 右侧：作答区 -->
+      <div>
+        <!-- 题目信息卡片 -->
+        <div class="card" style="margin-bottom: var(--space-4);">
+          <div style="display: flex; align-items: start; gap: var(--space-3);">
+            <div style="width: 36px; height: 36px; border-radius: var(--radius-lg); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i data-lucide="edit-3" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+                <span id="question-type" class="badge badge-info">题型</span>
+                <span id="question-score" class="badge badge-accent">满分</span>
+              </div>
+              <p id="question-stem" style="font-size: var(--text-sm); line-height: 1.6; color: var(--color-text);">
+                加载中...
+              </p>
+              <div style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted);">
+                字数要求：<span id="word-limit">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OCR 上传区 -->
+        <div class="card" style="margin-bottom: var(--space-4); border-style: dashed; border-color: var(--color-gray-300); background: var(--color-gray-50);">
+          <div style="text-align: center; padding: var(--space-4);">
+            <input type="file" id="ocr-input" accept="image/*" capture="camera" style="display: none;" onchange="handleOCRUpload(this)">
+            <div id="ocr-dropzone" style="cursor: pointer;" onclick="document.getElementById('ocr-input').click()">
+              <i data-lucide="camera" style="width: 32px; height: 32px; color: var(--color-gray-400); margin-bottom: var(--space-2);"></i>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-1);">
+                拍照识别文字
+              </p>
+              <p style="font-size: var(--text-xs); color: var(--color-text-muted);">
+                支持拍照或上传图片，自动识别手写/印刷文字
+              </p>
+            </div>
+            <div id="ocr-progress" style="display: none;">
+              <div class="grading-status">
+                <div class="grading-status-spinner"></div>
+                <span class="grading-status-text">正在识别文字...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 未登录提示 -->
+        <div id="login-hint" class="card" style="margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--color-warning-light); border-color: var(--color-warning); display: none;">
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-warning);">
+            <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+            <span>你尚未登录，答案不会保存。<a href="/login" style="color: var(--color-primary); font-weight: 600; text-decoration: underline;">登录</a>后可获得 AI 批改并保存记录</span>
+          </div>
+        </div>
+
+        <!-- 作答区 -->
+        <div class="card">
+          <form id="answer-form" onsubmit="handleSubmit(event)">
+            <input type="hidden" name="pid" value="{{ pid }}">
+            <input type="hidden" name="qid" value="{{ qid }}">
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+              <label style="font-size: var(--text-sm); font-weight: 600; color: var(--color-text);">你的答案</label>
+              <div style="display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted);">
+                <span>字数：<span id="word-count" style="font-weight: 600; color: var(--color-primary);">0</span></span>
+                <span id="word-count-hint"></span>
+              </div>
+            </div>
+
+            <textarea
+              id="user-answer"
+              name="user_answer"
+              class="input-field"
+              style="min-height: 280px; resize: vertical; font-family: var(--font-body); line-height: 1.8;"
+              placeholder="请在此输入你的答案...&#10;&#10;提示：&#10;1. 分点作答，条理清晰&#10;2. 使用序号标注要点&#10;3. 注意字数要求"
+              required
+            ></textarea>
+
+            <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+              <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px 24px; font-size: var(--text-base);">
+                <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+                提交批改
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="clearAnswer()" style="padding: 12px 24px;">
+                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                清空
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const pid = '{{ pid }}';
+  const qid = '{{ qid }}';
+
+  let paperData = null;
+  let questionData = null;
+
+  // 加载题目
+  async function loadQuestion() {
+    try {
+      // 加载试卷
+      const paperRes = await fetch(`/api/papers/${pid}`);
+      const { data: paper } = await paperRes.json();
+      paperData = paper;
+
+      document.getElementById('paper-title').textContent = paper.title;
+      document.title = `${paper.title} - 申论帮`;
+
+      // 加载题目
+      const qRes = await fetch(`/api/papers/${pid}/question/${qid}`);
+      const { data: question } = await qRes.json();
+      questionData = question;
+
+      // 渲染材料
+      const material = question.material || [];
+      document.getElementById('material-content').textContent = material.join('\n\n');
+
+      // 渲染题目
+      document.getElementById('question-stem').textContent = question.stem;
+      document.getElementById('word-limit').textContent = question.word_limit || '未指定';
+      document.getElementById('question-type').textContent = question.type || '未知';
+      document.getElementById('question-score').textContent = `满分 ${question.score_max || 100} 分`;
+
+      // 初始化图标
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+
+      // 显示登录提示
+      if (!localStorage.getItem('slb_token')) {
+        document.getElementById('login-hint').style.display = 'block';
+      }
+    } catch (e) {
+      console.error(e);
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.error('加载失败，请刷新页面重试');
+      }
+    }
+  }
+
+  // 字数统计
+  const answerTextarea = document.getElementById('user-answer');
+  if (answerTextarea) {
+    answerTextarea.addEventListener('input', function() {
+      const count = this.value.length;
+      document.getElementById('word-count').textContent = count;
+
+      // 字数提示
+      const hint = document.getElementById('word-count-hint');
+      if (questionData && questionData.word_limit) {
+        const match = questionData.word_limit.match(/(\d+)-(\d+)/);
+        if (match) {
+          const min = parseInt(match[1]);
+          const max = parseInt(match[2]);
+          if (count < min) {
+            hint.textContent = `(还需 ${min - count} 字)`;
+            hint.style.color = 'var(--color-warning)';
+          } else if (count > max) {
+            hint.textContent = `(超出 ${count - max} 字)`;
+            hint.style.color = 'var(--color-error)';
+          } else {
+            hint.textContent = '(字数合适)';
+            hint.style.color = 'var(--color-success)';
+          }
+        }
+      }
+    });
+  }
+
+  // OCR 上传
+  async function handleOCRUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // 检查文件大小
+    if (file.size > 10 * 1024 * 1024) {
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.warning('图片大小不能超过 10MB');
+      }
+      return;
+    }
+
+    // 显示进度
+    document.getElementById('ocr-dropzone').style.display = 'none';
+    document.getElementById('ocr-progress').style.display = 'block';
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.data && data.data.text) {
+        // 填充识别结果
+        const textarea = document.getElementById('user-answer');
+        textarea.value = data.data.text;
+        textarea.dispatchEvent(new Event('input')); // 触发字数统计
+
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.success('文字识别完成，请检查并修改');
+        }
+      } else {
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.error(data.error || '识别失败');
+        }
+      }
+    } catch (e) {
+      console.error('OCR error:', e);
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.error('识别失败，请重试');
+      }
+    } finally {
+      // 恢复上传区
+      document.getElementById('ocr-dropzone').style.display = 'block';
+      document.getElementById('ocr-progress').style.display = 'none';
+      input.value = ''; // 清空 input
+    }
+  }
+
+  // 拖拽上传
+  const dropzone = document.getElementById('ocr-dropzone');
+  if (dropzone) {
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = 'var(--color-primary)';
+      dropzone.style.background = 'var(--color-primary-light)';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.style.borderColor = '';
+      dropzone.style.background = '';
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '';
+      dropzone.style.background = '';
+
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const input = document.getElementById('ocr-input');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleOCRUpload(input);
+      }
+    });
+  }
+
+  // 清空答案
+  function clearAnswer() {
+    if (confirm('确定要清空答案吗？')) {
+      document.getElementById('user-answer').value = '';
+      document.getElementById('user-answer').dispatchEvent(new Event('input'));
+    }
+  }
+
+  // 提交
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const answer = form.user_answer.value.trim();
+
+    if (!answer) {
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.warning('请输入答案');
+      }
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.warning('请先登录');
+      }
+      // 尝试打开登录弹窗
+      if (typeof openAuthModal === 'function') {
+        openAuthModal('login');
+      } else {
+        window.location.href = '/login';
+      }
+      return;
+    }
+
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="grading-status-spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div> 提交中...';
+
+    try {
+      const res = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          pid: pid,
+          qid: qid,
+          user_answer: answer
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // 显示批改进度条
+        if (typeof SLBGradingProgress !== 'undefined') {
+          SLBGradingProgress.start();
+          SLBGradingProgress.nextStep(0);
+        }
+
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.success('提交成功，正在批改...');
+        }
+
+        // 跳转到结果页
+        setTimeout(() => {
+          window.location.href = `/result/${data.data.sid}`;
+        }, 500);
+      } else {
+        if (typeof SLBToast !== 'undefined') {
+          SLBToast.error(data.error || '提交失败');
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }
+    } catch (e) {
+      console.error('Submit error:', e);
+      if (typeof SLBToast !== 'undefined') {
+        SLBToast.error('提交失败，请稍后重试');
+      }
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+  }
+
+  // 初始加载
+  loadQuestion();
+</script>
+{% endblock %}

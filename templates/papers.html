@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}卷库 - 申论帮{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container">
+    <!-- 页面标题 -->
+    <div class="reveal" style="margin-bottom: var(--space-8);">
+      <h1 style="font-size: var(--text-2xl); letter-spacing: -0.5px; margin-bottom: var(--space-2);">试卷库</h1>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">393 套真题，覆盖国考 + 31 省省考 + 联考（2011-2026）</p>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="card reveal" style="margin-bottom: var(--space-6); padding: var(--space-4) var(--space-5);">
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end;">
+        <div style="flex: 1; min-width: 120px;">
+          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">考试类型</label>
+          <select id="filter-exam-type" class="input-field" style="width: 100%;">
+            <option value="">全部类型</option>
+            <option value="国考">国考</option>
+            <option value="省考">省考</option>
+            <option value="事业单位">事业单位</option>
+            <option value="联考">联考</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 120px;">
+          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">年份</label>
+          <select id="filter-year" class="input-field" style="width: 100%;">
+            <option value="">全部年份</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+            <option value="2018">2018</option>
+            <option value="2017">2017</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 120px;">
+          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">地区</label>
+          <select id="filter-province" class="input-field" style="width: 100%;">
+            <option value="">全部地区</option>
+            <option value="北京">北京</option>
+            <option value="上海">上海</option>
+            <option value="广东">广东</option>
+            <option value="浙江">浙江</option>
+            <option value="江苏">江苏</option>
+            <option value="山东">山东</option>
+            <option value="四川">四川</option>
+            <option value="湖北">湖北</option>
+            <option value="湖南">湖南</option>
+            <option value="河南">河南</option>
+            <option value="河北">河北</option>
+            <option value="安徽">安徽</option>
+            <option value="福建">福建</option>
+            <option value="江西">江西</option>
+            <option value="重庆">重庆</option>
+            <option value="天津">天津</option>
+            <option value="陕西">陕西</option>
+            <option value="辽宁">辽宁</option>
+            <option value="吉林">吉林</option>
+            <option value="黑龙江">黑龙江</option>
+            <option value="山西">山西</option>
+            <option value="甘肃">甘肃</option>
+            <option value="贵州">贵州</option>
+            <option value="云南">云南</option>
+            <option value="广西">广西</option>
+            <option value="海南">海南</option>
+            <option value="新疆">新疆</option>
+            <option value="西藏">西藏</option>
+            <option value="宁夏">宁夏</option>
+            <option value="青海">青海</option>
+            <option value="内蒙古">内蒙古</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="loadPapers(1)" style="height: 40px;">
+          <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+          搜索
+        </button>
+        <button class="btn btn-secondary" onclick="resetFilters()" style="height: 40px;">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          重置
+        </button>
+      </div>
+    </div>
+
+    <!-- 统计信息 -->
+    <div id="papers-stats" style="margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted);"></div>
+
+    <!-- 试卷列表 -->
+    <div id="papers-list">
+      <!-- 骨架屏 -->
+      <div class="grid grid-2">
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div id="pagination" style="margin-top: var(--space-8);"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPage = 1;
+
+  // 加载试卷
+  async function loadPapers(page = 1) {
+    currentPage = page;
+    const examType = document.getElementById('filter-exam-type').value;
+    const year = document.getElementById('filter-year').value;
+    const province = document.getElementById('filter-province').value;
+
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (examType) params.append('exam_type', examType);
+    if (year) params.append('year', year);
+    if (province) params.append('province', province);
+
+    // 显示骨架屏
+    document.getElementById('papers-list').innerHTML = `
+      <div class="grid grid-2">
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch(`/api/papers?${params}`);
+      const { data } = await res.json();
+
+      renderPapers(data.papers);
+      renderPagination(data);
+      renderStats(data);
+    } catch (e) {
+      document.getElementById('papers-list').innerHTML = `
+        <div class="empty-state">
+          <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/>
+          </svg>
+          <div class="empty-state-title">加载失败</div>
+          <div class="empty-state-desc">请检查网络连接后重试</div>
+        </div>
+      `;
+    }
+  }
+
+  // 渲染试卷列表
+  function renderPapers(papers) {
+    const container = document.getElementById('papers-list');
+
+    if (!papers || papers.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
+          </svg>
+          <div class="empty-state-title">暂无试卷</div>
+          <div class="empty-state-desc">尝试调整筛选条件</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="grid grid-2">
+        ${papers.map((paper, index) => {
+          const questions = parseQuestions(paper.questions);
+          const safePid = escapeHtml(paper.pid);
+          const safeQid = escapeHtml(questions[0]?.qid || 'q1');
+          const safeExamType = escapeHtml(paper.exam_type);
+          const safeYear = escapeHtml(String(paper.year));
+          const safeProvince = escapeHtml(paper.province || '');
+          const safeTitle = escapeHtml(paper.title);
+          const safeHeat = escapeHtml(String(paper.heat));
+          const difficulty = '★'.repeat(paper.difficulty) + '☆'.repeat(5 - paper.difficulty);
+
+          // 根据考试类型设置颜色
+          const typeColors = {
+            '国考': { bg: 'var(--color-primary-light)', color: 'var(--color-primary)' },
+            '省考': { bg: 'var(--color-accent-light)', color: 'var(--color-accent)' },
+            '事业单位': { bg: 'var(--color-success-light)', color: 'var(--color-success)' },
+            '联考': { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' }
+          };
+          const typeColor = typeColors[safeExamType] || { bg: 'var(--color-gray-100)', color: 'var(--color-gray-600)' };
+
+          return `
+            <div class="card" style="padding: var(--space-5); animation: fadeSlideIn 200ms ease-out forwards; animation-delay: ${index * 30}ms; opacity: 0;">
+              <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-3);">
+                <span class="badge" style="background: ${typeColor.bg}; color: ${typeColor.color};">${safeExamType}</span>
+                <span class="badge badge-accent">${safeYear}</span>
+                ${safeProvince ? `<span class="badge">${safeProvince}</span>` : ''}
+              </div>
+              <h3 style="font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-2); line-height: 1.4;">${safeTitle}</h3>
+              <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4);">
+                <span>${questions.length} 题</span>
+                <span>${difficulty}</span>
+                <span>热度 ${safeHeat}</span>
+              </div>
+              <div style="display: flex; gap: var(--space-2);">
+                <a href="/exam/${safePid}/${safeQid}" class="btn btn-primary" style="flex: 1; font-size: var(--text-sm); padding: 8px 16px;">
+                  <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+                  逐题练习
+                </a>
+                <a href="/simulate/${safePid}" class="btn btn-secondary" style="flex: 1; font-size: var(--text-sm); padding: 8px 16px;">
+                  <i data-lucide="timer" style="width: 14px; height: 14px;"></i>
+                  全真模拟
+                </a>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // 初始化图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  // 渲染统计信息
+  function renderStats(data) {
+    const container = document.getElementById('papers-stats');
+    container.innerHTML = `共 ${data.total} 套试卷，第 ${data.page}/${data.pages} 页`;
+  }
+
+  // 渲染分页
+  function renderPagination(data) {
+    const container = document.getElementById('pagination');
+    if (data.pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '<div style="display: flex; justify-content: center; gap: var(--space-1);">';
+
+    // 上一页
+    if (data.page > 1) {
+      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.page - 1})">
+        <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+      </button>`;
+    }
+
+    // 页码
+    const startPage = Math.max(1, data.page - 2);
+    const endPage = Math.min(data.pages, data.page + 2);
+
+    if (startPage > 1) {
+      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(1)">1</button>`;
+      if (startPage > 2) html += `<span style="padding: 8px 4px; color: var(--color-text-muted);">...</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      if (i === data.page) {
+        html += `<button class="btn btn-primary" style="padding: 8px 12px;">${i}</button>`;
+      } else {
+        html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${i})">${i}</button>`;
+      }
+    }
+
+    if (endPage < data.pages) {
+      if (endPage < data.pages - 1) html += `<span style="padding: 8px 4px; color: var(--color-text-muted);">...</span>`;
+      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.pages})">${data.pages}</button>`;
+    }
+
+    // 下一页
+    if (data.page < data.pages) {
+      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.page + 1})">
+        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+      </button>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  // 重置筛选
+  function resetFilters() {
+    document.getElementById('filter-exam-type').value = '';
+    document.getElementById('filter-year').value = '';
+    document.getElementById('filter-province').value = '';
+    loadPapers(1);
+  }
+
+  // 解析题目
+  function parseQuestions(questionsJson) {
+    try {
+      return JSON.parse(questionsJson);
+    } catch {
+      return [];
+    }
+  }
+
+  // HTML 转义
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // 初始加载
+  loadPapers();
+</script>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}专项训练 - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  .drill-container { max-width: 1000px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .drill-header { text-align: center; margin-bottom: var(--space-8); }
+  .drill-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
+  .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
+  .type-card { padding: var(--space-5); text-align: center; cursor: pointer; transition: all 0.2s; }
+  .type-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+  .type-card.active { border-color: var(--color-primary); background: var(--color-primary-faint); }
+  .type-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-gray-800); margin-bottom: var(--space-1); }
+  .type-level { font-size: var(--text-xs); color: var(--color-accent); margin-bottom: var(--space-1); }
+  .type-score { font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary); }
+  .type-attempts { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+  .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
+  .recommend-list { display: flex; flex-direction: column; gap: var(--space-3); }
+  .recommend-item { padding: var(--space-4); display: flex; justify-content: space-between; align-items: center; }
+  .recommend-info { flex: 1; }
+  .recommend-title { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-gray-800); }
+  .recommend-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+  .progress-chart { padding: var(--space-5); margin-top: var(--space-5); min-height: 200px; }
+  .history-table { width: 100%; border-collapse: collapse; margin-top: var(--space-4); }
+  .history-table th, .history-table td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: var(--text-sm); }
+  .history-table th { background: var(--color-gray-50); color: var(--color-text-secondary); font-weight: var(--weight-medium); }
+  .score-badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: var(--weight-semibold); font-size: var(--text-xs); }
+  .score-high { background: var(--color-success-light); color: var(--color-success); }
+  .score-mid { background: var(--color-warning-light); color: var(--color-warning); }
+  .score-low { background: var(--color-error-light); color: var(--color-error); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="drill-container">
+    <div class="drill-header reveal">
+      <h1>专项训练</h1>
+      <p class="text-muted">选择题型，针对性提升</p>
+    </div>
+
+    <div class="type-grid reveal-stagger" id="typeGrid"></div>
+
+    <div id="recommendSection" style="display:none;">
+      <div class="section-title">推荐练习</div>
+      <div class="recommend-list" id="recommendList"></div>
+    </div>
+
+    <div id="progressSection" style="display:none;">
+      <div class="section-title">进步趋势</div>
+      <div class="progress-chart glass" id="progressChart">
+        <canvas id="trendCanvas" width="960" height="200"></canvas>
+      </div>
+    </div>
+
+    <div id="historySection" style="display:none;">
+      <div class="section-title">训练历史</div>
+      <table class="history-table">
+        <thead><tr><th>试卷</th><th>题号</th><th>得分</th><th>时间</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = '/api/drill';
+const token = localStorage.getItem('slb_token');
+let currentType = null;
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+
+// 未登录时显示静态卡片
+function showStaticCards() {
+  const grid = document.getElementById('typeGrid');
+  const names = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+  const descs = {guina:'概括材料要点，提炼核心信息',zonghe:'多角度分析问题，揭示深层原因',duice:'针对问题提出可行对策方案',zhixing:'贯彻上级意图，执行写作任务',zuowen:'议论文写作，论证观点'};
+  const icons = {guina:'search',zonghe:'layers',duice:'lightbulb',zhixing:'check-circle',zuowen:'pen-tool'};
+  for (const [t, name] of Object.entries(names)) {
+    const card = document.createElement('div');
+    card.className = 'card type-card';
+    card.onclick = () => { if (!token) { openAuthModal('login'); } else { selectType(t); } };
+    card.innerHTML = '<div style="margin-bottom:8px;color:var(--color-primary);"><i data-lucide="'+icons[t]+'" style="width:24px;height:24px;"></i></div>' +
+      '<div class="type-name">' + name + '</div>' +
+      '<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:4px;">' + descs[t] + '</div>' +
+      '<div class="type-score" style="margin-top:8px;">--</div>' +
+      '<div class="type-attempts">登录后开始练习</div>';
+    grid.appendChild(card);
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function loadStats() {
+  if (!token) { showStaticCards(); return; }
+  const res = await fetch(API + '/types', {headers: headers()});
+  const data = await res.json();
+  if (!data.data) return;
+  const types = data.data.types;
+  const grid = document.getElementById('typeGrid');
+  grid.innerHTML = '';
+  const order = ['guina','zonghe','duice','zhixing','zuowen'];
+  const names = {guina:'归纳概括',zonghe:'综合分析',duice:'提出对策',zhixing:'贯彻执行',zuowen:'大作文'};
+  const levels = {bronze:'青铜',silver:'白银',gold:'黄金',platinum:'铂金',diamond:'钻石'};
+  for (const t of order) {
+    const s = types[t] || {total_attempts:0, avg_score:0, level:'bronze'};
+    const card = document.createElement('div');
+    card.className = 'card type-card' + (currentType === t ? ' active' : '');
+    card.onclick = () => selectType(t);
+    card.innerHTML = '<div class="type-name">' + names[t] + '</div>' +
+      '<div class="type-level">' + (levels[s.level]||'青铜') + '段位</div>' +
+      '<div class="type-score">' + (s.avg_score || '--') + '</div>' +
+      '<div class="type-attempts">练习' + s.total_attempts + '次</div>';
+    grid.appendChild(card);
+  }
+}
+
+async function selectType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-card').forEach((c,i) => {
+    c.classList.toggle('active', ['guina','zonghe','duice','zhixing','zuowen'][i] === type);
+  });
+  await Promise.all([loadRecommend(type), loadProgress(type), loadHistory(type)]);
+}
+
+async function loadRecommend(type) {
+  const sec = document.getElementById('recommendSection');
+  const list = document.getElementById('recommendList');
+  const res = await fetch(API + '/recommend?type=' + type, {headers: headers()});
+  const data = await res.json();
+  if (!data.data || !data.data.items.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = '';
+  for (const item of data.data.items) {
+    const div = document.createElement('div');
+    div.className = 'card recommend-item';
+    div.innerHTML = '<div class="recommend-info">' +
+      '<div class="recommend-title">' + (item.paper_title||'') + '</div>' +
+      '<div class="recommend-meta">' + (item.question_text||'').substring(0,60) + '...' +
+      ' | 难度: ' + '★'.repeat(item.difficulty||3) + '</div></div>' +
+      '<a href="/exam/' + item.pid + '/' + item.qid + '" class="btn btn-primary btn-sm">开始练习</a>';
+    list.appendChild(div);
+  }
+}
+
+async function loadProgress(type) {
+  const sec = document.getElementById('progressSection');
+  const res = await fetch(API + '/progress?type=' + type, {headers: headers()});
+  const data = await res.json();
+  if (!data.data || !data.data.trend.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  drawChart(data.data.trend);
+}
+
+function drawChart(trend) {
+  const canvas = document.getElementById('trendCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth - 40;
+  canvas.height = 200;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!trend.length) return;
+  const max = 100, padding = 40;
+  const w = canvas.width - padding * 2;
+  const h = canvas.height - padding * 2;
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (h / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(padding + w, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif';
+    ctx.fillText(Math.round(max - (max/4)*i), 5, y + 4);
+  }
+  ctx.strokeStyle = '#1e3a5f'; ctx.lineWidth = 2; ctx.beginPath();
+  trend.forEach((p, i) => {
+    const x = padding + (w / Math.max(trend.length - 1, 1)) * i;
+    const y = padding + h - (p.score / max) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  trend.forEach((p, i) => {
+    const x = padding + (w / Math.max(trend.length - 1, 1)) * i;
+    const y = padding + h - (p.score / max) * h;
+    ctx.fillStyle = '#1e3a5f'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#374151'; ctx.font = '11px sans-serif'; ctx.fillText(p.score, x-10, y-10);
+  });
+}
+
+async function loadHistory(type) {
+  const sec = document.getElementById('historySection');
+  const body = document.getElementById('historyBody');
+  const res = await fetch(API + '/history?type=' + type + '&limit=10', {headers: headers()});
+  const data = await res.json();
+  if (!data.data || !data.data.items.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  body.innerHTML = '';
+  for (const item of data.data.items) {
+    const sc = item.score || 0;
+    const cls = sc >= 75 ? 'score-high' : sc >= 55 ? 'score-mid' : 'score-low';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + (item.paper_title||'--') + '</td>' +
+      '<td>' + (item.qid||'--') + '</td>' +
+      '<td><span class="score-badge ' + cls + '">' + sc + '</span></td>' +
+      '<td>' + (item.created_at||'').substring(0,16) + '</td>';
+    body.appendChild(tr);
+  }
+}
+
+loadStats().catch(() => { showStaticCards(); });
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  .article-container { max-width: 800px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .article-back { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); text-decoration: none; font-size: var(--text-sm); margin-bottom: var(--space-6); transition: color 0.2s; }
+  .article-back:hover { color: var(--color-primary); }
+  .article-header { margin-bottom: var(--space-6); }
+  .article-header h1 { font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-gray-900); line-height: var(--leading-tight); margin-bottom: var(--space-3); }
+  .article-meta { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .article-badge { display: inline-block; padding: 3px 12px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: #fff; }
+  .badge-shiping { background: var(--color-primary); }
+  .badge-lilun { background: #722ed1; }
+  .badge-dangjian { background: var(--color-error); }
+  .badge-xuexi { background: #eb2f96; }
+  .article-date { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .article-source-link { font-size: var(--text-xs); color: var(--color-primary); text-decoration: none; }
+  .article-source-link:hover { text-decoration: underline; }
+  .article-keywords { margin-top: var(--space-3); }
+  .keyword-tag { display: inline-block; background: var(--color-primary-light); color: var(--color-primary); padding: 2px 10px; border-radius: var(--radius-sm); font-size: var(--text-xs); margin: 2px 4px 2px 0; }
+  .article-body { background: var(--color-bg-elevated); border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: var(--shadow-sm); border: 1px solid var(--color-gray-100); }
+  .article-body .content { font-size: var(--text-base); line-height: 2; color: var(--color-gray-700); white-space: pre-wrap; word-break: break-word; }
+  .article-body .content p { margin-bottom: var(--space-4); text-indent: 2em; }
+  .article-actions { display: flex; gap: var(--space-3); margin-top: var(--space-6); justify-content: center; }
+  .article-actions .btn { min-width: 120px; }
+  @media (max-width: 768px) {
+    .article-container { padding: var(--space-4) var(--space-3); }
+    .article-body { padding: var(--space-5); }
+    .article-header h1 { font-size: var(--text-xl); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="article-container">
+    <a href="/topics" class="article-back reveal">&larr; 返回热点列表</a>
+
+    <div class="article-header reveal">
+      <h1>{{ topic.title }}</h1>
+      <div class="article-meta">
+        <span class="article-badge badge-{{ topic.category }}">{{ topic.category_name }}</span>
+        {% if topic.created_at %}
+        <span class="article-date">{{ topic.created_at[:10] }}</span>
+        {% endif %}
+        {% if topic.source_url %}
+        <a href="{{ topic.source_url }}" target="_blank" rel="noopener" class="article-source-link">查看原文 ↗</a>
+        {% endif %}
+      </div>
+      {% if topic.keywords %}
+      <div class="article-keywords">
+        {% for kw in topic.keywords %}
+        {% if kw %}<span class="keyword-tag">{{ kw }}</span>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="article-body reveal">
+      <div class="content">{{ topic.original_text }}</div>
+    </div>
+
+    <div class="article-actions reveal">
+      {% if topic.source_url %}
+      <a href="{{ topic.source_url }}" target="_blank" rel="noopener" class="btn btn-secondary">阅读完整原文 ↗</a>
+      {% endif %}
+      <button class="btn btn-accent" id="bookmarkBtn" onclick="toggleBookmark()">收藏</button>
+      <a href="/topics" class="btn btn-secondary">返回列表</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const topicId = {{ topic.topic_id }};
+const token = localStorage.getItem('slb_token');
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+
+// Mark as read
+if (token) {
+  fetch('/api/topics/' + topicId + '/read', {method: 'POST', headers: headers()}).catch(() => {});
+}
+
+// Load bookmark state
+async function loadState() {
+  if (!token) return;
+  const res = await fetch('/api/topics/' + topicId, {headers: headers()});
+  const data = await res.json();
+  if (data.data && data.data.user_state && data.data.user_state.is_bookmarked) {
+    document.getElementById('bookmarkBtn').textContent = '取消收藏';
+  }
+}
+
+async function toggleBookmark() {
+  if (!token) { showToast('请先登录'); return; }
+  const res = await fetch('/api/topics/' + topicId + '/bookmark', {method: 'POST', headers: headers()});
+  const data = await res.json();
+  if (data.data) {
+    document.getElementById('bookmarkBtn').textContent = data.data.is_bookmarked ? '取消收藏' : '收藏';
+    showToast(data.data.is_bookmarked ? '已收藏' : '已取消收藏');
+  }
+}
+
+loadState();
+</script>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}社区互助 - 申论帮{% endblock %}
+
+{% block extra_css %}
+<style>
+  .comm-container { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .comm-header { text-align: center; margin-bottom: var(--space-8); }
+  .comm-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
+  .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
+  .filter-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-5); flex-wrap: wrap; }
+  .filter-btn { padding: var(--space-1) var(--space-4); border: 1px solid var(--color-gray-300); border-radius: var(--radius-full); background: var(--color-bg-elevated); font-size: var(--text-xs); cursor: pointer; transition: all 0.2s; }
+  .filter-btn:hover, .filter-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
+  .sort-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-5); justify-content: flex-end; }
+  .sort-btn { padding: var(--space-1) var(--space-3); border: none; background: none; font-size: var(--text-xs); color: var(--color-text-muted); cursor: pointer; }
+  .sort-btn.active { color: var(--color-primary); font-weight: var(--weight-semibold); }
+  .featured-section { margin-bottom: var(--space-6); }
+  .featured-card { background: var(--color-gray-900); color: #fff; border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-3); cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; }
+  .featured-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 80% 20%, rgba(184,148,46,0.1) 0%, transparent 60%); pointer-events: none; }
+  .featured-card:hover { transform: translateY(-2px); }
+  .featured-badge { display: inline-block; background: var(--color-accent); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: var(--weight-semibold); margin-bottom: var(--space-2); position: relative; }
+  .featured-title { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); position: relative; }
+  .featured-content { font-size: var(--text-sm); opacity: 0.85; margin-bottom: var(--space-2); line-height: var(--leading-relaxed); position: relative; }
+  .featured-meta { font-size: var(--text-xs); opacity: 0.6; position: relative; }
+  .post-list { margin-bottom: var(--space-6); }
+  .post-card { padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); cursor: pointer; transition: all 0.2s; }
+  .post-card:hover { border-color: var(--color-primary); }
+  .post-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+  .post-type-badge { display: inline-block; padding: 2px 10px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: #fff; }
+  .type-answer_share { background: var(--color-success); }
+  .type-question { background: var(--color-warning); }
+  .type-discussion { background: var(--color-primary); }
+  .type-tips { background: #722ed1; }
+  .post-nick { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .post-title { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-gray-800); margin-bottom: var(--space-1); }
+  .post-content { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-relaxed); margin-bottom: var(--space-2); }
+  .post-footer { display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); }
+  .post-footer span { display: flex; align-items: center; gap: var(--space-1); }
+  .featured-star { color: var(--color-accent); }
+  .create-section { margin-bottom: var(--space-6); }
+  .create-toggle { display: block; width: 100%; padding: var(--space-3); background: var(--color-gray-50); border: 1px dashed var(--color-gray-300); border-radius: var(--radius-lg); text-align: center; color: var(--color-text-secondary); font-size: var(--text-sm); cursor: pointer; transition: all 0.2s; }
+  .create-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .create-form { padding: var(--space-5); margin-top: var(--space-3); display: none; }
+  .form-row { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); }
+  .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .detail-box { background: var(--color-bg-elevated); border-radius: var(--radius-xl); max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: var(--space-8); box-shadow: var(--shadow-2xl); animation: modalIn 300ms var(--ease-out); }
+  .detail-close { float: right; background: none; border: none; font-size: var(--text-2xl); cursor: pointer; color: var(--color-text-muted); }
+  .detail-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-primary); margin-bottom: var(--space-3); }
+  .detail-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4); }
+  .detail-content { font-size: var(--text-sm); line-height: var(--leading-relaxed); color: var(--color-gray-700); margin-bottom: var(--space-5); white-space: pre-wrap; }
+  .detail-actions { display: flex; gap: var(--space-3); margin-bottom: var(--space-5); }
+  .btn-like { padding: var(--space-1) var(--space-4); border: 1px solid var(--color-gray-300); border-radius: var(--radius-md); background: var(--color-bg-elevated); cursor: pointer; font-size: var(--text-sm); transition: all 0.2s; }
+  .btn-like.liked { border-color: var(--color-error); color: var(--color-error); }
+  .comment-section { margin-top: var(--space-5); border-top: 1px solid var(--color-gray-200); padding-top: var(--space-4); }
+  .comment-item { padding: var(--space-2) 0; border-bottom: 1px solid var(--color-gray-100); }
+  .comment-header { display: flex; justify-content: space-between; margin-bottom: var(--space-1); }
+  .comment-nick { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-gray-800); }
+  .comment-time { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .comment-content { font-size: var(--text-sm); color: var(--color-gray-600); line-height: var(--leading-relaxed); }
+  .comment-form { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+  .comment-form textarea { flex: 1; border: 1px solid var(--color-gray-300); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); min-height: 60px; resize: vertical; font-family: inherit; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="comm-container">
+    <div class="comm-header reveal">
+      <h1>社区互助</h1>
+      <p class="text-muted">分享交流，共同进步</p>
+    </div>
+
+    <div class="create-section reveal">
+      <div class="create-toggle" onclick="toggleCreate()">+ 发布新帖</div>
+      <div class="card create-form" id="createForm">
+        <div class="form-row">
+          <div class="form-group" style="flex:1;"><label class="form-label">帖子类型</label><select class="input-field" id="postType"><option value="answer_share">晒答案</option><option value="question">求助</option><option value="discussion">讨论</option><option value="tips">备考经验</option></select></div>
+          <div class="form-group" style="flex:1;"><label class="form-label">标题</label><input type="text" class="input-field" id="postTitle" placeholder="简短描述"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:var(--space-3);"><label class="form-label">内容</label><textarea class="input-field" id="postContent" placeholder="分享你的经验、提出你的问题..."></textarea></div>
+        <div style="display:flex;gap:var(--space-2);">
+          <button class="btn btn-primary" onclick="submitPost()">发布</button>
+          <button class="btn btn-secondary" onclick="toggleCreate()">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="featured-section reveal" id="featuredSection" style="display:none;">
+      <div class="section-title">精选范文</div>
+      <div id="featuredList"></div>
+    </div>
+
+    <div class="section-title reveal">社区帖子</div>
+    <div class="filter-bar reveal">
+      <button class="filter-btn active" onclick="filterType('')">全部</button>
+      <button class="filter-btn" onclick="filterType('answer_share')">晒答案</button>
+      <button class="filter-btn" onclick="filterType('question')">求助</button>
+      <button class="filter-btn" onclick="filterType('discussion')">讨论</button>
+      <button class="filter-btn" onclick="filterType('tips')">备考经验</button>
+    </div>
+    <div class="sort-bar reveal">
+      <button class="sort-btn active" onclick="changeSort('latest')">最新</button>
+      <button class="sort-btn" onclick="changeSort('hot')">最热</button>
+    </div>
+
+    <div class="post-list reveal-stagger" id="postList"><div class="empty-state"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay" style="display:none;" onclick="closeDetail(event)">
+  <div class="detail-box" id="detailBox" onclick="event.stopPropagation()">
+    <button class="detail-close" onclick="document.getElementById('detailOverlay').style.display='none'">&times;</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = '/api/community';
+const token = localStorage.getItem('slb_token');
+const headers = () => ({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+let currentType = '';
+let currentSort = 'latest';
+
+async function loadFeatured() {
+  const res = await fetch(API + '/featured?limit=3');
+  const data = await res.json();
+  const items = data.data?.items || [];
+  if (!items.length) return;
+  document.getElementById('featuredSection').style.display = 'block';
+  document.getElementById('featuredList').innerHTML = items.map(p =>
+    '<div class="featured-card" onclick="viewPost(' + p.post_id + ')">' +
+      '<span class="featured-badge">精选</span>' +
+      '<div class="featured-title">' + escapeHtml(p.title || p.content.substring(0, 50)) + '</div>' +
+      '<div class="featured-content">' + escapeHtml(p.content.substring(0, 100)) + '...</div>' +
+      '<div class="featured-meta">' + escapeHtml(p.nickname) + ' · ' + p.like_count + '赞 · ' + p.comment_count + '评论</div>' +
+    '</div>'
+  ).join('');
+}
+
+async function loadPosts(page = 1) {
+  const params = new URLSearchParams({page, limit: 20, sort: currentSort});
+  if (currentType) params.append('type', currentType);
+  const h = token ? headers() : {'Content-Type': 'application/json'};
+  const res = await fetch(API + '/posts?' + params, {headers: h});
+  const data = await res.json();
+  const list = document.getElementById('postList');
+  const items = data.data?.items || [];
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:var(--space-8);">' +
+      '<i data-lucide="message-circle" style="width:48px;height:48px;color:var(--color-gray-300);margin-bottom:var(--space-3);"></i>' +
+      '<p style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-1);">还没有帖子</p>' +
+      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-4);">成为第一个分享的人吧！</p>' +
+      '<button class="btn btn-primary btn-sm" onclick="toggleCreate()">发布新帖</button></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+  list.innerHTML = items.map(p => {
+    const badgeCls = 'type-' + p.post_type;
+    return '<div class="card post-card" onclick="viewPost(' + p.post_id + ')">' +
+      '<div class="post-top">' +
+        '<span class="post-type-badge ' + badgeCls + '">' + escapeHtml(p.post_type_name) + '</span>' +
+        '<span class="post-nick">' + escapeHtml(p.nickname) + '</span>' +
+      '</div>' +
+      (p.title ? '<div class="post-title">' + escapeHtml(p.title) + '</div>' : '') +
+      '<div class="post-content">' + escapeHtml(p.content) + '</div>' +
+      '<div class="post-footer">' +
+        (p.is_featured ? '<span class="featured-star">★ 精选</span>' : '') +
+        '<span>' + p.view_count + ' 浏览</span>' +
+        '<span>' + p.like_count + ' 赞</span>' +
+        '<span>' + p.comment_count + ' 评论</span>' +
+        '<span>' + timeAgo(p.created_at) + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function filterType(type) { currentType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); loadPosts(); }
+function changeSort(sort) { currentSort = sort; document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); loadPosts(); }
+function toggleCreate() { const form = document.getElementById('createForm'); form.style.display = form.style.display === 'none' ? 'block' : 'none'; }
+
+async function submitPost() {
+  if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); return; }
+  const post_type = document.getElementById('postType').value;
+  const title = document.getElementById('postTitle').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+  if (!content) { showToast('请输入内容', 'error'); return; }
+  const res = await fetch(API + '/posts', { method: 'POST', headers: headers(), body: JSON.stringify({post_type, title, content}) });
+  const data = await res.json();
+  if (data.error) { showToast(data.error, 'error'); return; }
+  showToast('发布成功');
+  toggleCreate();
+  document.getElementById('postContent').value = '';
+  document.getElementById('postTitle').value = '';
+  loadPosts();
+}
+
+let currentPostId = null;
+
+async function viewPost(id) {
+  currentPostId = id;
+  const h = token ? headers() : {'Content-Type': 'application/json'};
+  const res = await fetch(API + '/posts/' + id, {headers: h});
+  const data = await res.json();
+  if (!data.data) return;
+  renderDetail(data.data);
+  document.getElementById('detailOverlay').style.display = 'flex';
+}
+
+function renderDetail(p) {
+  let html = '<div class="detail-title">' + escapeHtml(p.title || p.post_type_name) + '</div>';
+  html += '<div class="detail-meta">' + escapeHtml(p.nickname) + ' · ' + timeAgo(p.created_at) + ' · ' + p.view_count + '浏览 · ' + p.like_count + '赞 · ' + p.comment_count + '评论</div>';
+  html += '<div class="detail-content">' + escapeHtml(p.content) + '</div>';
+  const likedCls = p.is_liked ? ' liked' : '';
+  html += '<div class="detail-actions">';
+  html += '<button class="btn-like' + likedCls + '" onclick="toggleLike(' + p.post_id + ')">👍 ' + (p.is_liked ? '已赞' : '赞') + ' ' + p.like_count + '</button>';
+  html += '</div>';
+  html += '<div class="comment-section">';
+  html += '<h4 style="font-size:var(--text-sm);margin-bottom:var(--space-3);">评论 (' + (p.comments || []).length + ')</h4>';
+  (p.comments || []).forEach(c => {
+    html += '<div class="comment-item"><div class="comment-header"><span class="comment-nick">' + escapeHtml(c.nickname) + '</span><span class="comment-time">' + timeAgo(c.created_at) + '</span></div><div class="comment-content">' + escapeHtml(c.content) + '</div></div>';
+  });
+  if (token) {
+    html += '<div class="comment-form"><textarea id="commentInput" placeholder="写下你的评论..."></textarea><button class="btn btn-primary btn-sm" onclick="submitComment(' + p.post_id + ')">发送</button></div>';
+  }
+  html += '</div>';
+  document.getElementById('detailContent').innerHTML = html;
+}
+
+async function toggleLike(postId) {
+  if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); return; }
+  await fetch(API + '/post/' + postId + '/like', {method: 'POST', headers: headers()});
+  viewPost(postId);
+}
+
+async function submitComment(postId) {
+  const input = document.getElementById('commentInput');
+  const content = input.value.trim();
+  if (!content) return;
+  await fetch(API + '/posts/' + postId + '/comments', { method: 'POST', headers: headers(), body: JSON.stringify({content}) });
+  input.value = '';
+  viewPost(postId);
+}
+
+function closeDetail(e) { if (e.target === document.getElementById('detailOverlay')) document.getElementById('detailOverlay').style.display = 'none'; }
+
+function timeAgo(dt) {
+  if (!dt) return '';
+  const diff = (Date.now() - new Date(dt).getTime()) / 1000;
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return Math.floor(diff/60) + '分钟前';
+  if (diff < 86400) return Math.floor(diff/3600) + '小时前';
+  if (diff < 604800) return Math.floor(diff/86400) + '天前';
+  return dt.substring(0, 10);
+}
+
+loadFeatured();
+loadPosts();
+</script>
+{% endblock %}

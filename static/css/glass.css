@@ -1,0 +1,16 @@
+/* ================================================================
+   SLB Glass — Minimal glass-morphism effects
+   ================================================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle);
+}
+.glass-hover {
+  transition: background var(--dur-normal) ease;
+}
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
