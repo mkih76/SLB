@@ -124,8 +124,9 @@
           <input type="text" id="share-url" class="input-field" readonly style="flex: 1;">
           <button class="btn btn-primary" onclick="copyShareUrl()">复制</button>
         </div>
-        <p style="color: var(--color-text-muted); font-size: var(--text-xs);">分享链接永久有效，任何人都可以查看批改结果（不含你的答案内容）</p>
+        <p style="color: var(--color-text-muted); font-size: var(--text-xs);">分享链接30天内有效，任何人都可以查看批改结果（不含你的答案内容）</p>
         <div class="modal-actions">
+          <button class="btn btn-destructive" onclick="revokeShare()">撤销分享</button>
           <button class="btn btn-ghost" onclick="closeShareModal()">关闭</button>
         </div>
       </div>
@@ -323,6 +324,30 @@
     input.select();
     document.execCommand('copy');
     if (typeof SLBToast !== 'undefined') SLBToast.success('链接已复制');
+
+  async function revokeShare() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (typeof SLBToast !== 'undefined') SLBToast.warning('请先登录');
+      return;
+    }
+    if (!confirm('确定撤销该分享链接吗？撤销后他人将无法访问')) return;
+    try {
+      const res = await fetch(`/api/submissions/${sid}/share`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        if (typeof SLBToast !== 'undefined') SLBToast.success('分享已撤销');
+        closeShareModal();
+      } else {
+        if (typeof SLBToast !== 'undefined') SLBToast.error('撤销失败');
+      }
+    } catch (e) {
+      if (typeof SLBToast !== 'undefined') SLBToast.error('撤销失败');
+    }
+  }
+
   }
 
   // 显示/隐藏纠错表单

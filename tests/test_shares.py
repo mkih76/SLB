@@ -1,5 +1,6 @@
 """批改结果分享功能测试"""
 import json
+from datetime import datetime, timedelta
 import pytest
 
 from src.api.utils import get_db
@@ -114,4 +115,56 @@ class TestShareResult:
     def test_invalid_share_token_404(self, client):
         """无效分享 token 返回 404"""
         resp = client.get('/api/submissions/share/nonexistent')
+        assert resp.status_code == 404
+    def test_share_blocked_after_free_trial_used(self, app, client):
+        """免费试用已用完的非 VIP 用户不能生成分享（403）"""
+        data = _register(client, 'share_freeused')
+        uid = data['data']['uid']
+        token = data['data']['token']
+        _insert_paper_and_submission(app, uid)
+        # 模拟免费试用已用完
+        with app.app_context():
+            db = get_db()
+            db.execute("UPDATE users SET free_trial_used = 1 WHERE uid = ?", (uid,))
+            db.commit()
+
+        resp = client.post('/api/submissions/test_sub1/share',
+                           headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 403
+
+    def test_revoke_share_removes_access(self, app, client):
+        """撤销分享后，原链接返回 404"""
+        data = _register(client, 'share_revoke')
+        uid = data['data']['uid']
+        token = data['data']['token']
+        _insert_paper_and_submission(app, uid)
+
+        st = client.post('/api/submissions/test_sub1/share',
+                         headers={'Authorization': f'Bearer {token}'}).get_json()
+        share_token = st['data']['share_token']
+        # 撤销前可访问
+        assert client.get(f'/api/submissions/share/{share_token}').status_code == 200
+
+        resp = client.delete('/api/submissions/test_sub1/share',
+                             headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        # 撤销后 404
+        assert client.get(f'/api/submissions/share/{share_token}').status_code == 404
+
+    def test_expired_share_token_404(self, app, client):
+        """已过期的分享链接返回 404"""
+        data = _register(client, 'share_expired')
+        uid = data['data']['uid']
+        token = data['data']['token']
+        _insert_paper_and_submission(app, uid)
+        # 直接把 share_expires_at 设为过去时间
+        with app.app_context():
+            db = get_db()
+            db.execute(
+                "UPDATE submissions SET share_token = 'expiredtoken', share_expires_at = ? WHERE sid = 'test_sub1'",
+                ((datetime.now() - timedelta(days=1)).isoformat(),)
+            )
+            db.commit()
+
+        resp = client.get('/api/submissions/share/expiredtoken')
         assert resp.status_code == 404
