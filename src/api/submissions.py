@@ -145,6 +145,37 @@ def get_submission(current_user, sid):
     return api_success(result)
 
 
+@submissions_bp.route('/<sid>/share', methods=['POST'])
+@token_required
+def create_share(current_user, sid):
+    submission = submission_service.get_submission(sid)
+    if not submission or submission['uid'] != current_user['uid']:
+        return api_error("提交记录不存在", 404)
+    token = submission_service.generate_share_token(sid)
+    return api_success({'share_token': token, 'share_url': f'/share/{token}'})
+
+
+@submissions_bp.route('/share/<token>', methods=['GET'])
+def get_shared_submission(token):
+    submission = submission_service.get_submission_by_share_token(token)
+    if not submission:
+        return api_error("分享链接无效或已过期", 404)
+
+    # Public data only - hide user answer for privacy
+    result = {
+        'sid': submission['sid'],
+        'paper_title': submission['paper_title'],
+        'score': submission['score'],
+        'graded_at': submission['graded_at'],
+        'dimension_scores': json.loads(submission['dimension_scores']) if submission['dimension_scores'] else None,
+        'hit_points': json.loads(submission['hit_points']) if submission['hit_points'] else [],
+        'missing_points': json.loads(submission['missing_points']) if submission['missing_points'] else [],
+        'ai_feedback': submission['ai_feedback'],
+        'improving_suggestions': submission['improving_suggestions'],
+    }
+    return api_success(result)
+
+
 @submissions_bp.route('/history', methods=['GET'])
 @optional_token
 def get_history(current_user):

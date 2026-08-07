@@ -17,3 +17,4 @@ _probe*.py
 # IDE
 .vscode/
 .idea/
+.env

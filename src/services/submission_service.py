@@ -16,6 +16,29 @@ def create_submission(uid: str, pid: str, qid: str, user_answer: str):
     return sid
 
 
+def generate_share_token(sid: str) -> str:
+    db = get_db()
+    sub = db.execute("SELECT share_token FROM submissions WHERE sid = ?", (sid,)).fetchone()
+    if not sub:
+        return None
+    if sub['share_token']:
+        return sub['share_token']
+    token = generate_uuid()[:12]
+    db.execute("UPDATE submissions SET share_token = ? WHERE sid = ?", (token, sid))
+    db.commit()
+    return token
+
+
+def get_submission_by_share_token(token: str):
+    db = get_db()
+    sub = db.execute(
+        "SELECT s.*, p.title as paper_title FROM submissions s "
+        "JOIN papers p ON s.pid = p.pid WHERE s.share_token = ?",
+        (token,)
+    ).fetchone()
+    return dict(sub) if sub else None
+
+
 def get_submission(sid: str):
     db = get_db()
     sub = db.execute(

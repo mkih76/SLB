@@ -101,6 +101,10 @@
 
     <!-- 操作按钮 -->
     <div style="display: flex; gap: var(--space-3); justify-content: center; margin-bottom: var(--space-8);">
+      <button class="btn btn-accent" onclick="shareResult()" style="padding: 12px 24px;">
+        <i data-lucide="share-2" style="width: 16px; height: 16px;"></i>
+        分享结果
+      </button>
       <button class="btn btn-secondary" onclick="submitFeedback()" style="padding: 12px 24px;">
         <i data-lucide="flag" style="width: 16px; height: 16px;"></i>
         认为批改有误？
@@ -109,6 +113,22 @@
         <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
         继续练习
       </a>
+    </div>
+
+    <!-- 分享模态框 -->
+    <div class="modal-overlay" id="share-modal" style="display:none;">
+      <div class="modal-box">
+        <h3>分享批改结果</h3>
+        <p style="color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-4);">复制下方链接，分享给好友查看你的批改结果：</p>
+        <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4);">
+          <input type="text" id="share-url" class="input-field" readonly style="flex: 1;">
+          <button class="btn btn-primary" onclick="copyShareUrl()">复制</button>
+        </div>
+        <p style="color: var(--color-text-muted); font-size: var(--text-xs);">分享链接永久有效，任何人都可以查看批改结果（不含你的答案内容）</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeShareModal()">关闭</button>
+        </div>
+      </div>
     </div>
 
     <!-- 纠错表单 -->
@@ -266,6 +286,43 @@
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
+  }
+
+
+  // 分享批改结果
+  async function shareResult() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (typeof SLBToast !== 'undefined') SLBToast.warning('请先登录');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/submissions/${sid}/share`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const json = await res.json();
+      if (json.data && json.data.share_url) {
+        document.getElementById('share-url').value = window.location.origin + json.data.share_url;
+        document.getElementById('share-modal').style.display = 'flex';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } else {
+        if (typeof SLBToast !== 'undefined') SLBToast.error('生成分享链接失败');
+      }
+    } catch (e) {
+      if (typeof SLBToast !== 'undefined') SLBToast.error('生成分享链接失败');
+    }
+  }
+
+  function closeShareModal() {
+    document.getElementById('share-modal').style.display = 'none';
+  }
+
+  function copyShareUrl() {
+    const input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    if (typeof SLBToast !== 'undefined') SLBToast.success('链接已复制');
   }
 
   // 显示/隐藏纠错表单

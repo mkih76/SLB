@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     is_reviewed        INT DEFAULT 0,         -- 用户是否查看
     needs_review       INT DEFAULT 0,         -- 是否需要人工复核
     reviewer_uid       TEXT,                  -- 复核人uid
+    share_token        TEXT,                  -- 分享链接token
     created_at         DATETIME DEFAULT (datetime('now')),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (pid) REFERENCES papers(pid)
