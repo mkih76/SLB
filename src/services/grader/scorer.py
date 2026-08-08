@@ -73,7 +73,7 @@ def call_llm(messages: list, parse_json: bool = True):
         "max_tokens": llm['max_tokens']
     }
 
-    # 端点可能间歇性不可用：最多重试 2 次，指数退避
+    # 端点可能间歇性不可用/响应慢：最多重试 2 次，单次超时 45s，指数退避
     max_retries = 2
     last_err = None
     for attempt in range(max_retries + 1):

@@ -38,7 +38,7 @@ class Config:
     LLM_API_KEY = os.getenv('LLM_API_KEY', '')
     LLM_BASE_URL = os.getenv('LLM_BASE_URL', 'https://api.deepseek.com/v1')
     LLM_TEMPERATURE = float(os.getenv('LLM_TEMPERATURE', 0.3))
-    LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 4000))
+    LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 8000))
 
     # Redis Cache
     REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
