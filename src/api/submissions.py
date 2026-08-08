@@ -48,13 +48,6 @@ def create_submission(current_user):
     try:
         grading_result = grade_answer(pid, qid, question, user_answer, material)
 
-        # 调试：主路径结果
-        try:
-            with open('/tmp/grade_debug.log', 'a') as _f:
-                _f.write(f"{__import__('time').time()} MAIN-PATH fallback={grading_result.get('local_fallback')} score={grading_result.get('score')} fb_type={type(grading_result.get('ai_feedback')).__name__}\n")
-        except Exception:
-            pass
-
         # Mark free trial as used for non-VIP users
         if current_user.get('role') not in ('admin', 'super_admin', 'vip'):
             if not current_user.get('free_trial_used'):
@@ -63,26 +56,15 @@ def create_submission(current_user):
                 db.commit()
 
         # Update submission with grading result
-        try:
-            submission_service.update_submission_grading(
-                sid=sid,
-                score=grading_result['score'],
-                dimension_scores=grading_result['dimension_scores'],
-                ai_feedback=grading_result['ai_feedback'],
-                hit_points=grading_result.get('hit_points', []),
-                missing_points=grading_result.get('missing_points', []),
-                improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
-            )
-        except Exception as _ue:
-            try:
-                import traceback as _tb
-                with open('/tmp/grade_debug.log', 'a') as _f:
-                    _f.write(f"{__import__('time').time()} UPDATE-ERR: {type(_ue).__name__}: {str(_ue)[:200]}\n")
-                    _f.write(f"  score={type(grading_result.get('score')).__name__} dims={type(grading_result.get('dimension_scores')).__name__} fb={type(grading_result.get('ai_feedback')).__name__} hit={type(grading_result.get('hit_points')).__name__} miss={type(grading_result.get('missing_points')).__name__}\n")
-                    _f.write(_tb.format_exc()[:500] + "\n")
-            except Exception:
-                pass
-            raise
+        submission_service.update_submission_grading(
+            sid=sid,
+            score=grading_result['score'],
+            dimension_scores=grading_result['dimension_scores'],
+            ai_feedback=grading_result['ai_feedback'],
+            hit_points=grading_result.get('hit_points', []),
+            missing_points=grading_result.get('missing_points', []),
+            improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
+        )
 
         # Record learning
         submission_service.record_learning(
@@ -92,7 +74,7 @@ def create_submission(current_user):
         # Record weak points
         for missing in grading_result.get('missing_points', []):
             weak_point_service.record_weak_point(
-                current_user['uid'], missing,
+                current_user['uid'], missing.get('point', '') if isinstance(missing, dict) else missing,
                 topic_tag=question.get('type')
             )
 
@@ -121,11 +103,6 @@ def create_submission(current_user):
 
     except Exception as e:
         # LLM 批改失败：尝试本地规则降级（scorer 内部已降级，此处兜底）
-        try:
-            with open('/tmp/grade_debug.log', 'a') as _f:
-                _f.write(f"{__import__('time').time()} SUBMIT-EXCEPT: {type(e).__name__}: {str(e)[:400]}\n")
-        except Exception:
-            pass
         from src.services.grader.scorer import grade_answer_local
         try:
             grading_result = grade_answer_local(pid, qid, question, user_answer, material)
@@ -145,12 +122,6 @@ def create_submission(current_user):
                 'dimension_scores': grading_result['dimension_scores']
             })
         except Exception as e2:
-            try:
-                import traceback as _tb
-                with open('/tmp/grade_debug.log', 'a') as _f:
-                    _f.write(f"{__import__('time').time()} SUBMIT-EXCEPT2: {type(e2).__name__}: {str(e2)[:400]}\n{_tb.format_exc()[:800]}\n")
-            except Exception:
-                pass
             logger.error(f"降级批改也失败 (sid={sid}): {e2}")
             return api_success({
                 'sid': sid,
