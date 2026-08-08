@@ -324,6 +324,7 @@
     input.select();
     document.execCommand('copy');
     if (typeof SLBToast !== 'undefined') SLBToast.success('链接已复制');
+  }
 
   async function revokeShare() {
     const token = localStorage.getItem('token');
@@ -348,7 +349,6 @@
     }
   }
 
-  }
 
   // 显示/隐藏纠错表单
   function submitFeedback() {

@@ -168,3 +168,40 @@ class TestShareResult:
 
         resp = client.get('/api/submissions/share/expiredtoken')
         assert resp.status_code == 404
+    def test_revoke_others_share_404(self, app, client):
+        """不能撤销别人的分享（404）"""
+        _insert_paper_and_submission(app, 'u_owner2')
+        data = _register(client, 'share_intruder2')
+        token = data['data']['token']
+        # 先由 owner 生成分享
+        owner_data = _register(client, 'share_owner2b')
+        owner_uid = owner_data['data']['uid']
+        owner_token = owner_data['data']['token']
+        _insert_paper_and_submission(app, owner_uid, sid='test_sub2')
+        # 用 intruder 撤销 owner 的提交
+        resp = client.delete('/api/submissions/test_sub2/share',
+                             headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 404
+
+    def test_regenerate_after_expiry(self, app, client):
+        """过期后重新生成分享得到新 token，且新 token 可用"""
+        data = _register(client, 'share_regen')
+        uid = data['data']['uid']
+        token = data['data']['token']
+        _insert_paper_and_submission(app, uid)
+        # 先置为过期 token
+        with app.app_context():
+            db = get_db()
+            db.execute(
+                "UPDATE submissions SET share_token = 'oldtoken', share_expires_at = ? WHERE sid = 'test_sub1'",
+                ((datetime.now() - timedelta(days=1)).isoformat(),)
+            )
+            db.commit()
+        # 重新生成
+        st = client.post('/api/submissions/test_sub1/share',
+                         headers={'Authorization': f'Bearer {token}'}).get_json()
+        new_token = st['data']['share_token']
+        assert new_token != 'oldtoken'
+        # 新 token 可访问，旧 token 404
+        assert client.get(f'/api/submissions/share/{new_token}').status_code == 200
+        assert client.get('/api/submissions/share/oldtoken').status_code == 404
