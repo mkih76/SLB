@@ -285,6 +285,11 @@ def grade_answer(pid: str, qid: str, question: dict,
         llm_result = call_llm(messages)
     except Exception as e:
         logger.warning(f"LLM 批改失败，使用本地规则降级 (pid={pid}, qid={qid}): {e}")
+        try:
+            with open('/tmp/grade_debug.log', 'a') as _f:
+                _f.write(f"{__import__('time').time()} GRADE-DEBUG: {type(e).__name__}: {str(e)[:300]}\n")
+        except Exception:
+            pass
         llm_result = _grade_local_fallback(question, user_answer, material)
 
     # 3. 提取 LLM 返回的维度分数
