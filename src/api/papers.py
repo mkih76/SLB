@@ -5,6 +5,17 @@ from src.services import paper_service
 from src.services.grader.scorer import grade_answer
 from src.api.utils import api_success, api_error, clamp_per_page
 
+import time
+import threading
+
+# 演示接口限流：每 IP 每分钟最多 5 次调用（防匿名刷 LLM 成本）
+_demo_rate = {}
+_demo_total = {}  # 每 IP 总调用计数（不随窗口清理，防慢速绕过）
+_demo_rate_lock = threading.Lock()
+DEMO_RATE_LIMIT = 5  # 每分钟次数
+DEMO_RATE_WINDOW = 60  # 秒
+DEMO_TOTAL_LIMIT = 20  # 每 IP 总次数上限（防换 IP 绕过分钟限流）
+
 papers_bp = Blueprint('papers', __name__, url_prefix='/api/papers')
 
 
@@ -50,7 +61,24 @@ def get_question(pid, qid):
 
 @papers_bp.route('/demo/grade', methods=['POST'])
 def demo_grade():
-    """免登录试用批改接口"""
+    """免登录试用批改接口（限流：每 IP 每分钟 5 次）"""
+    ip = request.remote_addr or 'unknown'
+    global _demo_rate
+    global _demo_total
+    now = time.time()
+    with _demo_rate_lock:
+        # 总次数限制（独立持久计数，不随窗口清理——防慢速绕过）
+        total = _demo_total.get(ip, 0)
+        if total >= DEMO_TOTAL_LIMIT:
+            return api_error("演示次数已用完，请登录后使用完整批改", 429)
+        # 分钟窗口限流
+        _demo_rate = {k: v for k, v in _demo_rate.items() if v[0] > now - DEMO_RATE_WINDOW}
+        rec = _demo_rate.get(ip, (0, 0))
+        if rec[1] >= DEMO_RATE_LIMIT:
+            return api_error("演示次数已用完，请登录后使用完整批改", 429)
+        _demo_rate[ip] = (now, rec[1] + 1)
+        _demo_total[ip] = total + 1
+
     data = request.get_json()
     if not data:
         return api_error("请提供答案", 400)

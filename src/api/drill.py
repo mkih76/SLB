@@ -3,6 +3,7 @@ from flask import Blueprint, request
 
 from src.api.utils import api_success, api_error, token_required, optional_token, get_db, clamp_per_page
 from src.services import drill_service, submission_service
+from src.services.auth import is_vip_user
 from src.services.grader.scorer import grade_answer
 from src.services import paper_service
 
@@ -94,6 +95,13 @@ def submit_drill(current_user):
     question_type = question.get('type', 'guina')
 
     # 创建提交记录
+    # 付费墙：非 VIP 且免费试用已用完的用户在创建记录/调用 LLM 前拦截
+    if not is_vip_user(current_user) and current_user.get('free_trial_used', 0):
+        return api_success({
+            'upgrade_required': True,
+            'upgrade_message': '免费试用已结束，开通VIP查看详细批改结果'
+        })
+
     sid = submission_service.create_submission(
         current_user['uid'], pid, qid, user_answer
     )
@@ -136,9 +144,32 @@ def submit_drill(current_user):
                 topic_tag=question_type
             )
 
+
+        # 标记免费试用已用完（与 submissions 一致，防止 drill 绕过付费墙）
+        if current_user.get('role') not in ('admin', 'super_admin', 'vip'):
+            if not current_user.get('free_trial_used'):
+                from src.api.utils import get_db as _get_db
+                _db = _get_db()
+                _db.execute("UPDATE users SET free_trial_used = 1 WHERE uid = ?", (current_user['uid'],))
+                _db.commit()
         # 自动生成诊断报告
         from src.services import diagnosis_service
-        diagnosis_service.generate_diagnostic_report(current_user['uid'], sid)
+        try:
+            diagnosis_service.generate_diagnostic_report(current_user['uid'], sid)
+        except Exception:
+            pass  # 诊断报告失败不影响批改结果返回
+
+        # 付费墙：非 VIP 且免费试用已用完的用户只返回基础分数，不返回详细批改反馈
+        is_vip = is_vip_user(current_user)
+        free_trial_used = current_user.get('free_trial_used', 0)
+        if not is_vip and free_trial_used:
+            return api_success({
+                'sid': sid,
+                'score': grading['score'],
+                'question_type': question_type,
+                'upgrade_required': True,
+                'upgrade_message': '免费试用已结束，开通VIP查看详细批改结果'
+            })
 
         return api_success({
             'sid': sid,

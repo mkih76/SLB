@@ -101,7 +101,15 @@ def update_submission_grading(sid: str, score: float, dimension_scores: dict,
     db.commit()
 
 
-def get_user_submissions(uid: str, page=1, per_page=20):
+_FEEDBACK_FIELDS = ('dimension_scores', 'ai_feedback', 'hit_points', 'missing_points', 'improving_suggestions')
+
+
+def _strip_feedback(sub: dict) -> dict:
+    """剥离详细批改反馈字段，用于非 VIP 用户的历史列表"""
+    return {k: v for k, v in sub.items() if k not in _FEEDBACK_FIELDS}
+
+
+def get_user_submissions(uid: str, page=1, per_page=20, full_detail=True):
     db = get_db()
     offset = (page - 1) * per_page
 
@@ -120,7 +128,7 @@ def get_user_submissions(uid: str, page=1, per_page=20):
     ).fetchall()
 
     return {
-        'submissions': [dict(s) for s in subs],
+        'submissions': [_strip_feedback(dict(s)) if not full_detail else dict(s) for s in subs],
         'total': total,
         'page': page,
         'pages': (total + per_page - 1) // per_page
