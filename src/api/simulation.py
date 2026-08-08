@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 
 from src.api.utils import api_success, api_error, token_required, optional_token, clamp_per_page
+from src.services.auth import is_vip_user
 from src.services import simulation_service
 
 simulation_bp = Blueprint('simulation', __name__, url_prefix='/api/simulation')
@@ -27,6 +28,10 @@ def submit_sim(current_user):
     data = request.get_json()
     if not data or not data.get('sim_id') or not data.get('answers'):
         return api_error("缺少必要参数", 400)
+
+    # 付费墙：非 VIP 且免费试用已用完的用户在调用 LLM 前拦截
+    if not is_vip_user(current_user) and current_user.get('free_trial_used', 0):
+        return api_error("免费试用已结束，开通VIP查看详细批改结果", 403)
 
     result = simulation_service.submit_simulation(
         data['sim_id'], current_user['uid'], data['answers']

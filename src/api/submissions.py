@@ -29,6 +29,10 @@ def create_submission(current_user):
         return api_error("题目不存在", 404)
 
     # Create submission record
+
+    # 付费墙：非 VIP 且免费试用已用完的用户在调用 LLM 前拦截（不消耗成本）
+    if not is_vip_user(current_user) and current_user.get('free_trial_used', 0):
+        return api_error("免费试用已结束，开通VIP查看详细批改结果", 403)
     sid = submission_service.create_submission(
         current_user['uid'], pid, qid, user_answer
     )
@@ -200,8 +204,13 @@ def get_history(current_user):
     page = request.args.get('page', 1, type=int)
     per_page = clamp_per_page(request.args.get('limit', 20, type=int))
 
+    # 付费墙：非 VIP 且免费试用已用完的用户看不到历史中的详细反馈
+    is_vip = is_vip_user(current_user)
+    free_trial_used = current_user.get('free_trial_used', 0)
+    full_detail = is_vip or not free_trial_used
+
     result = submission_service.get_user_submissions(
-        current_user['uid'], page, per_page
+        current_user['uid'], page, per_page, full_detail=full_detail
     )
     return api_success(result)
 
