@@ -63,15 +63,26 @@ def create_submission(current_user):
                 db.commit()
 
         # Update submission with grading result
-        submission_service.update_submission_grading(
-            sid=sid,
-            score=grading_result['score'],
-            dimension_scores=grading_result['dimension_scores'],
-            ai_feedback=grading_result['ai_feedback'],
-            hit_points=grading_result.get('hit_points', []),
-            missing_points=grading_result.get('missing_points', []),
-            improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
-        )
+        try:
+            submission_service.update_submission_grading(
+                sid=sid,
+                score=grading_result['score'],
+                dimension_scores=grading_result['dimension_scores'],
+                ai_feedback=grading_result['ai_feedback'],
+                hit_points=grading_result.get('hit_points', []),
+                missing_points=grading_result.get('missing_points', []),
+                improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
+            )
+        except Exception as _ue:
+            try:
+                import traceback as _tb
+                with open('/tmp/grade_debug.log', 'a') as _f:
+                    _f.write(f"{__import__('time').time()} UPDATE-ERR: {type(_ue).__name__}: {str(_ue)[:200]}\n")
+                    _f.write(f"  score={type(grading_result.get('score')).__name__} dims={type(grading_result.get('dimension_scores')).__name__} fb={type(grading_result.get('ai_feedback')).__name__} hit={type(grading_result.get('hit_points')).__name__} miss={type(grading_result.get('missing_points')).__name__}\n")
+                    _f.write(_tb.format_exc()[:500] + "\n")
+            except Exception:
+                pass
+            raise
 
         # Record learning
         submission_service.record_learning(
