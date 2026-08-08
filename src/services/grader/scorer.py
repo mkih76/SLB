@@ -143,6 +143,8 @@ def _grade_local_fallback(question: dict, user_answer: str, material: list = Non
             'improving_suggestions': ['题目暂无标准采分点，建议对照参考答案自查要点覆盖度。'],
             'local_fallback': True,
         }
+
+    for kp in key_points:
         if not isinstance(kp, dict):
             continue
         point = kp.get('point', '')
