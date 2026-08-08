@@ -57,6 +57,7 @@ def get_question_by_qid(pid: str, qid: str):
                 'stem': q.get('stem'),
                 'score_max': q.get('score_max'),
                 'word_limit': q.get('word_limit'),
+                'key_points': q.get('key_points') or [],
                 'material': json.loads(paper['material']) if paper['material'] else []
             }
     return None

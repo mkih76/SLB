@@ -129,7 +129,20 @@ def _grade_local_fallback(question: dict, user_answer: str, material: list = Non
     hit_points = []
     missing_points = []
     answer = user_answer or ''
-    for kp in key_points:
+    if not key_points:
+        # 无采分点（自定义题）：退化为字数/结构粗评
+        char_count = count_chinese_chars(answer)
+        dim_scores_en = {}
+        total = _clamp(round(char_count / 300 * 60, 1) + 20, 0, 100)
+        return {
+            'score': total,
+            'dimension_scores': dim_scores_en,
+            'hit_points': [],
+            'missing_points': [],
+            'ai_feedback': '（AI 服务暂不可用，本次为本地规则评分）作答已收到，请结合材料完善要点。',
+            'improving_suggestions': ['题目暂无标准采分点，建议对照参考答案自查要点覆盖度。'],
+            'local_fallback': True,
+        }
         if not isinstance(kp, dict):
             continue
         point = kp.get('point', '')
