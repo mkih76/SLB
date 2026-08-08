@@ -65,6 +65,31 @@ def fetch_article_text(url):
             content = content.replace(entity, char)
         content = re.sub(r'\n{3,}', '\n\n', content).strip()
 
+        # fallback：<p> 提取失败时用 BeautifulSoup 抓正文容器（人民网 #rwb_zw / .show_text / article）
+        if not content:
+            try:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(html, 'html.parser')
+                for sel in ('#rwb_zw', '#p_content', '.show_text', 'article', '.article', '.content'):
+                    node = soup.select_one(sel)
+                    if node:
+                        text = node.get_text(separator='\n', strip=True)
+                        if len(text) > 50:
+                            content = text
+                            break
+                if not content:
+                    # 最后兜底：整页最长文本块
+                    blocks = []
+                    for p in soup.find_all(['p', 'div']):
+                        t = p.get_text(strip=True)
+                        if len(t) > 40:
+                            blocks.append((len(t), t))
+                    if blocks:
+                        content = sorted(blocks, key=lambda x: -x[0])[0][1]
+                content = re.sub(r'\n{3,}', '\n\n', content).strip()[:8000]
+            except Exception as _be:
+                logger.warning(f'bs4 正文提取失败: {_be}')
+
         return content[:8000] if content else ''
     except Exception as e:
         logger.warning(f'抓取正文失败 {url}: {e}')
