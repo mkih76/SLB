@@ -63,7 +63,7 @@ def create_submission(current_user):
             ai_feedback=grading_result['ai_feedback'],
             hit_points=grading_result.get('hit_points', []),
             missing_points=grading_result.get('missing_points', []),
-            improving_suggestions=grading_result.get('improving_suggestions')
+            improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
         )
 
         # Record learning
@@ -113,7 +113,7 @@ def create_submission(current_user):
                 ai_feedback=grading_result['ai_feedback'],
                 hit_points=grading_result.get('hit_points', []),
                 missing_points=grading_result.get('missing_points', []),
-                improving_suggestions=grading_result.get('improving_suggestions')
+                improving_suggestions=json.dumps(grading_result.get('improving_suggestions'), ensure_ascii=False) if grading_result.get('improving_suggestions') else None
             )
             return api_success({
                 'sid': sid,
