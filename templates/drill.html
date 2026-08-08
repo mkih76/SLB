@@ -32,6 +32,7 @@
   .score-high { background: var(--color-success-light); color: var(--color-success); }
   .score-mid { background: var(--color-warning-light); color: var(--color-warning); }
   .score-low { background: var(--color-error-light); color: var(--color-error); }
+  .empty-inline { padding: var(--space-5); font-size: var(--text-sm); }
 </style>
 {% endblock %}
 
@@ -132,7 +133,11 @@ async function loadRecommend(type) {
   const list = document.getElementById('recommendList');
   const res = await fetch(API + '/recommend?type=' + type, {headers: headers()});
   const data = await res.json();
-  if (!data.data || !data.data.items.length) { sec.classList.add('hidden'); return; }
+  if (!data.data || !data.data.items.length) {
+    sec.classList.remove('hidden');
+    list.innerHTML = '<div class="empty-state empty-inline">该题型暂无推荐题目，<a href="/papers" class="text-primary">去卷库挑选真题</a> 或 <a href="/demo" class="text-primary">免费试用批改</a></div>';
+    return;
+  }
   sec.classList.remove('hidden');
   list.innerHTML = '';
   for (const item of data.data.items) {

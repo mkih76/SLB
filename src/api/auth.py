@@ -74,6 +74,46 @@ def me(current_user):
     return api_success(profile)
 
 
+@auth_bp.route('/password', methods=['PUT'])
+@token_required
+def change_password(current_user):
+    """修改密码：校验旧密码后更新"""
+    from src.services.auth import hash_password, verify_password
+    data = request.get_json()
+    if not data:
+        return api_error("请提供当前密码和新密码", 400)
+
+    old_password = data.get('old_password', '')
+    new_password = data.get('new_password', '')
+
+    if not old_password or not new_password:
+        return api_error("当前密码和新密码不能为空", 400)
+
+    if len(new_password) < 6 or len(new_password) > 100:
+        return api_error("新密码长度需在6-100个字符之间", 400)
+
+    if new_password == old_password:
+        return api_error("新密码不能与当前密码相同", 400)
+
+    db = get_db()
+    row = db.execute(
+        "SELECT password_hash FROM users WHERE uid = ?",
+        (current_user['uid'],)
+    ).fetchone()
+    if not row:
+        return api_error("用户不存在", 404)
+
+    if not verify_password(old_password, row['password_hash']):
+        return api_error("当前密码不正确", 403)
+
+    db.execute(
+        "UPDATE users SET password_hash = ? WHERE uid = ?",
+        (hash_password(new_password), current_user['uid'])
+    )
+    db.commit()
+    return api_success(message="密码修改成功")
+
+
 # ============================================================
 # 每日签到系统
 # ============================================================

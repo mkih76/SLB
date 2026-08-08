@@ -42,11 +42,20 @@ def run_topics_update():
     """更新热点专题（从 topic_scraper 导入）"""
     logger.info("Starting topics update...")
     try:
-        from src.services.topic_scraper import scrape_and_save_topics
-        count = scrape_and_save_topics()
-        logger.info(f"Topics update completed: {count} new topics")
-    except ImportError:
-        logger.warning("topic_scraper not available, skipping")
+        from src.api.utils import get_db
+        from src.services.topic_scraper import run_scrape, run_scrape_xuexi
+        db = get_db()
+        shiping_result = run_scrape(db)
+        shiping_count = shiping_result.get('saved', 0) if isinstance(shiping_result, dict) else shiping_result
+        logger.info(f"Topics update completed: {shiping_count} shiping topics")
+        try:
+            xuexi_result = run_scrape_xuexi(db)
+            xuexi_count = xuexi_result.get('saved', 0) if isinstance(xuexi_result, dict) else xuexi_result
+            logger.info(f"Xuexi topics update completed: {xuexi_count} new xuexi topics")
+        except Exception as e:
+            logger.warning(f"Xuexi scrape skipped: {e}")
+    except ImportError as e:
+        logger.warning(f"topic_scraper not available, skipping: {e}")
     except Exception as e:
         logger.error(f"Topics update error: {e}")
 

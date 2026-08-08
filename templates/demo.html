@@ -40,6 +40,18 @@
   .demo-feedback ul { list-style: disc; padding-left: var(--space-5); }
   .demo-feedback p { margin-top: var(--space-2); }
   .demo-actions { text-align: center; margin-top: var(--space-4); display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+  .demo-steps { display: flex; justify-content: center; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-5) 0 var(--space-2); }
+  .demo-step { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-xs); background: var(--color-bg-elevated); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+  .demo-step.active { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); font-weight: var(--weight-semibold); }
+  .demo-step.done { background: var(--color-success-light); border-color: var(--color-success); color: var(--color-success); }
+  .demo-step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--color-gray-300); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-xs); }
+  .demo-step.active .demo-step-num, .demo-step.done .demo-step-num { background: currentColor; }
+  .demo-dim-item { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-1) 0; }
+  .demo-dim-bar { flex: 1; height: 6px; border-radius: var(--radius-full); background: var(--color-gray-200); overflow: hidden; }
+  .demo-dim-fill { height: 100%; border-radius: var(--radius-full); background: var(--gradient-primary); }
+  .demo-point { margin: var(--space-1) 0; padding-left: var(--space-4); position: relative; }
+  .demo-point.hit::before { content: '✓'; color: var(--color-success); position: absolute; left: 0; }
+  .demo-point.miss::before { content: '✗'; color: var(--color-error); position: absolute; left: 0; }
 </style>
 {% endblock %}
 
@@ -48,7 +60,13 @@
   <div class="container">
     <div class="demo-header">
       <h1>免注册试用</h1>
-      <p>体验完整批改流程，登录后可保存记录</p>
+      <p>三分钟体验完整 AI 批改流程，每位访客可免费批改 5 次</p>
+    </div>
+
+    <div class="demo-steps" id="demoSteps">
+      <span class="demo-step active" data-step="1"><span class="demo-step-num">1</span>选择试卷</span>
+      <span class="demo-step" data-step="2"><span class="demo-step-num">2</span>作答提交</span>
+      <span class="demo-step" data-step="3"><span class="demo-step-num">3</span>查看批改报告</span>
     </div>
 
     <!-- 选择试卷 -->
@@ -94,8 +112,8 @@
       </div>
       <div id="demo-feedback" class="demo-feedback"></div>
       <div class="demo-actions">
-        <a href="#" onclick="location.reload(); return false;" class="btn btn-secondary">重新体验</a>
-        <button class="btn btn-primary" onclick="openAuthModal('register')">登录保存记录</button>
+        <button class="btn btn-secondary" onclick="backToAnswer()">修改重答</button>
+        <button class="btn btn-primary" id="saveRecordBtn" onclick="saveRecord()">登录保存记录</button>
       </div>
     </div>
   </div>
@@ -106,10 +124,38 @@
 <script>
   let selectedPaper = null;
   let selectedQuestion = null;
+  let lastAnswer = '';
+
+  const DIM_NAMES = {
+    point_coverage: '踩点命中', logic_structure: '逻辑结构', language: '语言表达',
+    format: '格式规范', word_count: '字数控制', conciseness: '简洁准确',
+    accuracy: '准确性', logic_chain: '逻辑链条', depth: '分析深度',
+    problem_identification: '问题识别', targeting: '对策针对性', feasibility: '对策可行性',
+    specificity: '对策具体性', format_correctness: '格式正确', purpose_achievement: '目的达成',
+    content_completeness: '内容完整', language_appropriateness: '语言得体',
+    thesis_accuracy: '论点准确', argument_richness: '论证丰富', structure: '结构布局',
+    innovation: '创新性'
+  };
+  const DIM_MAX = {
+    point_coverage: 70, logic_structure: 25, language: 20, format: 10, word_count: 10,
+    conciseness: 15, accuracy: 10, logic_chain: 30, depth: 20,
+    problem_identification: 20, targeting: 25, feasibility: 25, specificity: 20,
+    format_correctness: 20, purpose_achievement: 25, content_completeness: 30,
+    language_appropriateness: 15, thesis_accuracy: 25, argument_richness: 25,
+    structure: 20, innovation: 10
+  };
+
+  function setStep(n) {
+    document.querySelectorAll('#demoSteps .demo-step').forEach(s => {
+      const step = parseInt(s.dataset.step, 10);
+      s.classList.toggle('active', step === n);
+      s.classList.toggle('done', step < n);
+    });
+  }
 
   async function loadDemoPapers() {
     try {
-      const res = await fetch('/api/papers?limit=3');
+      const res = await fetch('/api/papers?limit=4');
       const { data } = await res.json();
 
       const container = document.getElementById('demo-papers');
@@ -119,8 +165,8 @@
           const safePid = escapeHtml(paper.pid);
           const safeQid = escapeHtml(questions[0]?.qid || 'q1');
           const safeTitle = escapeHtml(paper.title);
-          const safeExamType = escapeHtml(paper.exam_type);
-          const safeYear = escapeHtml(paper.year);
+          const safeExamType = escapeHtml(paper.exam_type || '');
+          const safeYear = escapeHtml(paper.year || '');
           return `
             <div class="card demo-paper-card" onclick="selectPaper('${safePid}', '${safeQid}')">
               <h4>${safeTitle}</h4>
@@ -133,7 +179,7 @@
       }
       lucide.createIcons();
     } catch (e) {
-      document.getElementById('demo-papers').innerHTML = '<p class="empty-state">加载失败</p>';
+      document.getElementById('demo-papers').innerHTML = '<p class="empty-state">加载失败，<a href="javascript:loadDemoPapers()" class="text-primary">点击重试</a></p>';
     }
   }
 
@@ -149,18 +195,22 @@
 
       selectedPaper = paper;
       selectedQuestion = question;
+      lastAnswer = '';
 
       document.getElementById('demo-paper-title').textContent = paper.title;
       document.getElementById('demo-material').textContent = (question.material || []).join('\n\n');
       document.getElementById('demo-stem').textContent = question.stem;
       document.getElementById('demo-word-limit').textContent = '字数要求：' + (question.word_limit || '未指定');
+      document.getElementById('demo-answer').value = '';
+      document.getElementById('demo-count').textContent = '0';
 
       document.getElementById('demo-exam-section').classList.remove('hidden');
       document.getElementById('demo-result').classList.add('hidden');
+      setStep(2);
 
       lucide.createIcons();
     } catch (e) {
-      alert('加载失败');
+      showToast('题目加载失败，请重试', 'error');
     }
   }
 
@@ -171,18 +221,20 @@
   async function submitDemo() {
     const answer = document.getElementById('demo-answer').value.trim();
     if (!answer) {
-      alert('请输入答案');
+      showToast('请先输入答案', 'error');
       return;
     }
 
     if (!selectedPaper || !selectedQuestion) {
-      alert('请先选择试卷');
+      showToast('请先选择试卷', 'error');
       return;
     }
+    lastAnswer = answer;
 
     const btn = document.querySelector('#demo-exam-section .btn-primary');
+    btn.disabled = true;
     btn.classList.add('btn-loading');
-    btn.textContent = '批改中...';
+    btn.textContent = 'AI 批改中...';
 
     try {
       const res = await fetch('/api/papers/demo/grade', {
@@ -195,35 +247,115 @@
         })
       });
 
-      const { data, error } = await res.json();
+      const data = await res.json();
+      const err = data.error || '';
 
+      if (res.status === 429) {
+        showToast(err || '演示次数已用完，登录后可继续批改', 'error');
+        if (localStorage.getItem('slb_token')) {
+          openAuthModal('register');
+        } else {
+          window.openAuthModal = window.openAuthModal || (() => openAuthModal('register'));
+          openAuthModal('register');
+        }
+        return;
+      }
       if (!res.ok) {
-        alert(error || '批改失败，请稍后重试');
+        showToast(err || '批改失败，请稍后重试', 'error');
         return;
       }
 
-      const score = Math.round(data.score || 0);
-      const dims = data.dimension_scores || {};
-
-      document.getElementById('demo-score').textContent = score;
-      document.getElementById('demo-feedback').innerHTML = `
-        <p><strong>各维度得分：</strong></p>
-        <ul>
-          ${Object.entries(dims).map(([k, v]) => `<li>${escapeHtml(k)}：${escapeHtml(v)}分</li>`).join('')}
-        </ul>
-        ${data.hit_points && data.hit_points.length > 0 ? `<p><strong>命中要点：</strong>${data.hit_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
-        ${data.missing_points && data.missing_points.length > 0 ? `<p><strong>遗漏要点：</strong>${data.missing_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
-        <p><strong>AI评语：</strong>${escapeHtml(data.ai_feedback || '暂无评语')}</p>
-        ${data.improving_suggestions ? `<p><strong>改进建议：</strong>${escapeHtml(data.improving_suggestions)}</p>` : ''}
-      `;
-
+      renderResult(data.data);
+      setStep(3);
       document.getElementById('demo-exam-section').classList.add('hidden');
       document.getElementById('demo-result').classList.remove('hidden');
     } catch (e) {
-      alert('网络错误，请稍后重试');
+      showToast('网络错误，请稍后重试', 'error');
     } finally {
+      btn.disabled = false;
       btn.classList.remove('btn-loading');
       btn.textContent = '提交批改';
+    }
+  }
+
+  function renderResult(d) {
+    const score = Math.round(d.score || 0);
+    const dims = d.dimension_scores || {};
+
+    document.getElementById('demo-score').textContent = score;
+
+    let html = '<p><strong>各维度得分：</strong></p>';
+    const dimEntries = Object.entries(dims);
+    if (dimEntries.length) {
+      html += '<div class="demo-dims">';
+      for (const [k, v] of dimEntries) {
+        const name = DIM_NAMES[k] || k;
+        const max = DIM_MAX[k] || 20;
+        const pct = Math.min(100, Math.round((v / max) * 100));
+        html += '<div class="demo-dim-item"><span style="width:110px;flex-shrink:0;">' + escapeHtml(name) + '：' + escapeHtml(v) + '分</span>' +
+          '<div class="demo-dim-bar"><div class="demo-dim-fill" style="width:' + pct + '%"></div></div></div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<p class="text-muted">暂无维度数据</p>';
+    }
+
+    const hitPoints = (d.hit_points || []).map(p => typeof p === 'string' ? p : (p.point || '')).filter(Boolean);
+    const missPoints = (d.missing_points || []).map(p => typeof p === 'string' ? p : (p.point || '')).filter(Boolean);
+    if (hitPoints.length) {
+      html += '<p><strong>命中要点：</strong></p><ul>' + hitPoints.map(p => '<li class="demo-point hit">' + escapeHtml(p) + '</li>').join('') + '</ul>';
+    }
+    if (missPoints.length) {
+      html += '<p><strong>遗漏要点：</strong></p><ul>' + missPoints.map(p => '<li class="demo-point miss">' + escapeHtml(p) + '</li>').join('') + '</ul>';
+    }
+    html += '<p><strong>AI 评语：</strong>' + escapeHtml(d.ai_feedback || '暂无评语') + '</p>';
+    const sugg = d.improving_suggestions;
+    if (sugg) {
+      const suggText = Array.isArray(sugg) ? sugg.join('；') : (typeof sugg === 'string' ? sugg : JSON.stringify(sugg));
+      html += '<p><strong>改进建议：</strong>' + escapeHtml(suggText) + '</p>';
+    }
+
+    document.getElementById('demo-feedback').innerHTML = html;
+
+    // 登录态感知
+    const token = localStorage.getItem('slb_token');
+    const btn = document.getElementById('saveRecordBtn');
+    btn.textContent = token ? '保存到我的记录' : '登录保存记录';
+  }
+
+  function backToAnswer() {
+    document.getElementById('demo-answer').value = lastAnswer;
+    document.getElementById('demo-count').textContent = lastAnswer.length;
+    document.getElementById('demo-exam-section').classList.remove('hidden');
+    document.getElementById('demo-result').classList.add('hidden');
+    setStep(2);
+  }
+
+  async function saveRecord() {
+    const token = localStorage.getItem('slb_token');
+    if (!token) {
+      openAuthModal('register');
+      return;
+    }
+    try {
+      const res = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          pid: selectedPaper.pid,
+          qid: selectedQuestion.qid,
+          user_answer: lastAnswer
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.data && data.data.sid) {
+        showToast('已保存到我的记录');
+        setTimeout(() => { window.location.href = '/result/' + data.data.sid; }, 800);
+      } else {
+        showToast(data.error || '保存失败', 'error');
+      }
+    } catch (e) {
+      showToast('保存失败，请稍后重试', 'error');
     }
   }
 
@@ -233,6 +365,11 @@
     } catch {
       return [];
     }
+  }
+
+  // 登录后自动切换按钮文案
+  if (localStorage.getItem('slb_token')) {
+    document.getElementById('saveRecordBtn').textContent = '保存到我的记录';
   }
 
   loadDemoPapers();

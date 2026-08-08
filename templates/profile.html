@@ -222,7 +222,7 @@
     try {
       const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
-        const user = await res.json();
+        const { data: user } = await res.json();
         document.getElementById('profile-name').textContent = user.nickname || user.username;
         document.getElementById('profile-avatar').textContent = (user.nickname || user.username).charAt(0);
         document.getElementById('profile-role').textContent = user.role === 'vip' ? 'VIP 用户' : '普通用户';
@@ -235,8 +235,8 @@
     try {
       const res = await fetch('/api/submissions/history?limit=100', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
-        const data = await res.json();
-        const subs = data.submissions || [];
+        const { data } = await res.json();
+        const subs = (data && data.submissions) || [];
         const totalEl = document.getElementById('stat-submissions');
         totalEl.dataset.target = subs.length;
         totalEl.textContent = subs.length;
@@ -246,6 +246,22 @@
           const avgEl = document.getElementById('stat-avg-score');
           avgEl.dataset.target = Math.round(avg);
           avgEl.textContent = Math.round(avg);
+        }
+
+        // 渲染批改历史列表
+        const historyList = document.getElementById('history-list');
+        if (!subs.length) {
+          historyList.innerHTML = '<div class="empty-state"><div class="empty-state-title">还没有批改记录</div><div class="empty-state-desc">去卷库或专项训练完成一次练习吧</div><a href="/papers" class="btn btn-primary btn-sm mt-3">去练真题</a></div>';
+        } else {
+          historyList.innerHTML = subs.slice(0, 10).map(s => {
+            const scoreCls = s.score >= 75 ? 'score-high' : s.score >= 55 ? 'score-mid' : 'score-low';
+            return '<a class="card record-card" href="/result/' + s.sid + '" style="display:block;text-decoration:none;">' +
+              '<div class="record-head">' +
+                '<div><div class="card-title">' + escapeHtml(s.paper_title || '练习') + '</div>' +
+                '<div class="text-caption">' + (s.graded_at || s.created_at || '').substring(0, 16) + '</div></div>' +
+                '<span class="score-badge ' + scoreCls + '">' + (s.score !== null && s.score !== undefined ? Math.round(s.score) : '--') + ' 分</span>' +
+              '</div></a>';
+          }).join('');
         }
 
         // 渲染图表
@@ -312,8 +328,8 @@
     try {
       const res = await fetch('/api/weak', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
-        const data = await res.json();
-        const points = data.weak_points || [];
+        const { data } = await res.json();
+        const points = (data && data.weak_points) || [];
         document.getElementById('weak-count').textContent = points.length;
         document.getElementById('weak-pending').textContent = points.length;
 
@@ -337,8 +353,28 @@
     } catch (e) { console.error('loadWeak', e); }
   }
 
-  // 密码修改：字段级校验（后端接口暂未上线，阻止默认提交并提示）
-  function handlePasswordChange(e) {
+  // 加载我的收藏（素材金句）
+  async function loadFavorites() {
+    try {
+      const res = await fetch('/api/phrases/favorites', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
+      if (res.ok) {
+        const { data } = await res.json();
+        const items = (data && data.items) || [];
+        const container = document.getElementById('favorites-list');
+        if (!items.length) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state-title">暂无收藏</div><div class="empty-state-desc">在素材学习中收藏喜欢的金句</div><a href="/phrases/study" class="btn btn-primary btn-sm mt-3">去素材学习</a></div>';
+        } else {
+          container.innerHTML = items.map(p =>
+            '<div class="card skeleton-mb"><div class="card-title">' + escapeHtml(p.phrase) + '</div>' +
+            '<div class="text-caption">' + escapeHtml(p.source || '') + '</div></div>'
+          ).join('');
+        }
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  // 密码修改：字段级校验 + 调后端接口
+  async function handlePasswordChange(e) {
     e.preventDefault();
     const setErr = (id, msg) => {
       const input = document.getElementById(id);
@@ -358,13 +394,35 @@
     else if (newPwd !== confirmPwd) { setErr('confirm_password', '两次输入的新密码不一致'); valid = false; }
     else { setErr('confirm_password', ''); }
     if (!valid) return;
-    if (typeof showToast === 'function') showToast('在线修改密码功能即将上线，敬请期待', 'info');
+    const btn = document.querySelector('#password-form button[type="submit"]');
+    if (btn) { btn.disabled = true; btn.textContent = '提交中...'; }
+    try {
+      const res = await fetch('/api/auth/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') },
+        body: JSON.stringify({ old_password: oldPwd, new_password: newPwd })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (typeof showToast === 'function') showToast('密码修改成功');
+        document.getElementById('old_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+      } else {
+        if (typeof showToast === 'function') showToast(data.error || '修改失败', 'error');
+      }
+    } catch (err) {
+      if (typeof showToast === 'function') showToast('网络错误，请稍后重试', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '保存修改'; }
+    }
   }
 
   // 初始化
   loadProfile();
   loadStats();
   loadWeak();
+  loadFavorites();
 })();
 </script>
 {% endblock %}

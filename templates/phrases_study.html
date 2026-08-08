@@ -45,6 +45,17 @@
   .pack-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
   .pack-name { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-gray-800); margin-bottom: var(--space-1); }
   .pack-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .pack-desc { font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: var(--space-1); line-height: var(--leading-relaxed); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--space-4); }
+  .pack-modal { width: 100%; max-width: 640px; max-height: 85vh; display: flex; flex-direction: column; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+  .modal-head h3 { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-gray-900); }
+  .modal-close { width: 32px; height: 32px; border: none; background: var(--color-gray-100); border-radius: 50%; font-size: var(--text-lg); color: var(--color-text-muted); cursor: pointer; }
+  .modal-close:hover { background: var(--color-gray-200); }
+  .pack-phrase-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3); }
+  .pack-phrase-item { padding: var(--space-4); }
+  .pack-phrase-item .phrase-text { font-size: var(--text-base); }
+  .modal-foot { text-align: center; margin-top: var(--space-4); }
 </style>
 {% endblock %}
 
@@ -185,11 +196,52 @@ async function loadPacks() {
     '<div class="card pack-card" onclick="viewPack(' + p.id + ')">' +
       '<div class="pack-name">' + escapeHtml(p.name) + '</div>' +
       '<div class="pack-count">' + (p.phrase_count||0) + ' 条素材</div>' +
+      (p.description ? '<div class="pack-desc">' + escapeHtml(p.description) + '</div>' : '') +
     '</div>'
   ).join('');
 }
 
-function viewPack(id) { window.open('/api/phrases/packs/' + id, '_blank'); }
+async function viewPack(id) {
+  const res = await fetch(API + '/packs/' + id, {headers: headers()});
+  const data = await res.json();
+  if (!data.data) { showToast('素材包加载失败', 'error'); return; }
+  const p = data.data;
+  const phrases = p.phrases || [];
+  const items = phrases.length
+    ? phrases.map(ph => '<div class="card pack-phrase-item">' +
+        '<div class="phrase-text">' + escapeHtml(ph.phrase) + '</div>' +
+        '<div class="phrase-meta">' + escapeHtml(ph.source||'') + (ph.source_date ? ' · ' + escapeHtml(ph.source_date) : '') + '</div>' +
+        (ph.usage ? '<div class="phrase-usage">适用：' + escapeHtml(ph.usage) + '</div>' : '') +
+        '<button class="btn btn-secondary btn-sm mt-2" onclick="favoritePhrase(' + ph.id + ', this)">收藏</button>' +
+      '</div>').join('')
+    : '<p class="text-muted text-center p-4">该素材包暂无内容</p>';
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'packModal';
+  overlay.innerHTML = '<div class="modal-card pack-modal">' +
+    '<div class="modal-head"><h3>' + escapeHtml(p.name) + '</h3>' +
+    '<button class="modal-close" onclick="closePackModal()">&times;</button></div>' +
+    (p.description ? '<p class="text-sm text-muted mb-4">' + escapeHtml(p.description) + '</p>' : '') +
+    '<div class="pack-phrase-list">' + items + '</div>' +
+    '<div class="modal-foot"><button class="btn btn-secondary" onclick="closePackModal()">关闭</button></div>' +
+  '</div>';
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+}
+
+function closePackModal() {
+  const el = document.getElementById('packModal');
+  if (el) { el.remove(); document.body.style.overflow = ''; }
+}
+
+async function favoritePhrase(id, btn) {
+  if (!token) { openAuthModal('login'); return; }
+  const res = await fetch(API + '/' + id + '/favorite', {method: 'POST', headers: headers()});
+  const data = await res.json();
+  showToast(data.data && data.data.favorited ? '已收藏' : '已收藏');
+  btn.textContent = '已收藏';
+  btn.disabled = true;
+}
 function tryParseJson(s) { try { return JSON.parse(s || '[]'); } catch { return []; } }
 
 loadStats(); loadCards(); loadPacks();

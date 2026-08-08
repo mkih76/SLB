@@ -178,7 +178,7 @@ async function loadTodayTasks() {
     const statusCls = t.status === 'completed' ? ' completed' : t.status === 'skipped' ? ' skipped' : '';
     const checkMark = t.status === 'completed' ? '✓' : '';
     const actionBtns = t.status === 'pending' ?
-      '<button class="btn btn-primary btn-sm" onclick="startTask(\'' + t.task_type + '\')">开始</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="startTask(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')">开始</button>' +
       '<button class="btn btn-secondary btn-sm" onclick="skipTask(' + t.task_id + ')">跳过</button>' :
       t.status === 'completed' ? '<span class="text-sm text-success">已完成</span>' :
       '<span class="text-sm text-muted">已跳过</span>';
@@ -254,13 +254,31 @@ async function skipTask(taskId) {
   await loadTodayTasks();
 }
 
-function startTask(type) {
-  if (type === 'drill') window.location.href = '/drill';
+function startTask(task) {
+  // 深链到具体资源（若任务关联了真实题目/素材包/卷子）
+  if (task && task.detail) {
+    const d = typeof task.detail === 'string' ? tryParseJson(task.detail) : task.detail;
+    if (d && d.target_pid && d.target_qid) {
+      window.location.href = '/exam/' + d.target_pid + '/' + d.target_qid;
+      return;
+    }
+    if (d && d.pid && task.task_type === 'simulation') {
+      window.location.href = '/papers';
+      return;
+    }
+    if (d && d.pack_id) {
+      window.location.href = '/phrases/study';
+      return;
+    }
+  }
+  const type = task && task.task_type ? task.task_type : task;
+  if (type === 'drill' || type === 'essay_write') window.location.href = '/drill';
   else if (type === 'phrase_read') window.location.href = '/phrases/study';
   else if (type === 'simulation') window.location.href = '/papers';
-  else if (type === 'essay_write') window.location.href = '/drill';
   else if (type === 'review') window.location.href = '/diagnosis';
 }
+
+function tryParseJson(s) { try { return JSON.parse(s); } catch { return null; } }
 
 async function pauseResume() {
   if (!activePlan) return;

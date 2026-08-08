@@ -122,7 +122,16 @@ def get_comments(post_id):
             'like_count': c['like_count'],
             'created_at': c['created_at']
         })
-    return comments
+
+    # 组装回复层级：parent_comment_id 非空的挂到父评论 replies
+    top = [c for c in comments if not c['parent_comment_id']]
+    reply_map = {}
+    for c in comments:
+        if c['parent_comment_id']:
+            reply_map.setdefault(c['parent_comment_id'], []).append(c)
+    for c in top:
+        c['replies'] = reply_map.get(c['comment_id'], [])
+    return top
 
 
 def add_comment(post_id, uid, content, parent_comment_id=None):

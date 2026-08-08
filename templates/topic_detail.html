@@ -14,6 +14,13 @@
   .badge-lilun { background: #722ed1; }
   .badge-dangjian { background: var(--color-error); }
   .badge-xuexi { background: #eb2f96; }
+  .badge-jingji { background: var(--color-primary); }
+  .badge-shehui { background: var(--color-success); }
+  .badge-wenhua { background: #722ed1; }
+  .badge-shengtai { background: #13c2c2; }
+  .badge-minsheng { background: var(--color-warning); }
+  .badge-zhili { background: var(--color-gray-700); }
+  .badge-keji { background: #eb2f96; }
   .article-date { font-size: var(--text-xs); color: var(--color-text-muted); }
   .article-source-link { font-size: var(--text-xs); color: var(--color-primary); text-decoration: none; }
   .article-source-link:hover { text-decoration: underline; }
@@ -58,7 +65,7 @@
     </div>
 
     <div class="article-body reveal">
-      <div class="content">{{ topic.original_text }}</div>
+      <div class="content">{{ article_content }}</div>
     </div>
 
     <div class="article-actions reveal">

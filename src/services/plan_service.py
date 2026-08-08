@@ -116,9 +116,32 @@ def create_study_plan(uid, plan_name, exam_date, exam_type, daily_minutes=120):
 
 
 def _generate_daily_tasks(db, uid, plan_id, phases, daily_minutes, days=7):
-    """生成每日任务"""
+    """生成每日任务（关联真实资源：真题/素材包/卷子）"""
     weaknesses = _get_user_weaknesses(uid)
     task_date = date.today()
+
+    # 预取真实资源池
+    papers = db.execute(
+        "SELECT pid, title, questions FROM papers WHERE status = 'published'"
+    ).fetchall()
+    question_pool = {}  # type -> [{pid, qid, stem, paper_title}]
+    for p in papers:
+        try:
+            qs = json.loads(p['questions'])
+        except Exception:
+            continue
+        for q in qs:
+            if not isinstance(q, dict):
+                continue
+            qtype = q.get('type', 'guina')
+            question_pool.setdefault(qtype, []).append({
+                'pid': p['pid'], 'qid': q.get('qid', ''),
+                'stem': q.get('stem', ''), 'paper_title': p['title'],
+            })
+    packs = db.execute(
+        "SELECT id, name, phrase_ids FROM phrase_packs WHERE status = 'published'"
+    ).fetchall()
+    sim_papers = [p for p in papers if p['pid'] and not p['pid'].startswith('zh_')]
 
     for i in range(days):
         # 确定当前阶段
@@ -129,12 +152,45 @@ def _generate_daily_tasks(db, uid, plan_id, phases, daily_minutes, days=7):
         ratio = phase.get('ratio', {})
         tasks_for_day = []
 
-        # 题型练习
+        # 题型练习（关联真实题目）
         drill_min = int(daily_minutes * ratio.get('drill', 0))
         if drill_min > 0:
             target_type = weaknesses[0] if weaknesses else 'guina'
             type_names = {'guina': '归纳概括', 'zonghe': '综合分析', 'duice': '提出对策',
                           'zhixing': '贯彻执行', 'zuowen': '大作文'}
+            pool = question_pool.get(target_type, [])
+            import random
+            random.shuffle(pool)
+            picked = pool[:2]
+            if picked:
+                titles = []
+                for q in picked:
+                    t = f"{q['paper_title'][:18]} {q['qid']}"
+                    titles.append(t)
+                    db.execute(
+                        """INSERT INTO daily_tasks (uid, plan_id, task_date, task_type, task_detail, target_id, status)
+                           VALUES (?, ?, ?, ?, ?, ?, 'pending')""",
+                        (uid, plan_id, task_date, 'drill',
+                         json.dumps({'title': f"练习《{titles[-1]}》", 'target_type': target_type,
+                                     'estimated_minutes': drill_min, 'target_pid': q['pid'],
+                                     'target_qid': q['qid'], 'stem': q['stem'][:60]}, ensure_ascii=False),
+                         f"{q['pid']}::{q['qid']}")
+                    )
+                # 随机补一道同题型（让练习量=2道）
+                if len(picked) == 1 and pool:
+                    q = pool[0]
+                    db.execute(
+                        """INSERT INTO daily_tasks (uid, plan_id, task_date, task_type, task_detail, target_id, status)
+                           VALUES (?, ?, ?, ?, ?, ?, 'pending')""",
+                        (uid, plan_id, task_date, 'drill',
+                         json.dumps({'title': f"练习《{q['paper_title'][:18]} {q['qid']}》",
+                                     'target_type': target_type, 'estimated_minutes': drill_min,
+                                     'target_pid': q['pid'], 'target_qid': q['qid'],
+                                     'stem': q['stem'][:60]}, ensure_ascii=False),
+                         f"{q['pid']}::{q['qid']}")
+                    )
+                continue
+            # 无该题型题目时退回模板任务
             tasks_for_day.append({
                 'task_type': 'drill',
                 'task_detail': json.dumps({
@@ -145,9 +201,23 @@ def _generate_daily_tasks(db, uid, plan_id, phases, daily_minutes, days=7):
                 'estimated_minutes': drill_min
             })
 
-        # 素材学习
+        # 素材学习（关联真实素材包）
         phrase_min = int(daily_minutes * ratio.get('phrase_read', 0))
         if phrase_min > 0:
+            import random
+            pack = None
+            if packs:
+                pack = packs[(i + uid.__hash__()) % len(packs)]
+            if pack:
+                db.execute(
+                    """INSERT INTO daily_tasks (uid, plan_id, task_date, task_type, task_detail, target_id, status)
+                       VALUES (?, ?, ?, ?, ?, ?, 'pending')""",
+                    (uid, plan_id, task_date, 'phrase_read',
+                     json.dumps({'title': f"学习素材包《{pack['name']}》10条",
+                                 'estimated_minutes': phrase_min, 'pack_id': pack['id']}, ensure_ascii=False),
+                     f"pack::{pack['id']}")
+                )
+                continue
             tasks_for_day.append({
                 'task_type': 'phrase_read',
                 'task_detail': json.dumps({
@@ -157,9 +227,21 @@ def _generate_daily_tasks(db, uid, plan_id, phases, daily_minutes, days=7):
                 'estimated_minutes': phrase_min
             })
 
-        # 模拟考试
+        # 模拟考试（关联真实卷子）
         sim_min = int(daily_minutes * ratio.get('simulation', 0))
         if sim_min > 0:
+            import random
+            if sim_papers:
+                sp = sim_papers[(i * 3) % len(sim_papers)]
+                db.execute(
+                    """INSERT INTO daily_tasks (uid, plan_id, task_date, task_type, task_detail, target_id, status)
+                       VALUES (?, ?, ?, ?, ?, ?, 'pending')""",
+                    (uid, plan_id, task_date, 'simulation',
+                     json.dumps({'title': f"全真模拟《{sp['title'][:24]}》", 'estimated_minutes': sim_min,
+                                 'pid': sp['pid']}, ensure_ascii=False),
+                     sp['pid'])
+                )
+                continue
             tasks_for_day.append({
                 'task_type': 'simulation',
                 'task_detail': json.dumps({
@@ -172,6 +254,20 @@ def _generate_daily_tasks(db, uid, plan_id, phases, daily_minutes, days=7):
         # 大作文练习
         essay_min = int(daily_minutes * ratio.get('essay_write', 0))
         if essay_min > 0:
+            import random
+            zw_pool = question_pool.get('zuowen', [])
+            if zw_pool:
+                q = zw_pool[i % len(zw_pool)]
+                db.execute(
+                    """INSERT INTO daily_tasks (uid, plan_id, task_date, task_type, task_detail, target_id, status)
+                       VALUES (?, ?, ?, ?, ?, ?, 'pending')""",
+                    (uid, plan_id, task_date, 'essay_write',
+                     json.dumps({'title': f"大作文《{q['paper_title'][:18]} {q['qid']}》",
+                                 'estimated_minutes': essay_min, 'target_pid': q['pid'],
+                                 'target_qid': q['qid']}, ensure_ascii=False),
+                     f"{q['pid']}::{q['qid']}")
+                )
+                continue
             tasks_for_day.append({
                 'task_type': 'essay_write',
                 'task_detail': json.dumps({
@@ -318,6 +414,7 @@ def get_today_tasks(uid):
             'title': detail.get('title', ''),
             'target_type': detail.get('target_type', ''),
             'estimated_minutes': detail.get('estimated_minutes', 0),
+            'detail': detail,
             'status': r['status'],
             'score': r['score'],
             'completed_at': r['completed_at']
