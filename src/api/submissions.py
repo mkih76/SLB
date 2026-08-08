@@ -99,11 +99,32 @@ def create_submission(current_user):
         })
 
     except Exception as e:
-        return api_success({
-            'sid': sid,
-            'status': 'grading',
-            'message': '批改中，请稍后查询结果'
-        })
+        # LLM 批改失败：尝试本地规则降级（scorer 内部已降级，此处兜底）
+        from src.services.grader.scorer import grade_answer_local
+        try:
+            grading_result = grade_answer_local(pid, qid, question, user_answer, material)
+            submission_service.update_submission_grading(
+                sid=sid,
+                score=grading_result['score'],
+                dimension_scores=grading_result['dimension_scores'],
+                ai_feedback=grading_result['ai_feedback'],
+                hit_points=grading_result.get('hit_points', []),
+                missing_points=grading_result.get('missing_points', []),
+                improving_suggestions=grading_result.get('improving_suggestions')
+            )
+            return api_success({
+                'sid': sid,
+                'status': 'completed',
+                'score': grading_result['score'],
+                'dimension_scores': grading_result['dimension_scores']
+            })
+        except Exception as e2:
+            logger.error(f"降级批改也失败 (sid={sid}): {e2}")
+            return api_success({
+                'sid': sid,
+                'status': 'grading',
+                'message': '批改中，请稍后查询结果'
+            })
 
 
 @submissions_bp.route('/<sid>', methods=['GET'])

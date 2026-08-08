@@ -229,6 +229,15 @@ def _normalize_llm_scores(llm_scores: dict, dimension_max: dict) -> dict:
     return normalized
 
 
+def grade_answer_local(pid: str, qid: str, question: dict,
+                       user_answer: str, material: list = None) -> dict:
+    """纯本地规则批改（不调用 LLM，供降级兜底使用）"""
+    result = _grade_local_fallback(question, user_answer, material)
+    result['pid'] = pid
+    result['qid'] = qid
+    return result
+
+
 def grade_answer(pid: str, qid: str, question: dict,
                  user_answer: str, material: list = None) -> dict:
     """批改答案（新版分题型评分）
