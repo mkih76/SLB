@@ -14,7 +14,12 @@ from app import create_app
 def app():
     """创建测试用 Flask app（使用临时数据库）"""
     db_fd, db_path = tempfile.mkstemp(suffix='.db')
-    os.environ['DATABASE_URL'] = f'sqlite:///{db_path}'
+
+    # Config.DATABASE_PATH 是 import 时求值的类属性，
+    # 必须在 create_app() 之前直接覆盖它，否则测试会打在真实库 data/slb.db 上
+    from src.config import Config
+    Config.DATABASE_PATH = db_path
+    os.environ['DATABASE_PATH'] = db_path
     os.environ['TESTING'] = '1'
 
     app = create_app()
@@ -23,8 +28,27 @@ def app():
 
     yield app
 
+    # 关闭 Flask app context 持有的 SQLite 连接，释放文件句柄（Windows 必需）
+    with app.app_context():
+        from flask import g
+        if 'db' in g:
+            g.db.close()
+            g.pop('db', None)
+
     os.close(db_fd)
-    os.unlink(db_path)
+    try:
+        os.unlink(db_path)
+    except PermissionError:
+        # Windows 下文件句柄释放有延迟，宽限重试
+        import time
+        for _ in range(5):
+            time.sleep(0.1)
+            try:
+                os.unlink(db_path)
+                break
+            except PermissionError:
+                continue
+    os.environ.pop('DATABASE_PATH', None)
 
 
 @pytest.fixture

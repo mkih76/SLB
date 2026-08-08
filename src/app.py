@@ -163,6 +163,9 @@ def create_app():
     @app.route('/profile')
     def profile():
         return render_template('profile.html')
+    @app.route('/share/<token>')
+    def share_result(token):
+        return render_template('share.html', token=token)
 
     # Admin routes
     def _admin_guard():
