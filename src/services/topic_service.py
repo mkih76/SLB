@@ -265,9 +265,16 @@ def _upsert_learning(db, uid, topic_id, is_read=None, is_bookmarked=None, notes=
 
 def _format_topic_brief(row):
     """格式化热点摘要"""
-    keywords = json.loads(row.get('keywords', '[]')) if isinstance(row.get('keywords'), str) else row.get('keywords', [])
-    exam_prediction = json.loads(row.get('exam_prediction', '{}')) if isinstance(row.get('exam_prediction'), str) else row.get('exam_prediction', {})
-    exam_history = json.loads(row.get('exam_history', '[]')) if isinstance(row.get('exam_history'), str) else row.get('exam_history', [])
+    def _safe_json(v, default):
+        if v is None or v == '':
+            return default
+        try:
+            return json.loads(v) if isinstance(v, str) else (v or default)
+        except Exception:
+            return default
+    keywords = _safe_json(row.get('keywords', '[]'), [])
+    exam_prediction = _safe_json(row.get('exam_prediction', '{}'), {})
+    exam_history = _safe_json(row.get('exam_history', '[]'), [])
 
     return {
         'topic_id': row['id'],
@@ -285,18 +292,25 @@ def _format_topic_brief(row):
 
 def _format_topic_detail(row):
     """格式化热点详情"""
+    def _safe_json(v, default):
+        if v is None or v == '':
+            return default
+        try:
+            return json.loads(v) if isinstance(v, str) else (v or default)
+        except Exception:
+            return default
     return {
         'topic_id': row['id'],
         'title': row['title'],
         'summary': row['summary'],
         'category': row['category'],
         'category_name': CATEGORY_NAMES.get(row['category'], row['category']),
-        'keywords': json.loads(row.get('keywords', '[]')) if isinstance(row.get('keywords'), str) else row.get('keywords', []),
-        'multi_views': json.loads(row.get('multi_views', '[]')) if isinstance(row.get('multi_views'), str) else row.get('multi_views', []),
-        'related_phrases': json.loads(row.get('related_phrases', '[]')) if isinstance(row.get('related_phrases'), str) else row.get('related_phrases', []),
-        'related_papers': json.loads(row.get('related_papers', '[]')) if isinstance(row.get('related_papers'), str) else row.get('related_papers', []),
-        'exam_prediction': json.loads(row.get('exam_prediction', '{}')) if isinstance(row.get('exam_prediction'), str) else row.get('exam_prediction', {}),
-        'exam_history': json.loads(row.get('exam_history', '[]')) if isinstance(row.get('exam_history'), str) else row.get('exam_history', []),
+        'keywords': _safe_json(row.get('keywords', '[]'), []),
+        'multi_views': _safe_json(row.get('multi_views', '[]'), []),
+        'related_phrases': _safe_json(row.get('related_phrases', '[]'), []),
+        'related_papers': _safe_json(row.get('related_papers', '[]'), []),
+        'exam_prediction': _safe_json(row.get('exam_prediction', '{}'), {}),
+        'exam_history': _safe_json(row.get('exam_history', '[]'), []),
         'week_label': row.get('week_label', ''),
         'source_url': row.get('source_url', ''),
         'original_text': row.get('original_text', ''),
