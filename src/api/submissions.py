@@ -1,5 +1,8 @@
 from flask import Blueprint, request
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.api.utils import api_success, api_error, token_required, optional_token, get_db, clamp_per_page
 from src.services import submission_service, paper_service, weak_point_service, drill_service, diagnosis_service
