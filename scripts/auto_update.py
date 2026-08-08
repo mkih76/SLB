@@ -42,9 +42,10 @@ def run_topics_update():
     """更新热点专题（从 topic_scraper 导入）"""
     logger.info("Starting topics update...")
     try:
-        from src.api.utils import get_db
+        import sqlite3
+        from src.config import Config
         from src.services.topic_scraper import run_scrape, run_scrape_xuexi
-        db = get_db()
+        db = sqlite3.connect(Config.DATABASE_PATH)
         shiping_result = run_scrape(db)
         shiping_count = shiping_result.get('saved', 0) if isinstance(shiping_result, dict) else shiping_result
         logger.info(f"Topics update completed: {shiping_count} shiping topics")
