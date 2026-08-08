@@ -48,12 +48,7 @@ def create_submission(current_user):
     try:
         grading_result = grade_answer(pid, qid, question, user_answer, material)
 
-        # Mark free trial as used for non-VIP users
-        if current_user.get('role') not in ('admin', 'super_admin', 'vip'):
-            if not current_user.get('free_trial_used'):
-                db = get_db()
-                db.execute("UPDATE users SET free_trial_used = 1 WHERE uid = ?", (current_user['uid'],))
-                db.commit()
+        # 免费试用额度在查看详情时消耗（get_submission），提交时不标记
 
         # Update submission with grading result
         submission_service.update_submission_grading(
@@ -158,9 +153,16 @@ def get_submission(current_user, sid):
         'is_vip': is_vip
     }
 
-    # Full details for VIP or free trial not yet used
+    # Full details for VIP or free trial not yet consumed
+    # 免费试用额度在"首次查看详情"时消耗（而非提交时），保证提交后能看一次
     free_trial_used = current_user.get('free_trial_used', 0)
     if is_vip or not free_trial_used:
+        if not is_vip and not free_trial_used:
+            # 消耗免费试用额度
+            db = get_db()
+            db.execute("UPDATE users SET free_trial_used = 1 WHERE uid = ?", (current_user['uid'],))
+            db.commit()
+            current_user['free_trial_used'] = 1
         result['dimension_scores'] = json.loads(submission['dimension_scores']) if submission['dimension_scores'] else None
         result['ai_feedback'] = submission['ai_feedback']
         result['hit_points'] = json.loads(submission['hit_points']) if submission['hit_points'] else []
