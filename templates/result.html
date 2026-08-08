@@ -251,7 +251,7 @@
   const sid = '{{ sid }}';
 
   async function loadResult() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('slb_token');
     if (!token) {
       if (typeof SLBToast !== 'undefined') {
         SLBToast.warning('请先登录');
@@ -389,7 +389,7 @@
 
   // 分享批改结果
   async function shareResult() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('slb_token');
     if (!token) {
       if (typeof SLBToast !== 'undefined') SLBToast.warning('请先登录');
       return;
@@ -424,7 +424,7 @@
   }
 
   async function revokeShare() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('slb_token');
     if (!token) {
       if (typeof SLBToast !== 'undefined') SLBToast.warning('请先登录');
       return;
@@ -466,7 +466,7 @@
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('slb_token');
     try {
       const res = await fetch(`/api/submissions/${sid}/feedback`, {
         method: 'POST',

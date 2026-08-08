@@ -220,7 +220,7 @@
   // 加载用户信息
   async function loadProfile() {
     try {
-      const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
         const user = await res.json();
         document.getElementById('profile-name').textContent = user.nickname || user.username;
@@ -233,7 +233,7 @@
   // 加载统计数据
   async function loadStats() {
     try {
-      const res = await fetch('/api/submissions/history?limit=100', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      const res = await fetch('/api/submissions/history?limit=100', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
         const data = await res.json();
         const subs = data.submissions || [];
@@ -310,7 +310,7 @@
   // 加载薄弱点
   async function loadWeak() {
     try {
-      const res = await fetch('/api/weak', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+      const res = await fetch('/api/weak', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('slb_token') } });
       if (res.ok) {
         const data = await res.json();
         const points = data.weak_points || [];

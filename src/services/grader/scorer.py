@@ -81,7 +81,15 @@ def call_llm(messages: list, parse_json: bool = True):
         )
         response.raise_for_status()
         result = response.json()
-        content = result['choices'][0]['message']['content']
+        content = result['choices'][0]['message'].get('content') or ''
+        # 推理模型（如 deepseek-v4-flash）可能把正文放 reasoning_content，
+        # 或 max_tokens 不够导致 content 为空——回退读取
+        if not content.strip():
+            reasoning = result['choices'][0]['message'].get('reasoning_content') or ''
+            # reasoning 里通常只有思考过程，无法作为正式输出；抛出明确错误
+            if reasoning:
+                raise Exception(f"LLM 返回内容为空（推理型模型 max_tokens 不足）: {reasoning[:200]}")
+            raise Exception("LLM 返回内容为空")
         if parse_json:
             # 处理 LLM 可能在 JSON 前后添加的 markdown 标记
             content = content.strip()
@@ -104,6 +112,86 @@ def call_llm(messages: list, parse_json: bool = True):
 def _clamp(value, min_val, max_val):
     """将值限制在指定范围内"""
     return max(min_val, min(max_val, value))
+
+
+def _grade_local_fallback(question: dict, user_answer: str, material: list = None) -> dict:
+    """本地规则降级批改（LLM 不可用时兜底，不依赖外部 API）
+
+    基于题目采分点做关键词匹配，结合字数/口语化/格式等本地检测，
+    输出与 LLM 版结构一致的批改结果。
+    """
+    import re
+    qtype = question.get('type', 'guina')
+    key_points = question.get('key_points') or []
+    word_limit = question.get('word_limit') or ''
+
+    # 1. 采分点匹配（关键词 + 别名）
+    hit_points = []
+    missing_points = []
+    answer = user_answer or ''
+    for kp in key_points:
+        if not isinstance(kp, dict):
+            continue
+        point = kp.get('point', '')
+        score = kp.get('score', 0)
+        aliases = kp.get('alias') or []
+        # 要点正文或别名任一命中即算得分
+        keywords = [point] + list(aliases)
+        matched = False
+        for kw in keywords:
+            if kw and kw in answer:
+                matched = True
+                break
+        if matched:
+            hit_points.append({'point': point, 'score': score, 'matched': True})
+        else:
+            missing_points.append({'point': point})
+
+    # 2. 维度分数（本地规则，键名与 LLM 版一致）
+    try:
+        dim_scores = calculate_dimensions(question, answer, hit_points, missing_points)
+        # 转换为英文键名（新版 scorer 用英文维度）
+        dim_map = {'踩点命中': 'point_coverage', '逻辑结构': 'logic_structure',
+                   '语言规范': 'language', '字数控制': 'word_count', '卷面整洁': 'format'}
+        dim_scores_en = {dim_map.get(k, k): v for k, v in dim_scores.items()}
+        total = calculate_total_score(qtype, dim_scores_en)
+    except Exception:
+        # 极端兜底：按命中率粗算
+        total = round(100 * len(hit_points) / max(len(key_points), 1), 1)
+        dim_scores_en = {}
+
+    # 3. 本地反馈文案
+    hit_rate = len(hit_points) / max(len(key_points), 1)
+    if hit_rate >= 0.8:
+        verdict = '整体作答较好，要点覆盖全面。'
+    elif hit_rate >= 0.5:
+        verdict = '作答基本合格，但存在要点遗漏。'
+    elif hit_rate >= 0.3:
+        verdict = '作答要点覆盖不足，需要加强审题与踩点。'
+    else:
+        verdict = '作答与采分点差距较大，建议结合材料分点作答。'
+
+    suggestions = []
+    if missing_points:
+        suggestions.append('以下要点未命中：' + '、'.join(p['point'] for p in missing_points[:5]))
+    colloquial = detect_colloquial(answer)
+    if colloquial:
+        suggestions.append('答案存在口语化表达：' + '、'.join(colloquial[:3]) + '，建议改用规范书面语。')
+    char_count = count_chinese_chars(answer)
+    if char_count < 80:
+        suggestions.append('作答字数偏少（约%d字），建议充分展开论述。' % char_count)
+    if not suggestions:
+        suggestions.append('继续保持分点作答结构，注意结合材料佐证。')
+
+    return {
+        'score': total,
+        'dimension_scores': dim_scores_en,
+        'hit_points': hit_points,
+        'missing_points': missing_points,
+        'ai_feedback': verdict + '（AI 服务暂不可用，本次为本地规则评分）',
+        'improving_suggestions': suggestions,
+        'local_fallback': True,
+    }
 
 
 def _normalize_llm_scores(llm_scores: dict, dimension_max: dict) -> dict:
@@ -162,8 +250,8 @@ def grade_answer(pid: str, qid: str, question: dict,
     try:
         llm_result = call_llm(messages)
     except Exception as e:
-        logger.error(f"批改失败 (pid={pid}, qid={qid}): {e}")
-        raise Exception(f"批改失败: {str(e)}")
+        logger.warning(f"LLM 批改失败，使用本地规则降级 (pid={pid}, qid={qid}): {e}")
+        llm_result = _grade_local_fallback(question, user_answer, material)
 
     # 3. 提取 LLM 返回的维度分数
     llm_raw_scores = llm_result.get('dimension_scores', {})

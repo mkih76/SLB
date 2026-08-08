@@ -125,6 +125,16 @@ async function loadCards() {
 function renderCard() {
   const area = document.getElementById('cardArea');
   if (!cards.length || cardIdx >= cards.length) {
+    // 未登录：引导登录（区分于已登录的"学完了"）
+    if (!token) {
+      area.innerHTML = '<div class="card empty-card">' +
+        '<i data-lucide="log-in" class="done-icon" style="color:var(--color-primary)"></i>' +
+        '<p class="text-base font-semibold">登录后开始素材学习</p>' +
+        '<p class="text-caption mb-4">每天 5 条申论金句，打卡积累素材库</p>' +
+        '<a href="/login" class="btn btn-primary btn-sm">登录 / 注册</a></div>';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
     area.innerHTML = '<div class="card empty-card">' +
       '<i data-lucide="check-circle" class="done-icon"></i>' +
       '<p class="text-base font-semibold">今日素材已全部学完</p>' +

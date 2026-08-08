@@ -333,7 +333,7 @@
       const res = await fetch('/api/ocr', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+          'Authorization': 'Bearer ' + (localStorage.getItem('slb_token') || '')
         },
         body: formData
       });
@@ -419,7 +419,7 @@
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('slb_token');
     if (!token) {
       if (typeof SLBToast !== 'undefined') {
         SLBToast.warning('请先登录');
