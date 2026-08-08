@@ -57,6 +57,7 @@ def call_llm(messages: list, parse_json: bool = True):
         解析后的 dict 或原始文本
     """
     import requests
+    import time as _time
 
     llm = get_llm_config()
 
@@ -72,41 +73,50 @@ def call_llm(messages: list, parse_json: bool = True):
         "max_tokens": llm['max_tokens']
     }
 
-    try:
-        response = requests.post(
-            f"{llm['base_url']}/chat/completions",
-            headers=headers,
-            json=data,
-            timeout=60
-        )
-        response.raise_for_status()
-        result = response.json()
-        content = result['choices'][0]['message'].get('content') or ''
-        # 推理模型（如 deepseek-v4-flash）可能把正文放 reasoning_content，
-        # 或 max_tokens 不够导致 content 为空——回退读取
-        if not content.strip():
-            reasoning = result['choices'][0]['message'].get('reasoning_content') or ''
-            # reasoning 里通常只有思考过程，无法作为正式输出；抛出明确错误
-            if reasoning:
-                raise Exception(f"LLM 返回内容为空（推理型模型 max_tokens 不足）: {reasoning[:200]}")
-            raise Exception("LLM 返回内容为空")
-        if parse_json:
-            # 处理 LLM 可能在 JSON 前后添加的 markdown 标记
-            content = content.strip()
-            if content.startswith('```json'):
-                content = content[7:]
-            if content.startswith('```'):
-                content = content[3:]
-            if content.endswith('```'):
-                content = content[:-3]
-            return json.loads(content.strip())
-        return content
-    except json.JSONDecodeError as e:
-        logger.error(f"LLM 返回的 JSON 解析失败: {e}, 原始内容: {content[:500]}")
-        raise Exception(f"LLM 返回格式错误: {str(e)}")
-    except Exception as e:
-        logger.error(f"LLM 调用失败: {e}")
-        raise Exception(f"LLM调用失败: {str(e)}")
+    # 端点可能间歇性不可用：最多重试 2 次，指数退避
+    max_retries = 2
+    last_err = None
+    for attempt in range(max_retries + 1):
+        try:
+            response = requests.post(
+                f"{llm['base_url']}/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=90
+            )
+            response.raise_for_status()
+            result = response.json()
+            content = result['choices'][0]['message'].get('content') or ''
+            # 推理模型（如 deepseek-v4-flash）可能把正文放 reasoning_content，
+            # 或 max_tokens 不够导致 content 为空——回退读取
+            if not content.strip():
+                reasoning = result['choices'][0]['message'].get('reasoning_content') or ''
+                # reasoning 里通常只有思考过程，无法作为正式输出；抛出明确错误
+                if reasoning:
+                    raise Exception(f"LLM 返回内容为空（推理型模型 max_tokens 不足）: {reasoning[:200]}")
+                raise Exception("LLM 返回内容为空")
+            if parse_json:
+                # 处理 LLM 可能在 JSON 前后添加的 markdown 标记
+                content = content.strip()
+                if content.startswith('```json'):
+                    content = content[7:]
+                if content.startswith('```'):
+                    content = content[3:]
+                if content.endswith('```'):
+                    content = content[:-3]
+                return json.loads(content.strip())
+            return content
+        except json.JSONDecodeError as e:
+            logger.error(f"LLM 返回的 JSON 解析失败: {e}, 原始内容: {content[:500]}")
+            raise Exception(f"LLM 返回格式错误: {str(e)}")
+        except Exception as e:
+            last_err = e
+            logger.warning(f"LLM 调用失败 (第{attempt+1}次): {e}")
+            if attempt < max_retries:
+                _time.sleep(2 * (attempt + 1))  # 2s, 4s 退避
+            else:
+                break
+    raise Exception(f"LLM调用失败: {str(last_err)}")
 
 
 def _clamp(value, min_val, max_val):
