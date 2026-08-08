@@ -410,17 +410,20 @@
       showToast('已退出登录', 'success');
     }
 
-    // 登录模态框焦点管理
+    // 登录模态框焦点管理（只绑定一次）
+    let focusTrapHandler = null;
     function trapFocus(container) {
       const focusables = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (focusables.length === 0) return;
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
-      container.addEventListener('keydown', function handler(e) {
+      if (focusTrapHandler) container.removeEventListener('keydown', focusTrapHandler);
+      focusTrapHandler = (e) => {
         if (e.key !== 'Tab') return;
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-      });
+      };
+      container.addEventListener('keydown', focusTrapHandler);
     }
     let lastFocusedElement = null;
 
