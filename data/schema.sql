@@ -387,7 +387,7 @@ CREATE TABLE IF NOT EXISTS hot_topics (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     title           TEXT NOT NULL,              -- e.g. "新质生产力"
     summary         TEXT NOT NULL,              -- 300字以内的背景梳理
-    category        TEXT NOT NULL,              -- jingji/shehui/wenhua/shengtai/minsheng/zhili/keji
+    category        TEXT NOT NULL,              -- jingji/shehui/wenhua/shengtai/minsheng/zhili/keji/xuexi/...
     keywords        TEXT DEFAULT '[]',          -- JSON: 关键词列表
     multi_views     TEXT,                       -- JSON: 多方观点
     related_phrases TEXT DEFAULT '[]',          -- JSON: 关联素材ID
@@ -395,6 +395,8 @@ CREATE TABLE IF NOT EXISTS hot_topics (
     exam_prediction TEXT,                       -- JSON: AI押题分析
     exam_history    TEXT DEFAULT '[]',          -- JSON: 历年考过的相关题目
     week_label      TEXT,                       -- e.g. "2026-W22"
+    source_url      TEXT,                       -- 原文链接（爬虫/导入来源）
+    original_text   TEXT,                       -- 正文全文（爬虫/导入）
     status          TEXT DEFAULT 'published',
     created_at      DATETIME DEFAULT (datetime('now'))
 );
