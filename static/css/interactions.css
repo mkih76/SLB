@@ -1,8 +1,8 @@
 /* ========================================
-   交互系统 —— 克制、有目的、不炫技
+   交互系统 —— 阳光·现代化：轻快、有反馈、不炫技
    ======================================== */
 
-/* ---- 卡片悬停 ---- */
+/* ---- 卡片悬停（微抬升） ---- */
 .card {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -20,14 +20,13 @@
   transition:
     background var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out),
     transform 80ms var(--ease-out);
 }
-.btn-primary:hover {
-  box-shadow: var(--shadow-glow-primary);
-}
+.btn-primary:hover { box-shadow: var(--shadow-glow-primary); }
 .btn-primary:active {
   transform: scale(0.97);
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
 }
 
 .btn-secondary {
@@ -40,33 +39,48 @@
 .btn-accent {
   transition:
     background var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
+    box-shadow var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
 }
-.btn-accent:hover {
-  box-shadow: var(--shadow-glow-accent);
+.btn-accent:hover { box-shadow: var(--shadow-glow-accent); }
+
+.btn-ghost {
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 /* ---- 输入框 ---- */
-.input-field {
+.input-field,
+.form-input,
+.form-select,
+.form-textarea {
   transition:
     border-color var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+    box-shadow var(--duration-normal) var(--ease-out),
+    background var(--duration-normal) var(--ease-out);
 }
-.input-field:focus {
+.input-field:focus,
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-glow-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
   outline: none;
 }
 
-/* ---- 表单验证 shake ---- */
+/* ---- 表单验证 shake（配合 .form-error / .input-error） ---- */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-4px); }
   40%, 80% { transform: translateX(4px); }
 }
-.input-error {
+.input-error,
+.form-input.error,
+.input-field.error {
   animation: shake 350ms var(--ease-out);
   border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px var(--color-error-soft) !important;
 }
 
 /* ---- 按钮加载态 ---- */
@@ -83,18 +97,21 @@
   top: 50%;
   left: 50%;
   margin: -7px 0 0 -7px;
-  border: 2px solid transparent;
-  border-top-color: currentColor;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 500ms linear infinite;
+}
+.btn-secondary.btn-loading::after,
+.btn-ghost.btn-loading::after {
+  border-color: var(--color-border-strong);
+  border-top-color: var(--color-primary);
 }
 
 /* ========================================
    滚动进场动画 —— 由 GSAP ScrollTrigger 驱动 (gsap-animations.js)
-   CSS 保留类名用于标记，初始状态由 GSAP gsap.from() 控制
+   初始状态由 GSAP gsap.from() 控制
    ======================================== */
-
-/* GSAP 驱动的 reveal 元素 — 不再需要 CSS 初始隐藏 */
 .reveal,
 .reveal-left,
 .reveal-right,
@@ -133,7 +150,7 @@ main {
    ======================================== */
 .counter {
   font-variant-numeric: tabular-nums;
-  letter-spacing: var(--tracking-tighter);
+  letter-spacing: var(--tracking-tight);
 }
 
 /* ========================================
@@ -181,11 +198,12 @@ main {
 }
 
 /* ========================================
-   焦点环 —— 键盘可访问性
+   焦点环 —— 键盘可访问性（与 main.css 全局一致）
    ======================================== */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  box-shadow: none;
 }
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {

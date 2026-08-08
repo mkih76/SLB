@@ -26,14 +26,14 @@
       <p class="text-muted">输入论点，AI 自动匹配素材生成示范段落</p>
     </div>
 
-    <div class="card reveal" style="padding: var(--space-6);">
+    <div class="card reveal p-6">
       <div class="section-title">输入信息</div>
       <div class="form-group">
-        <label class="form-label">你的论点</label>
+        <label class="form-label" for="pointInput">你的论点</label>
         <textarea class="input-field" id="pointInput" placeholder="例如：科技创新是推动高质量发展的第一动力"></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">主题</label>
+        <label class="form-label" for="themeSelect">主题</label>
         <select class="input-field" id="themeSelect">
           <option value="科技创新">科技创新</option>
           <option value="乡村振兴">乡村振兴</option>
@@ -47,7 +47,7 @@
           <option value="通用">通用</option>
         </select>
       </div>
-      <button class="btn btn-primary" style="width:100%;" id="btnGen" onclick="generate()">生成示范段落</button>
+      <button class="btn btn-primary btn-block" id="btnGen" onclick="generate()">生成示范段落</button>
     </div>
 
     <div class="loading-spinner" id="loadingSpinner">
@@ -59,7 +59,7 @@
       <div class="section-title">生成结果</div>
       <div class="result-paragraph" id="resultParagraph"></div>
       <div class="result-meta" id="resultMeta"></div>
-      <div class="used-phrases" id="usedPhrases" style="display:none;">
+      <div class="used-phrases hidden" id="usedPhrases">
         <div class="label">使用了以下素材：</div>
         <div id="phraseTags"></div>
       </div>
@@ -106,9 +106,9 @@ function renderResult(r) {
   const used = r.used_phrases || [];
   const upDiv = document.getElementById('usedPhrases');
   if (used.length) {
-    upDiv.style.display = 'block';
+    upDiv.classList.remove('hidden');
     document.getElementById('phraseTags').innerHTML = used.map(p => '<span class="phrase-tag">' + escapeHtml(p) + '</span>').join('');
-  } else { upDiv.style.display = 'none'; }
+  } else { upDiv.classList.add('hidden'); }
 }
 
 function copyText() {

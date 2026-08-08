@@ -2,39 +2,136 @@
 
 {% block title %}批改结果 - 申论帮{% endblock %}
 
+{% block extra_css %}
+<style>
+  .result-wrap { max-width: 800px; }
+
+  .back-row { margin-bottom: var(--space-6); }
+  .back-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    width: fit-content;
+  }
+  .back-link:hover { color: var(--color-primary); }
+
+  .result-heading { text-align: center; margin-bottom: var(--space-8); }
+  .result-heading h1 { font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--space-2); }
+  .result-heading p { color: var(--color-text-secondary); font-size: var(--text-sm); }
+
+  .score-card {
+    text-align: center;
+    margin-bottom: var(--space-6);
+    background: linear-gradient(180deg, var(--color-accent-light), var(--bg-800));
+    border-color: var(--color-border-accent);
+    padding: var(--space-8);
+  }
+  .score-label {
+    font-size: var(--text-xs);
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-2);
+    font-weight: var(--fw-semibold);
+  }
+  .score-value {
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-max { font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--space-2); }
+
+  .section-card { margin-bottom: var(--space-6); }
+  .section-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .section-head h3 { margin: 0; font-size: var(--text-base); }
+
+  .points-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin-bottom: var(--space-6); }
+  @media (min-width: 768px) { .points-grid { grid-template-columns: 1fr 1fr; } }
+  .points-card { border-left: 3px solid var(--color-success); }
+  .points-card.miss { border-left-color: var(--color-error); }
+  .points-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .points-head h4 { margin: 0; font-size: var(--text-sm); }
+  .points-head.hit h4 { color: var(--color-success); }
+  .points-head.miss h4 { color: var(--color-error); }
+  .points-list { padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8; list-style: disc; }
+  .points-list li { margin-bottom: 4px; }
+  .points-list .none { color: var(--color-text-muted); list-style: none; margin-left: calc(-1 * var(--space-4)); }
+
+  .feedback-text { line-height: 1.8; font-size: var(--text-sm); color: var(--color-text-secondary); white-space: pre-wrap; }
+  .answer-box {
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    padding: var(--space-4);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-gray-200);
+  }
+  .answer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2); }
+  .answer-head .left { display: flex; align-items: center; gap: var(--space-2); }
+  .answer-head h3 { margin: 0; font-size: var(--text-base); }
+  .answer-count { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+  .result-actions { display: flex; gap: var(--space-3); justify-content: center; margin-bottom: var(--space-8); flex-wrap: wrap; }
+  .result-actions .btn { padding: 12px 24px; }
+
+  .share-note { color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-4); }
+  .share-row { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .share-row .input-field { flex: 1; }
+  .share-tip { color: var(--color-text-muted); font-size: var(--text-xs); }
+
+  .feedback-card { display: none; margin-bottom: var(--space-8); border-color: var(--color-warning); }
+  .feedback-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .feedback-head h4 { margin: 0; font-size: var(--text-base); }
+  .feedback-textarea { min-height: 100px; margin-bottom: var(--space-4); }
+  .feedback-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
+
+  .dim-row { margin-bottom: var(--space-4); }
+  .dim-head { display: flex; justify-content: space-between; margin-bottom: var(--space-1); }
+  .dim-name { font-size: var(--text-sm); font-weight: 500; color: var(--color-text); }
+  .dim-score { font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--color-text-secondary); }
+  .progress-bar { height: 8px; border-radius: var(--radius-full); background: var(--color-bg-hover); overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: var(--radius-full); transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-container">
-  <div class="container" style="max-width: 800px;">
+  <div class="container result-wrap">
     <!-- 返回按钮 -->
-    <div style="margin-bottom: var(--space-6);">
-      <a href="/papers" style="color: var(--color-text-secondary); text-decoration: none; font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-1); width: fit-content;">
-        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+    <div class="back-row">
+      <a href="/papers" class="back-link">
+        <i data-lucide="arrow-left"></i>
         返回卷库
       </a>
     </div>
 
     <!-- 试卷信息 -->
-    <div class="reveal" style="text-align: center; margin-bottom: var(--space-8);">
-      <h1 id="paper-info" style="font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--space-2);">批改结果</h1>
-      <p id="question-info" style="color: var(--color-text-secondary); font-size: var(--text-sm);"></p>
+    <div class="result-heading reveal">
+      <h1 id="paper-info">批改结果</h1>
+      <p id="question-info"></p>
     </div>
 
     <!-- 得分卡片 -->
-    <div class="card reveal-scale" style="text-align: center; margin-bottom: var(--space-6); background: var(--color-accent-light); border-color: var(--color-accent);">
-      <div style="font-size: var(--text-xs); color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2);">综合得分</div>
-      <div id="total-score" style="font-size: 72px; font-weight: 700; color: var(--color-accent); line-height: 1; font-variant-numeric: tabular-nums;">
-        --
-      </div>
-      <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--space-2);">
+    <div class="card score-card reveal-scale">
+      <div class="score-label">综合得分</div>
+      <div id="total-score" class="score-value">--</div>
+      <div class="score-max">
         满分 <span id="max-score">100</span> 分
       </div>
     </div>
 
     <!-- 五维度得分 -->
-    <div class="card" style="margin-bottom: var(--space-6);">
-      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-        <i data-lucide="bar-chart-3" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
-        <h3 style="margin: 0; font-size: var(--text-base);">维度分析</h3>
+    <div class="card section-card">
+      <div class="section-head">
+        <i data-lucide="bar-chart-3" class="text-primary"></i>
+        <h3>维度分析</h3>
       </div>
       <div id="dimension-scores">
         <!-- 动态渲染 -->
@@ -42,89 +139,89 @@
     </div>
 
     <!-- 命中/遗漏要点 -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
-      <div class="card" style="border-left: 3px solid var(--color-success);">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3);">
-          <i data-lucide="check-circle" style="width: 18px; height: 18px; color: var(--color-success);"></i>
-          <h4 style="margin: 0; font-size: var(--text-sm); color: var(--color-success);">命中要点</h4>
+    <div class="points-grid">
+      <div class="card points-card">
+        <div class="points-head hit">
+          <i data-lucide="check-circle" class="text-success"></i>
+          <h4>命中要点</h4>
         </div>
-        <ul id="hit-points" style="padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8;">
-        </ul>
+        <ul id="hit-points" class="points-list"></ul>
       </div>
-      <div class="card" style="border-left: 3px solid var(--color-error);">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3);">
-          <i data-lucide="x-circle" style="width: 18px; height: 18px; color: var(--color-error);"></i>
-          <h4 style="margin: 0; font-size: var(--text-sm); color: var(--color-error);">遗漏要点</h4>
+      <div class="card points-card miss">
+        <div class="points-head miss">
+          <i data-lucide="x-circle" class="text-error"></i>
+          <h4>遗漏要点</h4>
         </div>
-        <ul id="missing-points" style="padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8;">
-        </ul>
+        <ul id="missing-points" class="points-list"></ul>
       </div>
     </div>
 
     <!-- AI 批改意见 -->
-    <div class="card" style="margin-bottom: var(--space-6);">
-      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-        <i data-lucide="message-square" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
-        <h3 style="margin: 0; font-size: var(--text-base);">AI 批改意见</h3>
+    <div class="card section-card">
+      <div class="section-head">
+        <i data-lucide="message-square" class="text-primary"></i>
+        <h3>AI 批改意见</h3>
       </div>
-      <div id="ai-feedback" style="line-height: 1.8; font-size: var(--text-sm); color: var(--color-text-secondary);">
+      <div id="ai-feedback" class="feedback-text">
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
-        <div class="skeleton skeleton-text" style="width: 60%;"></div>
+        <div class="skeleton skeleton-text w-60"></div>
       </div>
     </div>
 
     <!-- 改进建议 -->
-    <div class="card" style="margin-bottom: var(--space-6);">
-      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-        <i data-lucide="lightbulb" style="width: 18px; height: 18px; color: var(--color-accent);"></i>
-        <h3 style="margin: 0; font-size: var(--text-base);">改进建议</h3>
+    <div class="card section-card">
+      <div class="section-head">
+        <i data-lucide="lightbulb" class="text-accent"></i>
+        <h3>改进建议</h3>
       </div>
-      <div id="improving-suggestions" style="line-height: 1.8; font-size: var(--text-sm); color: var(--color-text-secondary);">
+      <div id="improving-suggestions" class="feedback-text">
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
       </div>
     </div>
 
     <!-- 用户答案 -->
-    <div class="card" style="margin-bottom: var(--space-8);">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4);">
-        <div style="display: flex; align-items: center; gap: var(--space-2);">
-          <i data-lucide="file-text" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
-          <h3 style="margin: 0; font-size: var(--text-base);">你的答案</h3>
+    <div class="card mb-8">
+      <div class="answer-head">
+        <div class="left">
+          <i data-lucide="file-text" class="text-primary"></i>
+          <h3>你的答案</h3>
         </div>
-        <span id="answer-word-count" style="font-size: var(--text-xs); color: var(--color-text-muted);"></span>
+        <span id="answer-word-count" class="answer-count"></span>
       </div>
-      <div id="user-answer" style="line-height: 1.8; white-space: pre-wrap; font-size: var(--text-sm); color: var(--color-text); padding: var(--space-4); background: var(--color-gray-50); border-radius: var(--radius-lg); border: 1px solid var(--color-gray-200);">
-      </div>
+      <div id="user-answer" class="answer-box"></div>
     </div>
 
     <!-- 操作按钮 -->
-    <div style="display: flex; gap: var(--space-3); justify-content: center; margin-bottom: var(--space-8);">
-      <button class="btn btn-accent" onclick="shareResult()" style="padding: 12px 24px;">
-        <i data-lucide="share-2" style="width: 16px; height: 16px;"></i>
+    <div class="result-actions">
+      <button class="btn btn-accent" onclick="shareResult()">
+        <i data-lucide="share-2"></i>
         分享结果
       </button>
-      <button class="btn btn-secondary" onclick="submitFeedback()" style="padding: 12px 24px;">
-        <i data-lucide="flag" style="width: 16px; height: 16px;"></i>
+      <button class="btn btn-secondary" onclick="submitFeedback()">
+        <i data-lucide="flag"></i>
         认为批改有误？
       </button>
-      <a href="/papers" class="btn btn-primary" style="padding: 12px 24px;">
-        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+      <a href="/papers" class="btn btn-primary">
+        <i data-lucide="arrow-right"></i>
         继续练习
       </a>
     </div>
 
     <!-- 分享模态框 -->
-    <div class="modal-overlay" id="share-modal" style="display:none;">
+    <div class="modal-overlay hidden" id="share-modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
       <div class="modal-box">
-        <h3>分享批改结果</h3>
-        <p style="color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-4);">复制下方链接，分享给好友查看你的批改结果：</p>
-        <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <input type="text" id="share-url" class="input-field" readonly style="flex: 1;">
+        <div class="modal-header">
+          <h3 id="share-title" class="modal-title">分享批改结果</h3>
+          <button class="modal-close" onclick="closeShareModal()" aria-label="关闭">&times;</button>
+        </div>
+        <p class="share-note">复制下方链接，分享给好友查看你的批改结果：</p>
+        <div class="share-row">
+          <input type="text" id="share-url" class="input-field" readonly>
           <button class="btn btn-primary" onclick="copyShareUrl()">复制</button>
         </div>
-        <p style="color: var(--color-text-muted); font-size: var(--text-xs);">分享链接30天内有效，任何人都可以查看批改结果（不含你的答案内容）</p>
+        <p class="share-tip">分享链接30天内有效，任何人都可以查看批改结果（不含你的答案内容）</p>
         <div class="modal-actions">
           <button class="btn btn-destructive" onclick="revokeShare()">撤销分享</button>
           <button class="btn btn-ghost" onclick="closeShareModal()">关闭</button>
@@ -133,14 +230,14 @@
     </div>
 
     <!-- 纠错表单 -->
-    <div id="feedback-form" class="card" style="display: none; margin-bottom: var(--space-8); border-color: var(--color-warning);">
-      <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: var(--color-warning);"></i>
-        <h4 style="margin: 0; font-size: var(--text-base);">提交纠错</h4>
+    <div id="feedback-form" class="card feedback-card">
+      <div class="feedback-head">
+        <i data-lucide="alert-triangle" class="text-warning"></i>
+        <h4>提交纠错</h4>
       </div>
-      <textarea id="feedback-text" class="input-field" style="min-height: 100px; margin-bottom: var(--space-4);"
+      <textarea id="feedback-text" class="input-field feedback-textarea"
         placeholder="请说明你认为批改有误的原因..."></textarea>
-      <div style="display: flex; gap: var(--space-2); justify-content: flex-end;">
+      <div class="feedback-actions">
         <button class="btn btn-secondary" onclick="document.getElementById('feedback-form').style.display='none'">取消</button>
         <button class="btn btn-primary" onclick="sendFeedback()">提交反馈</button>
       </div>
@@ -236,12 +333,12 @@
         const color = colors[index % colors.length];
 
         return `
-          <div style="margin-bottom: var(--space-4);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1);">
-              <span style="font-size: var(--text-sm); font-weight: 500; color: var(--color-text);">${escapeHtml(key)}</span>
-              <span style="font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--color-text-secondary);">${escapeHtml(String(value))}/${max}</span>
+          <div class="dim-row">
+            <div class="dim-head">
+              <span class="dim-name">${escapeHtml(key)}</span>
+              <span class="dim-score">${escapeHtml(String(value))}/${max}</span>
             </div>
-            <div class="progress-bar" style="height: 8px;">
+            <div class="progress-bar">
               <div class="progress-bar-fill" style="width: ${pct}%; background: ${color};"></div>
             </div>
           </div>
@@ -268,14 +365,14 @@
     // 命中要点
     const hitPoints = data.hit_points ? (typeof data.hit_points === 'string' ? JSON.parse(data.hit_points) : data.hit_points) : [];
     document.getElementById('hit-points').innerHTML = hitPoints.length > 0
-      ? hitPoints.map(p => `<li style="margin-bottom: 4px;">${escapeHtml(p)}</li>`).join('')
-      : '<li style="color: var(--color-text-muted);">无</li>';
+      ? hitPoints.map(p => `<li>${escapeHtml(p)}</li>`).join('')
+      : '<li class="none">无</li>';
 
     // 遗漏要点
     const missingPoints = data.missing_points ? (typeof data.missing_points === 'string' ? JSON.parse(data.missing_points) : data.missing_points) : [];
     document.getElementById('missing-points').innerHTML = missingPoints.length > 0
-      ? missingPoints.map(p => `<li style="margin-bottom: 4px;">${escapeHtml(p)}</li>`).join('')
-      : '<li style="color: var(--color-text-muted);">无</li>';
+      ? missingPoints.map(p => `<li>${escapeHtml(p)}</li>`).join('')
+      : '<li class="none">无</li>';
 
     // AI 反馈
     document.getElementById('ai-feedback').textContent = data.ai_feedback || '暂无反馈';

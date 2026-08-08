@@ -34,6 +34,12 @@
   .dist-legend { display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-5); }
   .dist-legend span { display: flex; align-items: center; gap: var(--space-1); }
   .dist-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dist-dot-error { background: var(--color-error); }
+  .dist-dot-warning { background: var(--color-warning); }
+  .dist-dot-primary { background: var(--color-primary); }
+  .dist-dot-success { background: var(--color-success); }
+  .done-icon { width: 48px; height: 48px; color: var(--color-success); margin-bottom: var(--space-3); }
+  .pack-empty-icon { width: 40px; height: 40px; color: var(--color-gray-300); margin-bottom: var(--space-2); }
   .pack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-8); }
   .pack-card { padding: var(--space-4); cursor: pointer; transition: all 0.2s; }
   .pack-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
@@ -51,32 +57,32 @@
     </div>
 
     <div class="stats-bar reveal" id="statsBar">
-      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statDue">-</div><div class="stat-label">今日待学</div></div>
-      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statMastered">-</div><div class="stat-label">已掌握</div></div>
-      <div class="stat-item glass" style="padding: var(--space-4) var(--space-6);"><div class="stat-num" id="statTotal">-</div><div class="stat-label">总库存</div></div>
+      <div class="stat-item glass px-6 py-4"><div class="stat-num" id="statDue">-</div><div class="stat-label">今日待学</div></div>
+      <div class="stat-item glass px-6 py-4"><div class="stat-num" id="statMastered">-</div><div class="stat-label">已掌握</div></div>
+      <div class="stat-item glass px-6 py-4"><div class="stat-num" id="statTotal">-</div><div class="stat-label">总库存</div></div>
     </div>
 
-    <div id="distSection" style="display:none;" class="reveal">
+    <div id="distSection" class="hidden reveal">
       <div class="section-title">掌握度分布</div>
       <div class="dist-bar" id="distBar"></div>
       <div class="dist-legend">
-        <span><span class="dist-dot" style="background:var(--color-error);"></span> 新学</span>
-        <span><span class="dist-dot" style="background:var(--color-warning);"></span> 认识</span>
-        <span><span class="dist-dot" style="background:var(--color-primary);"></span> 熟悉</span>
-        <span><span class="dist-dot" style="background:var(--color-success);"></span> 掌握</span>
+        <span><span class="dist-dot dist-dot-error"></span> 新学</span>
+        <span><span class="dist-dot dist-dot-warning"></span> 认识</span>
+        <span><span class="dist-dot dist-dot-primary"></span> 熟悉</span>
+        <span><span class="dist-dot dist-dot-success"></span> 掌握</span>
       </div>
     </div>
 
     <div class="section-title reveal">今日学习</div>
     <div class="card-area" id="cardArea"><div class="empty-card"><div class="spinner"></div></div></div>
-    <div style="text-align:center; margin-bottom:var(--space-8);">
+    <div class="text-center mb-8">
       <button class="btn btn-secondary" onclick="loadCards()">换一批</button>
     </div>
 
     <div class="section-title reveal">素材包</div>
     <div class="pack-grid reveal-stagger" id="packGrid"></div>
 
-    <div style="text-align:center; margin: var(--space-8) 0;" class="reveal">
+    <div class="text-center my-8 reveal">
       <a href="/phrases/generate" class="btn btn-accent btn-lg">AI 造段 - 输入论点生成示范段落</a>
     </div>
   </div>
@@ -120,9 +126,9 @@ function renderCard() {
   const area = document.getElementById('cardArea');
   if (!cards.length || cardIdx >= cards.length) {
     area.innerHTML = '<div class="card empty-card">' +
-      '<i data-lucide="check-circle" style="width:48px;height:48px;color:var(--color-success);margin-bottom:var(--space-3);"></i>' +
-      '<p style="font-size:var(--text-base);font-weight:600;">今日素材已全部学完</p>' +
-      '<p class="text-caption" style="margin-bottom:var(--space-4);">坚持每天学习，积累申论素材</p>' +
+      '<i data-lucide="check-circle" class="done-icon"></i>' +
+      '<p class="text-base font-semibold">今日素材已全部学完</p>' +
+      '<p class="text-caption mb-4">坚持每天学习，积累申论素材</p>' +
       '<a href="/phrases/generate" class="btn btn-primary btn-sm">试试 AI 造段</a></div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
@@ -159,9 +165,9 @@ async function loadPacks() {
   const grid = document.getElementById('packGrid');
   const items = data.data?.items || [];
   if (!items.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:var(--space-6);">' +
-      '<i data-lucide="package" style="width:40px;height:40px;color:var(--color-gray-300);margin-bottom:var(--space-2);"></i>' +
-      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);">素材包正在准备中，请先体验 AI 造段功能</p></div>';
+    grid.innerHTML = '<div class="text-center col-span-full p-6">' +
+      '<i data-lucide="package" class="pack-empty-icon"></i>' +
+      '<p class="text-sm text-muted">素材包正在准备中，请先体验 AI 造段功能</p></div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }

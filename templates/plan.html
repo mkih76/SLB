@@ -4,6 +4,12 @@
 {% block extra_css %}
 <style>
   .plan-container { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .form-group.flex1 { flex: 1; }
+  .btn-wide { width: 100%; }
+  .task-summary { font-size: var(--text-sm); font-weight: var(--weight-normal); color: var(--color-text-muted); }
+  .center-actions { text-align: center; margin-top: var(--space-5); }
+  .task-empty { text-align: center; padding: var(--space-10); color: var(--color-text-muted); }
+  .week-empty { font-size: var(--text-xs); }
   .plan-header { text-align: center; margin-bottom: var(--space-8); }
   .plan-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
   .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
@@ -65,22 +71,22 @@
 
     <div id="loadingState" class="empty-state"><div class="spinner"></div></div>
 
-    <div id="createView" style="display:none;">
+    <div id="createView" class="hidden">
       <div class="card create-form reveal">
         <div class="section-title">创建备考计划</div>
         <div class="form-row">
-          <div class="form-group" style="flex:1;"><label class="form-label">计划名称</label><input type="text" class="input-field" id="planName" placeholder="例如：2026国考冲刺" value="我的备考计划"></div>
-          <div class="form-group" style="flex:1;"><label class="form-label">考试类型</label><select class="input-field" id="examType"><option value="guokao">国考</option><option value="shengkao">省考</option><option value="xuandiao">选调</option></select></div>
+          <div class="form-group"><label class="form-label" for="planName">计划名称</label><input type="text" class="input-field" id="planName" placeholder="例如：2026国考冲刺" value="我的备考计划"></div>
+          <div class="form-group"><label class="form-label" for="examType">考试类型</label><select class="input-field" id="examType"><option value="guokao">国考</option><option value="shengkao">省考</option><option value="xuandiao">选调</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="flex:1;"><label class="form-label">考试日期</label><input type="date" class="input-field" id="examDate"></div>
-          <div class="form-group" style="flex:1;"><label class="form-label">每天学习时间（分钟）</label><input type="number" class="input-field" id="dailyMinutes" value="120" min="30" max="480"></div>
+          <div class="form-group"><label class="form-label" for="examDate">考试日期</label><input type="date" class="input-field" id="examDate"></div>
+          <div class="form-group"><label class="form-label" for="dailyMinutes">每天学习时间（分钟）</label><input type="number" class="input-field" id="dailyMinutes" value="120" min="30" max="480"></div>
         </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="createPlan()">生成备考计划</button>
+        <button class="btn btn-primary btn-block" onclick="createPlan()">生成备考计划</button>
       </div>
     </div>
 
-    <div id="planView" style="display:none;">
+    <div id="planView" class="hidden">
       <div class="overview-card reveal glass-glow">
         <div class="overview-top"><div class="overview-title" id="planTitle">--</div><div class="countdown" id="countdown">--<small> 天</small></div></div>
         <div class="overview-stats">
@@ -95,13 +101,13 @@
       <div class="section-title reveal">阶段进度</div>
       <div class="phase-bar reveal" id="phaseBar"></div>
 
-      <div class="section-title reveal">今日任务 <span id="taskSummary" style="font-size:var(--text-sm);font-weight:var(--weight-normal);color:var(--color-text-muted);"></span></div>
+      <div class="section-title reveal">今日任务 <span id="taskSummary" class="text-sm font-normal text-muted"></span></div>
       <div class="task-list reveal-stagger" id="taskList"></div>
 
       <div class="section-title reveal">本周进度</div>
       <div class="week-grid reveal" id="weekGrid"></div>
 
-      <div style="text-align:center; margin-top: var(--space-5);" class="reveal">
+      <div class="text-center mt-5 reveal">
         <button class="btn btn-secondary" onclick="pauseResume()">暂停/恢复计划</button>
       </div>
     </div>
@@ -127,20 +133,20 @@ async function init() {
       await loadTodayTasks();
     } else {
       document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('createView').style.display = 'block';
+      document.getElementById('createView').classList.remove('hidden');
       const d = new Date(); d.setMonth(d.getMonth() + 3);
       document.getElementById('examDate').value = d.toISOString().split('T')[0];
     }
   } catch (e) {
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('createView').style.display = 'block';
+    document.getElementById('createView').classList.remove('hidden');
   }
 }
 
 function renderPlan(plan) {
   document.getElementById('loadingState').style.display = 'none';
-  document.getElementById('createView').style.display = 'none';
-  document.getElementById('planView').style.display = 'block';
+  document.getElementById('createView').classList.add('hidden');
+  document.getElementById('planView').classList.remove('hidden');
   document.getElementById('planTitle').textContent = plan.plan_name + ' · ' + plan.exam_type_name;
   document.getElementById('countdown').innerHTML = plan.days_remaining + '<small> 天</small>';
   document.getElementById('streakDays').textContent = plan.streak_days;
@@ -166,7 +172,7 @@ async function loadTodayTasks() {
   const completed = data.data.completed || 0;
   document.getElementById('taskSummary').textContent = completed + '/' + tasks.length + ' 完成';
   const list = document.getElementById('taskList');
-  if (!tasks.length) { list.innerHTML = '<div style="text-align:center;padding:var(--space-10);color:var(--color-text-muted);">今日暂无任务</div>'; return; }
+  if (!tasks.length) { list.innerHTML = '<div class="task-empty">今日暂无任务</div>'; return; }
   list.innerHTML = tasks.map(t => {
     const badgeCls = 'badge-' + t.task_type;
     const statusCls = t.status === 'completed' ? ' completed' : t.status === 'skipped' ? ' skipped' : '';
@@ -174,7 +180,7 @@ async function loadTodayTasks() {
     const actionBtns = t.status === 'pending' ?
       '<button class="btn btn-primary btn-sm" onclick="startTask(\'' + t.task_type + '\')">开始</button>' +
       '<button class="btn btn-secondary btn-sm" onclick="skipTask(' + t.task_id + ')">跳过</button>' :
-      t.status === 'completed' ? '<span class="text-sm" style="color:var(--color-success);">已完成</span>' :
+      t.status === 'completed' ? '<span class="text-sm text-success">已完成</span>' :
       '<span class="text-sm text-muted">已跳过</span>';
     return '<div class="card task-item' + statusCls + '">' +
       '<div class="task-check" onclick="completeTask(' + t.task_id + ')">' + checkMark + '</div>' +
@@ -195,7 +201,7 @@ async function renderWeekProgress() {
     const res = await fetch(API + '/week-progress', {headers: headers()});
     const data = await res.json();
     if (data.error || !data.data) {
-      grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">暂无数据</div>';
+      grid.innerHTML = '<div class="week-empty text-muted">暂无数据</div>';
       return;
     }
     grid.innerHTML = data.data.map(d => {
@@ -209,7 +215,7 @@ async function renderWeekProgress() {
       return '<div class="' + cls + '"><div class="day-label">' + d.weekday + '</div><div class="day-status">' + status + '</div></div>';
     }).join('');
   } catch(e) {
-    grid.innerHTML = '<div class="text-muted" style="font-size:var(--text-xs);">加载失败</div>';
+    grid.innerHTML = '<div class="week-empty text-muted">加载失败</div>';
   }
 }
 
@@ -219,12 +225,20 @@ async function createPlan() {
   const examDate = document.getElementById('examDate').value;
   const dailyMinutes = parseInt(document.getElementById('dailyMinutes').value) || 120;
   if (!examDate) { showToast('请选择考试日期', 'error'); return; }
-  const res = await fetch(API + '/create', { method: 'POST', headers: headers(), body: JSON.stringify({plan_name: planName, exam_type: examType, exam_date: examDate, daily_minutes: dailyMinutes}) });
-  const data = await res.json();
-  if (data.error) { showToast(data.error, 'error'); return; }
-  activePlan = data.data;
-  renderPlan(data.data);
-  await loadTodayTasks();
+  const btn = event.target.closest('button');
+  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); }
+  try {
+    const res = await fetch(API + '/create', { method: 'POST', headers: headers(), body: JSON.stringify({plan_name: planName, exam_type: examType, exam_date: examDate, daily_minutes: dailyMinutes}) });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, 'error'); return; }
+    activePlan = data.data;
+    renderPlan(data.data);
+    await loadTodayTasks();
+  } catch (e) {
+    showToast('创建失败：' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); }
+  }
 }
 
 async function completeTask(taskId) {

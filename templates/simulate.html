@@ -89,6 +89,9 @@
   .modal-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
   .result-panel { max-width: 800px; margin: 80px auto 40px; padding: 0 var(--space-6); }
   .result-card { background: var(--color-bg-elevated); border-radius: var(--radius-2xl); padding: var(--space-8); margin-bottom: var(--space-5); box-shadow: var(--shadow-card); }
+  .result-table-title { margin-bottom: var(--space-4); font-size: var(--text-base); color: var(--color-primary); }
+  .result-actions-bar { text-align: center; margin-top: var(--space-6); display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+  .result-pct { font-weight: 600; }
   .result-header { text-align: center; margin-bottom: var(--space-6); }
   .result-score { font-size: 64px; font-weight: var(--weight-bold); color: var(--color-primary); }
   .result-max { font-size: var(--text-lg); color: var(--color-text-muted); }
@@ -115,7 +118,7 @@
   <p class="text-muted">正在加载试卷...</p>
 </div>
 
-<div class="sim-body" id="simBody" style="display:none;">
+<div class="sim-body hidden" id="simBody">
   <div class="material-panel" id="materialPanel">
     <h3>给定材料</h3>
     <div id="materialContent"></div>
@@ -123,12 +126,12 @@
   <div class="answer-panel" id="answerPanel"></div>
 </div>
 
-<div class="q-nav" id="qNav" style="display:none;">
+<div class="q-nav hidden" id="qNav">
   <div class="q-nav-title">题目导航</div>
   <div class="q-nav-grid" id="qNavGrid"></div>
 </div>
 
-<div class="modal-overlay" id="submitModal" style="display:none;">
+<div class="modal-overlay hidden" id="submitModal">
   <div class="modal-box">
     <h3>确认交卷？</h3>
     <p id="submitSummary">你还有 X 题未作答，确定要交卷吗？交卷后无法修改。</p>
@@ -139,7 +142,7 @@
   </div>
 </div>
 
-<div class="result-panel" id="resultPanel" style="display:none;"></div>
+<div class="result-panel hidden" id="resultPanel"></div>
 {% endblock %}
 
 {% block extra_js %}
@@ -304,18 +307,18 @@ function renderResult(result) {
     '<div class="result-score">' + (result.total_score || 0) + '</div>' +
     '<div class="result-max">/ ' + (result.total_max || 0) + ' 分</div>' +
     '<div class="result-meta"><span>用时：' + timeMin + '分' + timeSec + '秒</span><span>' + rankText + '</span></div></div></div>';
-  html += '<div class="result-card"><h3 style="margin-bottom:var(--space-4);font-size:var(--text-base);color:var(--color-primary);">各题得分</h3>';
+  html += '<div class="result-card"><h3 class="result-table-title">各题得分</h3>';
   html += '<table class="result-table"><thead><tr><th>题号</th><th>得分</th><th>满分</th><th>得分率</th></tr></thead><tbody>';
   (result.results || []).forEach((r, idx) => {
     const pct = r.max_score > 0 ? Math.round(r.score / r.max_score * 100) : 0;
     const color = pct >= 75 ? 'var(--color-success)' : pct >= 50 ? 'var(--color-warning)' : 'var(--color-error)';
     html += '<tr><td>第' + (idx+1) + '题</td><td>' + r.score + '</td><td>' + r.max_score + '</td>' +
-      '<td><span style="color:' + color + ';font-weight:600;">' + pct + '%</span>' +
+      '<td><span class="result-pct" style="color:' + color + ';">' + pct + '%</span>' +
       '<span class="score-bar"><span class="score-bar-fill" style="width:' + pct + '%;background:' + color + '"></span></span></td></tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div style="text-align:center;margin-top:var(--space-6);">' +
-    '<a href="/papers" class="btn btn-primary" style="margin-right:var(--space-3);">返回卷库</a>' +
+  html += '<div class="result-actions-bar">' +
+    '<a href="/papers" class="btn btn-primary">返回卷库</a>' +
     '<a href="/diagnosis" class="btn btn-accent">查看诊断报告</a></div>';
   panel.innerHTML = html;
 }

@@ -78,6 +78,11 @@ def create_app():
     def demo():
         return render_template('demo.html')
 
+    @app.route('/__design-system')
+    def design_system():
+        """设计系统演示页：渲染全部组件，用于视觉验证（不进入正式导航）"""
+        return render_template('design_system.html')
+
     @app.route('/drill')
     def drill():
         return render_template('drill.html')

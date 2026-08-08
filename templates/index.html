@@ -2,31 +2,97 @@
 
 {% block title %}申论帮 - AI智能批改平台{% endblock %}
 
-{% block content %}
-<!-- Hero — left-aligned split, dark canvas -->
-<section class="hero" style="padding: var(--sp-24) 0 var(--sp-20); position: relative; overflow: hidden; background: var(--color-bg);">
-  <!-- Subtle gradient mesh -->
-  <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(94,106,210,0.08) 0%, transparent 40%, rgba(158,57,229,0.05) 100%); pointer-events: none;"></div>
-  <div style="position: absolute; top: -40%; right: -15%; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(113,112,255,0.06) 0%, transparent 70%); pointer-events: none;"></div>
+{% block extra_css %}
+<style>
+  /* 首页专用样式（落地页布局，非通用组件） */
+  .hero {
+    padding: var(--sp-24) 0 var(--sp-20);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f0f9ff 0%, var(--color-bg) 100%);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.10) 0%, transparent 40%, rgba(139, 92, 246, 0.08) 100%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -15%;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; z-index: 1; max-width: 620px; }
+  .hero h1 {
+    font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    margin-bottom: var(--sp-5);
+    color: var(--color-text);
+  }
+  .hero h1 .hl { background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+  .hero .lead {
+    font-size: var(--text-lg);
+    color: var(--color-text-tertiary);
+    max-width: 480px;
+    line-height: 1.65;
+    margin-bottom: var(--sp-8);
+  }
 
-  <div class="container" style="position: relative; z-index: 1;">
-    <div style="max-width: 600px;">
-      <div class="badge badge-neutral" style="margin-bottom: var(--sp-6);">
+  .stats-strip {
+    background: var(--color-bg-panel);
+    border-bottom: 1px solid var(--color-border-subtle);
+    padding: var(--sp-6) 0;
+  }
+
+  .features-section { background: var(--color-bg-panel); }
+  .feature-card { padding: var(--sp-8); }
+  .feature-card .icon-circle { margin-bottom: var(--sp-4); }
+  .feature-card h3 { margin-bottom: var(--sp-2); }
+  .feature-card p { margin-bottom: 0; }
+  .feature-wide {
+    padding: var(--sp-8);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+  .feature-row-gap { margin-bottom: var(--sp-4); }
+
+  .cta-box h2 { color: var(--color-text); margin-bottom: var(--sp-3); }
+  .cta-box > p { color: var(--color-text-tertiary); margin-bottom: var(--sp-8); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="badge badge-neutral mb-6">
         AI 驱动 · 393 套真题 · 五维度批改
       </div>
-      <h1 style="font-size: clamp(2.25rem, 4.5vw, 3.5rem); font-weight: 700; letter-spacing: -1.5px; line-height: 1.05; margin-bottom: var(--sp-5); color: var(--color-text);">
-        申论<span style="color: var(--color-primary);">帮</span>
+      <h1 class="reveal">
+        申论<span class="hl">帮</span>
       </h1>
-      <p class="reveal" style="font-size: var(--text-lg); color: var(--color-text-tertiary); max-width: 480px; line-height: 1.65; margin-bottom: var(--sp-8);">
+      <p class="lead reveal">
         AI 智能批改, 五题型专项训练, 全真模拟考场。科学备考，精准提分。
       </p>
       <div class="flex gap-3 reveal">
         <a href="/papers" class="btn btn-primary btn-lg">
-          <i data-lucide="book-open" style="width: 18px; height: 18px;"></i>
+          <i data-lucide="book-open"></i>
           开始练习
         </a>
         <a href="/demo" class="btn btn-ghost btn-lg">
-          <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
+          <i data-lucide="play-circle"></i>
           免注册试用
         </a>
       </div>
@@ -34,31 +100,31 @@
   </div>
 </section>
 
-<!-- Stats bar — KPI style -->
-<section style="background: var(--color-bg-panel); border-bottom: 1px solid var(--color-border-subtle); padding: var(--sp-6) 0;">
+<!-- Stats bar -->
+<section class="stats-strip">
   <div class="container">
-    <div class="kpi-row reveal-stagger" style="max-width: 640px; margin: 0 auto;">
+    <div class="kpi-row reveal-stagger mx-auto max-w-640">
       <div class="stat-item">
-        <div class="stat-value" style="color: var(--color-text);">393</div>
+        <div class="stat-value">393</div>
         <div class="stat-label">套真题</div>
       </div>
       <div class="stat-item">
-        <div class="stat-value" style="color: var(--color-text);">34</div>
+        <div class="stat-value">34</div>
         <div class="stat-label">个地区</div>
       </div>
       <div class="stat-item">
-        <div class="stat-value" style="color: var(--color-text);">271</div>
+        <div class="stat-value">271</div>
         <div class="stat-label">万字</div>
       </div>
       <div class="stat-item">
-        <div class="stat-value" style="color: var(--color-primary);">5</div>
+        <div class="stat-value text-primary">5</div>
         <div class="stat-label">维度批改</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Learning loop — stepped flow -->
+<!-- Learning loop -->
 <section class="section">
   <div class="container">
     <div class="section-header centered reveal">
@@ -81,7 +147,7 @@
       </div>
       {% if not loop.last %}
       <div class="step-divider">
-        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+        <i data-lucide="chevron-right"></i>
       </div>
       {% endif %}
       {% endfor %}
@@ -89,8 +155,8 @@
   </div>
 </section>
 
-<!-- Features — asymmetric grid (2+1+2+1) -->
-<section class="section" style="background: var(--color-bg-panel);">
+<!-- Features -->
+<section class="section features-section">
   <div class="container">
     <div class="section-header centered reveal">
       <h2>核心功能</h2>
@@ -98,62 +164,62 @@
     </div>
 
     <!-- Row 1: 2 cards -->
-    <div class="grid grid-2 reveal-stagger" style="margin-bottom: var(--sp-4);">
-      <div class="card" style="padding: var(--sp-8);">
-        <div class="icon-circle primary" style="margin-bottom: var(--sp-4);">
-          <i data-lucide="target" style="width: 24px; height: 24px;"></i>
+    <div class="grid grid-2 reveal-stagger feature-row-gap">
+      <div class="card feature-card">
+        <div class="icon-circle primary">
+          <i data-lucide="target"></i>
         </div>
-        <h3 style="margin-bottom: var(--sp-2);">五题型专项训练</h3>
-        <p class="text-sm text-secondary" style="margin-bottom: 0;">归纳概括、综合分析、提出对策、贯彻执行、大作文，每种题型独立计分</p>
+        <h3>五题型专项训练</h3>
+        <p class="text-sm text-secondary">归纳概括、综合分析、提出对策、贯彻执行、大作文，每种题型独立计分</p>
       </div>
-      <div class="card" style="padding: var(--sp-8);">
-        <div class="icon-circle accent" style="margin-bottom: var(--sp-4);">
-          <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+      <div class="card feature-card">
+        <div class="icon-circle accent">
+          <i data-lucide="sparkles"></i>
         </div>
-        <h3 style="margin-bottom: var(--sp-2);">AI 多维度批改</h3>
-        <p class="text-sm text-secondary" style="margin-bottom: 0;">踩点命中、逻辑结构、语言表达、格式规范、字数控制，五维度融合评分</p>
+        <h3>AI 多维度批改</h3>
+        <p class="text-sm text-secondary">踩点命中、逻辑结构、语言表达、格式规范、字数控制，五维度融合评分</p>
       </div>
     </div>
 
     <!-- Row 2: 1 wide card -->
-    <div class="reveal" style="margin-bottom: var(--sp-4);">
-      <div class="card-featured" style="padding: var(--sp-8); display: grid; grid-template-columns: 1fr; gap: var(--sp-6); align-items: center;">
+    <div class="reveal feature-row-gap">
+      <div class="card-featured feature-wide">
         <div>
-          <div class="icon-circle primary" style="margin-bottom: var(--sp-4);">
-            <i data-lucide="timer" style="width: 24px; height: 24px;"></i>
+          <div class="icon-circle primary">
+            <i data-lucide="timer"></i>
           </div>
-          <h3 style="margin-bottom: var(--sp-2);">全真模拟考场</h3>
-          <p class="text-sm text-secondary" style="margin-bottom: 0;">限时倒计时、逐题作答、自动交卷、即时出分，模拟真实考试压力</p>
+          <h3>全真模拟考场</h3>
+          <p class="text-sm text-secondary">限时倒计时、逐题作答、自动交卷、即时出分，模拟真实考试压力</p>
         </div>
       </div>
     </div>
 
     <!-- Row 3: 2 cards -->
-    <div class="grid grid-2 reveal-stagger" style="margin-bottom: var(--sp-4);">
-      <div class="card" style="padding: var(--sp-8);">
-        <div class="icon-circle primary" style="margin-bottom: var(--sp-4);">
-          <i data-lucide="bar-chart-3" style="width: 24px; height: 24px;"></i>
+    <div class="grid grid-2 reveal-stagger feature-row-gap">
+      <div class="card feature-card">
+        <div class="icon-circle primary">
+          <i data-lucide="bar-chart-3"></i>
         </div>
-        <h3 style="margin-bottom: var(--sp-2);">能力诊断报告</h3>
-        <p class="text-sm text-secondary" style="margin-bottom: 0;">五维度雷达图、强弱项分析、个性化推荐建议</p>
+        <h3>能力诊断报告</h3>
+        <p class="text-sm text-secondary">五维度雷达图、强弱项分析、个性化推荐建议</p>
       </div>
-      <div class="card" style="padding: var(--sp-8);">
-        <div class="icon-circle accent" style="margin-bottom: var(--sp-4);">
-          <i data-lucide="repeat" style="width: 24px; height: 24px;"></i>
+      <div class="card feature-card">
+        <div class="icon-circle accent">
+          <i data-lucide="repeat"></i>
         </div>
-        <h3 style="margin-bottom: var(--sp-2);">素材智能应用</h3>
-        <p class="text-sm text-secondary" style="margin-bottom: 0;">间隔重复记忆、主题素材包、AI 造段功能，背了会用才是真掌握</p>
+        <h3>素材智能应用</h3>
+        <p class="text-sm text-secondary">间隔重复记忆、主题素材包、AI 造段功能，背了会用才是真掌握</p>
       </div>
     </div>
 
     <!-- Row 4: 1 wide card -->
     <div class="reveal">
-      <div class="card" style="padding: var(--sp-8);">
-        <div class="icon-circle primary" style="margin-bottom: var(--sp-4);">
-          <i data-lucide="calendar-check" style="width: 24px; height: 24px;"></i>
+      <div class="card feature-card">
+        <div class="icon-circle primary">
+          <i data-lucide="calendar-check"></i>
         </div>
-        <h3 style="margin-bottom: var(--sp-2);">备考计划引擎</h3>
-        <p class="text-sm text-secondary" style="margin-bottom: 0;">根据目标日期和薄弱项自动生成每日任务，科学分配练习量</p>
+        <h3>备考计划引擎</h3>
+        <p class="text-sm text-secondary">根据目标日期和薄弱项自动生成每日任务，科学分配练习量</p>
       </div>
     </div>
   </div>
@@ -163,8 +229,8 @@
 <section class="section">
   <div class="container">
     <div class="cta-box reveal">
-      <h2 style="color: var(--color-text); margin-bottom: var(--sp-3);">准备好开始了吗?</h2>
-      <p style="color: var(--color-text-tertiary); margin-bottom: var(--sp-8);">免费试用，无需注册</p>
+      <h2>准备好开始了吗?</h2>
+      <p>免费试用，无需注册</p>
       <a href="/demo" class="btn btn-primary btn-lg">
         立即试用
       </a>

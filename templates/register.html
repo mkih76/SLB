@@ -2,61 +2,121 @@
 
 {% block title %}注册 - 申论帮{% endblock %}
 
+{% block extra_css %}
+<style>
+  .auth-shell {
+    min-height: calc(100vh - var(--navbar-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    background: linear-gradient(180deg, #f0f9ff 0%, var(--color-bg) 60%);
+  }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-xl);
+    background: var(--gradient-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.3);
+  }
+  .auth-heading { text-align: center; margin-bottom: var(--space-8); }
+  .auth-heading h1 { font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-2); }
+  .auth-heading p { color: var(--color-text-secondary); font-size: var(--text-sm); }
+  .auth-form-card { padding: var(--space-8); }
+  .auth-footer { margin-top: var(--space-6); text-align: center; }
+  .auth-footer p { font-size: var(--text-sm); color: var(--color-text-secondary); }
+  .auth-footer a { color: var(--color-primary); font-weight: 500; }
+  .password-wrap { position: relative; }
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .password-toggle:hover { color: var(--color-text); }
+  .auth-error {
+    display: none;
+    color: var(--color-error);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-error-soft);
+    border-radius: var(--radius-md);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="min-height: calc(100vh - var(--navbar-height)); display: flex; align-items: center; justify-content: center; padding: var(--space-6);">
-  <div style="width: 100%; max-width: 400px;">
+<div class="auth-shell">
+  <div class="auth-card">
     <!-- Logo -->
-    <div style="text-align: center; margin-bottom: var(--space-8);">
-      <div style="width: 48px; height: 48px; border-radius: var(--radius-xl); background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); font-size: var(--text-xl); font-weight: 700;">
-        申
-      </div>
-      <h1 style="font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-2);">注册申论帮</h1>
-      <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">创建账号，开始高效备考</p>
+    <div class="auth-heading">
+      <div class="auth-logo">申</div>
+      <h1>注册申论帮</h1>
+      <p>创建账号，开始高效备考</p>
     </div>
 
     <!-- 注册表单 -->
-    <div class="card" style="padding: var(--space-8);">
+    <div class="card auth-form-card">
       <form id="register-form" onsubmit="handleRegister(event)">
         <div class="form-group">
-          <label class="form-label">用户名</label>
+          <label class="form-label" for="username">用户名</label>
           <input type="text" id="username" name="username" class="input-field" placeholder="3-20位字母数字" required autofocus>
+          <p id="username-error" class="form-error hidden" role="alert"></p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">昵称</label>
+          <label class="form-label" for="nickname">昵称</label>
           <input type="text" id="nickname" name="nickname" class="input-field" placeholder="显示名称（可选）">
         </div>
 
         <div class="form-group">
-          <label class="form-label">密码</label>
-          <div style="position: relative;">
+          <label class="form-label" for="password">密码</label>
+          <div class="password-wrap">
             <input type="password" id="password" name="password" class="input-field" placeholder="至少6位" required minlength="6">
-            <button type="button" onclick="togglePassword('password')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px;">
-              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            <button type="button" onclick="togglePassword('password')" class="password-toggle" aria-label="显示/隐藏密码">
+              <i data-lucide="eye"></i>
             </button>
           </div>
+          <p id="password-error" class="form-error hidden" role="alert"></p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">确认密码</label>
-          <div style="position: relative;">
+          <label class="form-label" for="confirm-password">确认密码</label>
+          <div class="password-wrap">
             <input type="password" id="confirm-password" name="confirm_password" class="input-field" placeholder="再次输入密码" required minlength="6">
-            <button type="button" onclick="togglePassword('confirm-password')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px;">
-              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            <button type="button" onclick="togglePassword('confirm-password')" class="password-toggle" aria-label="显示/隐藏密码">
+              <i data-lucide="eye"></i>
             </button>
           </div>
+          <p id="confirm-password-error" class="form-error hidden" role="alert"></p>
         </div>
 
-        <div id="register-error" style="display: none; color: var(--color-error); font-size: var(--text-sm); margin-bottom: var(--space-4);"></div>
+        <div id="register-error" class="auth-error" role="alert"></div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: var(--text-base);">
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
           注册
         </button>
       </form>
 
-      <div style="margin-top: var(--space-6); text-align: center;">
-        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
-          已有账号？<a href="/login" style="color: var(--color-primary); font-weight: 500;">立即登录</a>
+      <div class="auth-footer">
+        <p>
+          已有账号？<a href="/login">立即登录</a>
         </p>
       </div>
     </div>
@@ -82,6 +142,21 @@
     }
   }
 
+  // 字段级错误设置
+  function setFieldError(id, msg) {
+    const input = document.getElementById(id);
+    const err = document.getElementById(id + '-error');
+    if (!input || !err) return;
+    if (msg) {
+      input.classList.add('error');
+      err.textContent = msg;
+      err.classList.remove('hidden');
+    } else {
+      input.classList.remove('error');
+      err.classList.add('hidden');
+    }
+  }
+
   // 注册
   async function handleRegister(e) {
     e.preventDefault();
@@ -93,34 +168,24 @@
     const errorEl = document.getElementById('register-error');
     const btn = e.target.querySelector('button[type="submit"]');
 
-    // 验证
-    if (!username || !password) {
-      errorEl.textContent = '请输入用户名和密码';
-      errorEl.style.display = 'block';
-      return;
-    }
+    // 字段级校验
+    let valid = true;
+    if (!username) { setFieldError('username', '请输入用户名'); valid = false; }
+    else if (username.length < 3 || username.length > 20) { setFieldError('username', '用户名长度应为3-20位'); valid = false; }
+    else { setFieldError('username', ''); }
 
-    if (username.length < 3 || username.length > 20) {
-      errorEl.textContent = '用户名长度应为3-20位';
-      errorEl.style.display = 'block';
-      return;
-    }
+    if (!password) { setFieldError('password', '请输入密码'); valid = false; }
+    else if (password.length < 6) { setFieldError('password', '密码至少6位'); valid = false; }
+    else { setFieldError('password', ''); }
 
-    if (password.length < 6) {
-      errorEl.textContent = '密码至少6位';
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      errorEl.textContent = '两次输入的密码不一致';
-      errorEl.style.display = 'block';
-      return;
-    }
+    if (!confirmPassword) { setFieldError('confirm-password', '请再次输入密码'); valid = false; }
+    else if (password !== confirmPassword) { setFieldError('confirm-password', '两次输入的密码不一致'); valid = false; }
+    else { setFieldError('confirm-password', ''); }
+    if (!valid) return;
 
     errorEl.style.display = 'none';
     btn.disabled = true;
-    btn.innerHTML = '<div class="grading-status-spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div>';
+    btn.classList.add('btn-loading');
 
     try {
       const res = await fetch('/api/auth/register', {
@@ -136,8 +201,8 @@
       const data = await res.json();
 
       if (res.ok && data.data) {
-        // 保存 token
-        localStorage.setItem('token', data.data.token);
+        // 保存 token（键名与 base.html 保持一致）
+        localStorage.setItem('slb_token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
 
         if (typeof SLBToast !== 'undefined') {
@@ -151,15 +216,20 @@
       } else {
         errorEl.textContent = data.error || '注册失败';
         errorEl.style.display = 'block';
+        setFieldError('username', '');
+        setFieldError('password', '');
+        setFieldError('confirm-password', '');
         btn.disabled = false;
-        btn.innerHTML = '注册';
+        btn.classList.remove('btn-loading');
+        btn.textContent = '注册';
       }
     } catch (e) {
       console.error('Register error:', e);
       errorEl.textContent = '网络错误，请稍后重试';
       errorEl.style.display = 'block';
       btn.disabled = false;
-      btn.innerHTML = '注册';
+      btn.classList.remove('btn-loading');
+      btn.textContent = '注册';
     }
   }
 </script>

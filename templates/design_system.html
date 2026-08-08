@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设计系统 — SLB 阳光·现代化</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/interactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+  <style>
+    .ds-shell { padding: 32px 0 96px; }
+    .ds-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .ds-nav-inner { display: flex; align-items: center; gap: 16px; height: 56px; }
+    .ds-nav-inner a { font-size: var(--text-sm); color: var(--color-text-secondary); }
+    .ds-section { margin-bottom: 48px; }
+    .ds-section > h2 {
+      font-size: var(--text-2xl); font-weight: var(--fw-bold);
+      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .ds-section > h2 .tag {
+      font-size: var(--text-xs); font-weight: var(--fw-medium);
+      color: var(--color-text-muted); background: var(--color-bg-hover);
+      padding: 2px 10px; border-radius: var(--radius-full);
+    }
+    .ds-section > p { color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: 20px; }
+    .ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .ds-cell {
+      background: var(--bg-800); border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl); padding: 24px; box-shadow: var(--shadow-card);
+    }
+    .ds-cell h3 {
+      font-size: var(--text-sm); font-weight: var(--fw-semibold);
+      color: var(--color-text-muted); text-transform: uppercase;
+      letter-spacing: var(--ls-wider); margin-bottom: 16px;
+    }
+    .ds-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .ds-row.col { flex-direction: column; align-items: stretch; }
+    .ds-swatch { width: 100%; display: flex; align-items: center; gap: 12px; }
+    .ds-swatch .chip {
+      width: 40px; height: 40px; border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .ds-swatch code { font-size: var(--text-xs); color: var(--color-text-tertiary); }
+    .ds-table-wrap { overflow-x: auto; }
+    .badge-demo { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#ds-main">跳到主要内容</a>
+
+  <nav class="ds-nav" aria-label="设计系统导航">
+    <div class="container ds-nav-inner">
+      <strong style="font-size:var(--text-base);color:var(--color-text)">🎨 SLB 设计系统</strong>
+      <a href="/" style="margin-left:auto">← 返回首页</a>
+    </div>
+  </nav>
+
+  <main id="ds-main" class="container ds-shell">
+    <div class="ds-section">
+      <h2><span class="tag">Token</span> 颜色体系</h2>
+      <p>主色天蓝 #0ea5e9 → 靛蓝 #6366f1 → 紫 #8b5cf6 渐变；浅灰底 + 白卡片。</p>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>品牌色</h3>
+          <div class="ds-row col">
+            <div class="ds-swatch"><span class="chip" style="background:#0ea5e9"></span>--color-primary <code>#0ea5e9</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:#6366f1"></span>--indigo-500 <code>#6366f1</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:#8b5cf6"></span>--color-accent <code>#8b5cf6</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:var(--gradient-primary)"></span>--gradient-primary</div>
+            <div class="ds-swatch"><span class="chip" style="background:var(--gradient-sunny)"></span>--gradient-sunny</div>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>语义色</h3>
+          <div class="ds-row col">
+            <div class="ds-swatch"><span class="chip" style="background:#10b981"></span>success <code>#10b981</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:#f59e0b"></span>warning <code>#f59e0b</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:#ef4444"></span>error <code>#ef4444</code></div>
+            <div class="ds-swatch"><span class="chip" style="background:#94a3b8"></span>muted <code>#94a3b8</code></div>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>排版</h3>
+          <div class="ds-row col" style="gap:8px">
+            <span class="text-display-lg">Display Lg</span>
+            <span class="text-headline">Headline</span>
+            <span class="text-title">Title</span>
+            <span class="text-subtitle">Subtitle</span>
+            <span class="text-body">Body 正文内容示例</span>
+            <span class="text-caption">Caption 辅助说明</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">1</span> 按钮 Buttons</h2>
+      <p>五种变体 × 三档尺寸，含 hover / disabled / loading 状态。</p>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>变体</h3>
+          <div class="ds-row">
+            <button class="btn btn-primary">主按钮</button>
+            <button class="btn btn-secondary">次按钮</button>
+            <button class="btn btn-ghost">幽灵按钮</button>
+            <button class="btn btn-tertiary">文字按钮</button>
+            <button class="btn btn-accent">强调按钮</button>
+            <button class="btn btn-destructive">危险操作</button>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>尺寸 &amp; 状态</h3>
+          <div class="ds-row">
+            <button class="btn btn-primary btn-sm">小号</button>
+            <button class="btn btn-primary">中号</button>
+            <button class="btn btn-primary btn-lg">大号</button>
+          </div>
+          <div class="ds-row" style="margin-top:12px">
+            <button class="btn btn-primary" disabled>禁用</button>
+            <button class="btn btn-primary is-loading">加载中</button>
+            <button class="btn btn-block btn-primary" style="margin-top:12px">通栏按钮</button>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>学习状态按钮</h3>
+          <div class="ds-row">
+            <button class="btn btn-familiar">熟悉</button>
+            <button class="btn btn-know">掌握</button>
+            <button class="btn btn-mastered">精通</button>
+            <button class="btn btn-new">新学</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">2</span> 表单 Forms</h2>
+      <p>输入框 / 文本域 / 下拉 / 复选 / 单选，含 focus 与错误态。</p>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>输入控件</h3>
+          <div class="ds-row col" style="gap:16px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="ds-input">用户名</label>
+              <input class="input-field" id="ds-input" type="text" placeholder="请输入用户名">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="ds-textarea">作答内容</label>
+              <textarea class="form-textarea" id="ds-textarea" placeholder="请输入你的申论作答……"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="ds-select">科目</label>
+              <select class="form-select" id="ds-select">
+                <option>申论</option>
+                <option>行测</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>错误 &amp; 帮助</h3>
+          <div class="ds-row col" style="gap:16px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="ds-err">邮箱</label>
+              <input class="input-field error" id="ds-err" type="email" value="bad-email">
+              <p class="form-error" role="alert">邮箱格式不正确，请检查后重试。</p>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="ds-hint">密码</label>
+              <input class="input-field" id="ds-hint" type="password" placeholder="至少 8 位">
+              <p class="form-helper">建议包含字母、数字与符号，强度更高。</p>
+            </div>
+            <div class="ds-row">
+              <label class="checkbox"><input type="checkbox"> 记住我</label>
+              <label class="radio"><input type="radio" name="ds-r"> 选项 A</label>
+              <label class="radio"><input type="radio" name="ds-r"> 选项 B</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">3</span> 卡片 Cards</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>变体</h3>
+          <div class="ds-row col" style="gap:16px">
+            <div class="card"><div class="card-title">标准卡片</div><p class="text-body-sm">hover 时微抬升 + 阴影增强。</p></div>
+            <div class="card-featured"><div class="card-title">特色卡片</div><p class="text-body-sm">渐变浅底 + 主色边框。</p></div>
+            <div class="card-flat"><div class="card-title">扁平卡片</div><p class="text-body-sm">无阴影。</p></div>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>KPI 卡片</h3>
+          <div class="kpi-row" style="grid-template-columns:repeat(2,1fr)">
+            <div class="kpi-card">
+              <div class="kpi-label">本周练习</div>
+              <div class="kpi-value">42</div>
+              <div class="kpi-trend positive">↑ 12%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">平均分</div>
+              <div class="kpi-value">68.5</div>
+              <div class="kpi-trend neutral">持平</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">4</span> 徽章 Badges</h2>
+      <p>语义变体 + 状态徽章。</p>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>语义徽章</h3>
+          <div class="badge-demo">
+            <span class="badge badge-primary">主色</span>
+            <span class="badge badge-success">通过</span>
+            <span class="badge badge-warning">待定</span>
+            <span class="badge badge-error">驳回</span>
+            <span class="badge badge-info">信息</span>
+            <span class="badge badge-neutral">普通</span>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>状态徽章</h3>
+          <div class="badge-demo">
+            <span class="status-badge status-active">已激活</span>
+            <span class="status-badge status-pending">审核中</span>
+            <span class="status-badge status-rejected">已拒绝</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">5</span> 表格 Tables</h2>
+      <div class="ds-grid">
+        <div class="ds-cell" style="grid-column:1/-1">
+          <h3>数据表格</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>试卷名称</th>
+                  <th>难度</th>
+                  <th class="numeric">得分</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2024 国考申论真题</td>
+                  <td><span class="badge badge-warning">中等</span></td>
+                  <td class="numeric">72.5</td>
+                  <td><span class="status-badge status-active">已批改</span></td>
+                </tr>
+                <tr>
+                  <td>2024 省考行测模考</td>
+                  <td><span class="badge badge-error">困难</span></td>
+                  <td class="numeric">—</td>
+                  <td><span class="status-badge status-pending">待批改</span></td>
+                </tr>
+                <tr>
+                  <td>2023 联考真题卷</td>
+                  <td><span class="badge badge-success">简单</span></td>
+                  <td class="numeric">85.0</td>
+                  <td><span class="status-badge status-active">已批改</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">6</span> 列表 Lists</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>列表项</h3>
+          <div class="list" style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:4px">
+            <div class="list-item">
+              <i data-lucide="file-text" class="list-item-icon"></i>
+              <div class="list-item-main">
+                <div class="list-item-title">申论概括题专项</div>
+                <div class="list-item-desc">12 题 · 预计 40 分钟</div>
+              </div>
+              <span class="badge badge-success">已完成</span>
+            </div>
+            <div class="list-divider"></div>
+            <div class="list-item">
+              <i data-lucide="target" class="list-item-icon"></i>
+              <div class="list-item-main">
+                <div class="list-item-title">行测判断推理</div>
+                <div class="list-item-desc">20 题 · 预计 30 分钟</div>
+              </div>
+              <span class="badge badge-warning">进行中</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">8</span> 标签页 Tabs</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <div class="tabs" role="tablist">
+            <button class="tab-item active" role="tab" aria-selected="true">全部题目</button>
+            <button class="tab-item" role="tab" aria-selected="false">我的收藏</button>
+            <button class="tab-item" role="tab" aria-selected="false">错题本</button>
+          </div>
+          <div class="tab-panel" role="tabpanel">
+            <p class="text-body-sm">标签页内容区域，active 项底部显示渐变指示条。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">9</span> 模态框 Modal</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>模态框结构</h3>
+          <button class="btn btn-primary" id="ds-open-modal">打开模态框</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">10</span> 提示 Alert</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <div class="alert alert-info">
+            <i data-lucide="info" class="alert-icon"></i>
+            <div><div class="alert-title">提示</div>系统将于今晚 23:00 进行维护，请提前保存作答。</div>
+          </div>
+          <div class="alert alert-success">
+            <i data-lucide="check-circle" class="alert-icon"></i>
+            <div><div class="alert-title">批改完成</div>你的作答已批改完毕，点击查看评分报告。</div>
+          </div>
+          <div class="alert alert-warning">
+            <i data-lucide="alert-triangle" class="alert-icon"></i>
+            <div><div class="alert-title">请注意</div>距离考试还有 3 天，建议加大真题练习量。</div>
+          </div>
+          <div class="alert alert-error">
+            <i data-lucide="x-circle" class="alert-icon"></i>
+            <div><div class="alert-title">提交失败</div>网络异常，请稍后重试。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">11</span> 骨架屏 &amp; 加载</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>骨架屏</h3>
+          <div class="ds-row col" style="gap:12px">
+            <div class="skeleton skeleton-text w-sm"></div>
+            <div class="skeleton skeleton-text w-md"></div>
+            <div class="skeleton skeleton-block"></div>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>Spinner</h3>
+          <div class="ds-row">
+            <span class="spinner" role="status" aria-label="加载中"></span>
+            <span class="spinner lg" role="status" aria-label="加载中"></span>
+            <div class="loading"><span class="spinner"></span> 正在生成批改报告…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-section">
+      <h2><span class="tag">—</span> 其他组件</h2>
+      <div class="ds-grid">
+        <div class="ds-cell">
+          <h3>空状态</h3>
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="inbox"></i></div>
+            <div class="empty-state-title">暂无数据</div>
+            <div class="empty-state-desc">还没有练习记录，去题库挑一套真题开始吧！</div>
+            <button class="btn btn-primary btn-sm">去刷题</button>
+          </div>
+        </div>
+        <div class="ds-cell">
+          <h3>评分进度条</h3>
+          <div class="ds-row col" style="gap:16px">
+            <div>
+              <div class="text-body-sm" style="margin-bottom:8px">综合得分 <strong class="text-primary">72.5</strong></div>
+              <div class="score-bar"><div class="score-bar-fill" style="width:72.5%"></div></div>
+            </div>
+            <div class="step-flow">
+              <div class="step-item"><div class="step-number done">✓</div><div class="step-title">答题</div></div>
+              <i data-lucide="chevron-right" class="step-divider"></i>
+              <div class="step-item"><div class="step-number active">2</div><div class="step-title">批改</div></div>
+              <i data-lucide="chevron-right" class="step-divider"></i>
+              <div class="step-item"><div class="step-number">3</div><div class="step-title">报告</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal demo -->
+  <div class="modal-overlay" id="ds-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ds-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="ds-modal-title">确认提交</div>
+        <button class="modal-close" id="ds-modal-close" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-content">提交后将进入 AI 批改流程，预计 1-3 分钟出报告。确认提交本次作答？</div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="ds-modal-cancel">取消</button>
+        <button class="btn btn-primary">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const modal = document.getElementById('ds-modal');
+    document.getElementById('ds-open-modal').addEventListener('click', () => { modal.style.display = 'flex'; });
+    const closeModal = () => { modal.style.display = 'none'; };
+    document.getElementById('ds-modal-close').addEventListener('click', closeModal);
+    document.getElementById('ds-modal-cancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
+  </script>
+</body>
+</html>

@@ -118,10 +118,15 @@
     const menu = document.querySelector('.navbar-menu');
     if (!toggle || !menu) return;
 
+    const syncAria = () => {
+      toggle.setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false');
+    };
+
     toggle.addEventListener('click', () => {
       toggle.classList.toggle('open');
       menu.classList.toggle('open');
       document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+      syncAria();
     });
 
     // 点击菜单项后关闭
@@ -130,6 +135,7 @@
         toggle.classList.remove('open');
         menu.classList.remove('open');
         document.body.style.overflow = '';
+        syncAria();
       });
     });
 
@@ -139,6 +145,7 @@
         toggle.classList.remove('open');
         menu.classList.remove('open');
         document.body.style.overflow = '';
+        syncAria();
       }
     });
   }

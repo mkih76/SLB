@@ -2,21 +2,57 @@
 
 {% block title %}卷库 - 申论帮{% endblock %}
 
+{% block extra_css %}
+<style>
+  .page-heading { margin-bottom: var(--space-8); }
+  .page-heading h1 { font-size: var(--text-2xl); letter-spacing: -0.5px; margin-bottom: var(--space-2); }
+  .page-heading p { color: var(--color-text-secondary); font-size: var(--text-sm); }
+
+  .filter-card { margin-bottom: var(--space-6); padding: var(--space-4) var(--space-5); }
+  .filter-row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end; }
+  .filter-field { flex: 1; min-width: 120px; }
+  .filter-field label {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .papers-stats { margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+  .paper-card { padding: var(--space-5); animation: fadeSlideIn 200ms ease-out forwards; opacity: 0; }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .paper-badges { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); flex-wrap: wrap; }
+  .paper-title { font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-2); line-height: 1.4; }
+  .paper-meta { display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .paper-actions { display: flex; gap: var(--space-2); }
+  .paper-actions .btn { flex: 1; font-size: var(--text-sm); }
+
+  .pagination-wrap { display: flex; justify-content: center; gap: var(--space-1); margin-top: var(--space-8); flex-wrap: wrap; }
+  .pagination-btn { padding: 8px 12px; }
+  .pagination-ellipsis { padding: 8px 4px; color: var(--color-text-muted); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-container">
   <div class="container">
     <!-- 页面标题 -->
-    <div class="reveal" style="margin-bottom: var(--space-8);">
-      <h1 style="font-size: var(--text-2xl); letter-spacing: -0.5px; margin-bottom: var(--space-2);">试卷库</h1>
-      <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">393 套真题，覆盖国考 + 31 省省考 + 联考（2011-2026）</p>
+    <div class="page-heading reveal">
+      <h1>试卷库</h1>
+      <p>393 套真题，覆盖国考 + 31 省省考 + 联考（2011-2026）</p>
     </div>
 
     <!-- 筛选栏 -->
-    <div class="card reveal" style="margin-bottom: var(--space-6); padding: var(--space-4) var(--space-5);">
-      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: end;">
-        <div style="flex: 1; min-width: 120px;">
-          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">考试类型</label>
-          <select id="filter-exam-type" class="input-field" style="width: 100%;">
+    <div class="card filter-card reveal">
+      <div class="filter-row">
+        <div class="filter-field">
+          <label for="filter-exam-type">考试类型</label>
+          <select id="filter-exam-type" class="input-field">
             <option value="">全部类型</option>
             <option value="国考">国考</option>
             <option value="省考">省考</option>
@@ -24,9 +60,9 @@
             <option value="联考">联考</option>
           </select>
         </div>
-        <div style="flex: 1; min-width: 120px;">
-          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">年份</label>
-          <select id="filter-year" class="input-field" style="width: 100%;">
+        <div class="filter-field">
+          <label for="filter-year">年份</label>
+          <select id="filter-year" class="input-field">
             <option value="">全部年份</option>
             <option value="2026">2026</option>
             <option value="2025">2025</option>
@@ -40,9 +76,9 @@
             <option value="2017">2017</option>
           </select>
         </div>
-        <div style="flex: 1; min-width: 120px;">
-          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 4px; font-weight: 500;">地区</label>
-          <select id="filter-province" class="input-field" style="width: 100%;">
+        <div class="filter-field">
+          <label for="filter-province">地区</label>
+          <select id="filter-province" class="input-field">
             <option value="">全部地区</option>
             <option value="北京">北京</option>
             <option value="上海">上海</option>
@@ -77,33 +113,33 @@
             <option value="内蒙古">内蒙古</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="loadPapers(1)" style="height: 40px;">
-          <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+        <button class="btn btn-primary" onclick="loadPapers(1)">
+          <i data-lucide="search"></i>
           搜索
         </button>
-        <button class="btn btn-secondary" onclick="resetFilters()" style="height: 40px;">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        <button class="btn btn-secondary" onclick="resetFilters()">
+          <i data-lucide="x"></i>
           重置
         </button>
       </div>
     </div>
 
     <!-- 统计信息 -->
-    <div id="papers-stats" style="margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted);"></div>
+    <div id="papers-stats" class="papers-stats"></div>
 
     <!-- 试卷列表 -->
     <div id="papers-list">
       <!-- 骨架屏 -->
       <div class="grid grid-2">
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card h-160"></div>
+        <div class="skeleton skeleton-card h-160"></div>
+        <div class="skeleton skeleton-card h-160"></div>
+        <div class="skeleton skeleton-card h-160"></div>
       </div>
     </div>
 
     <!-- 分页 -->
-    <div id="pagination" style="margin-top: var(--space-8);"></div>
+    <div id="pagination"></div>
   </div>
 </div>
 {% endblock %}
@@ -127,8 +163,8 @@
     // 显示骨架屏
     document.getElementById('papers-list').innerHTML = `
       <div class="grid grid-2">
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
-        <div class="skeleton skeleton-card" style="height: 160px;"></div>
+        <div class="skeleton skeleton-card h-160"></div>
+        <div class="skeleton skeleton-card h-160"></div>
       </div>
     `;
 
@@ -192,25 +228,25 @@
           const typeColor = typeColors[safeExamType] || { bg: 'var(--color-gray-100)', color: 'var(--color-gray-600)' };
 
           return `
-            <div class="card" style="padding: var(--space-5); animation: fadeSlideIn 200ms ease-out forwards; animation-delay: ${index * 30}ms; opacity: 0;">
-              <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-3);">
+            <div class="card paper-card" style="animation-delay: ${index * 30}ms;">
+              <div class="paper-badges">
                 <span class="badge" style="background: ${typeColor.bg}; color: ${typeColor.color};">${safeExamType}</span>
                 <span class="badge badge-accent">${safeYear}</span>
-                ${safeProvince ? `<span class="badge">${safeProvince}</span>` : ''}
+                ${safeProvince ? `<span class="badge badge-neutral">${safeProvince}</span>` : ''}
               </div>
-              <h3 style="font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-2); line-height: 1.4;">${safeTitle}</h3>
-              <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-4);">
+              <h3 class="paper-title">${safeTitle}</h3>
+              <div class="paper-meta">
                 <span>${questions.length} 题</span>
                 <span>${difficulty}</span>
                 <span>热度 ${safeHeat}</span>
               </div>
-              <div style="display: flex; gap: var(--space-2);">
-                <a href="/exam/${safePid}/${safeQid}" class="btn btn-primary" style="flex: 1; font-size: var(--text-sm); padding: 8px 16px;">
-                  <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+              <div class="paper-actions">
+                <a href="/exam/${safePid}/${safeQid}" class="btn btn-primary">
+                  <i data-lucide="pencil"></i>
                   逐题练习
                 </a>
-                <a href="/simulate/${safePid}" class="btn btn-secondary" style="flex: 1; font-size: var(--text-sm); padding: 8px 16px;">
-                  <i data-lucide="timer" style="width: 14px; height: 14px;"></i>
+                <a href="/simulate/${safePid}" class="btn btn-secondary">
+                  <i data-lucide="timer"></i>
                   全真模拟
                 </a>
               </div>
@@ -240,12 +276,12 @@
       return;
     }
 
-    let html = '<div style="display: flex; justify-content: center; gap: var(--space-1);">';
+    let html = '<div class="pagination-wrap">';
 
     // 上一页
     if (data.page > 1) {
-      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.page - 1})">
-        <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+      html += `<button class="btn btn-secondary pagination-btn" onclick="loadPapers(${data.page - 1})">
+        <i data-lucide="chevron-left"></i>
       </button>`;
     }
 
@@ -254,27 +290,27 @@
     const endPage = Math.min(data.pages, data.page + 2);
 
     if (startPage > 1) {
-      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(1)">1</button>`;
-      if (startPage > 2) html += `<span style="padding: 8px 4px; color: var(--color-text-muted);">...</span>`;
+      html += `<button class="btn btn-secondary pagination-btn" onclick="loadPapers(1)">1</button>`;
+      if (startPage > 2) html += `<span class="pagination-ellipsis">...</span>`;
     }
 
     for (let i = startPage; i <= endPage; i++) {
       if (i === data.page) {
-        html += `<button class="btn btn-primary" style="padding: 8px 12px;">${i}</button>`;
+        html += `<button class="btn btn-primary pagination-btn">${i}</button>`;
       } else {
-        html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${i})">${i}</button>`;
+        html += `<button class="btn btn-secondary pagination-btn" onclick="loadPapers(${i})">${i}</button>`;
       }
     }
 
     if (endPage < data.pages) {
-      if (endPage < data.pages - 1) html += `<span style="padding: 8px 4px; color: var(--color-text-muted);">...</span>`;
-      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.pages})">${data.pages}</button>`;
+      if (endPage < data.pages - 1) html += `<span class="pagination-ellipsis">...</span>`;
+      html += `<button class="btn btn-secondary pagination-btn" onclick="loadPapers(${data.pages})">${data.pages}</button>`;
     }
 
     // 下一页
     if (data.page < data.pages) {
-      html += `<button class="btn btn-secondary" style="padding: 8px 12px;" onclick="loadPapers(${data.page + 1})">
-        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+      html += `<button class="btn btn-secondary pagination-btn" onclick="loadPapers(${data.page + 1})">
+        <i data-lucide="chevron-right"></i>
       </button>`;
     }
 

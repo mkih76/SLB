@@ -2,18 +2,59 @@
 
 {% block title %}免注册试用 - 申论帮{% endblock %}
 
+{% block extra_css %}
+<style>
+  .demo-header { text-align: center; margin-bottom: var(--space-4); }
+  .demo-header p { color: var(--color-text-secondary); }
+  .demo-section { margin-bottom: var(--space-4); }
+  .demo-papers { margin-top: var(--space-3); }
+  .demo-paper-card { cursor: pointer; }
+  .demo-paper-meta { color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0; }
+  .demo-split { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin-top: var(--space-3); }
+  @media (min-width: 768px) { .demo-split { grid-template-columns: 1fr 1fr; } }
+  .demo-pane-title { margin-bottom: var(--space-2); }
+  .demo-material {
+    padding: var(--space-3);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    line-height: 1.8;
+    max-height: 480px;
+    overflow-y: auto;
+    font-size: var(--text-sm);
+  }
+  .demo-stem { margin-bottom: var(--space-2); line-height: var(--lh-relaxed); }
+  .demo-word-limit { color: var(--color-text-secondary); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+  .demo-answer { height: 200px; resize: vertical; }
+  .demo-count-row { margin-top: var(--space-2); text-align: right; font-size: var(--text-sm); color: var(--color-text-secondary); }
+  .demo-score-box { text-align: center; margin: var(--space-4) 0; }
+  .demo-score { font-size: 64px; font-weight: 700; line-height: 1; background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+  .demo-feedback {
+    padding: var(--space-3);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    line-height: 1.8;
+  }
+  .demo-feedback ul { list-style: disc; padding-left: var(--space-5); }
+  .demo-feedback p { margin-top: var(--space-2); }
+  .demo-actions { text-align: center; margin-top: var(--space-4); display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-container">
   <div class="container">
-    <div style="text-align: center; margin-bottom: var(--space-4);">
+    <div class="demo-header">
       <h1>免注册试用</h1>
-      <p style="color: var(--color-text-secondary);">体验完整批改流程，登录后可保存记录</p>
+      <p>体验完整批改流程，登录后可保存记录</p>
     </div>
 
     <!-- 选择试卷 -->
-    <div class="card" style="margin-bottom: var(--space-4);">
+    <div class="card demo-section">
       <h3>选择示范卷</h3>
-      <div id="demo-papers" class="grid grid-3" style="margin-top: var(--space-3);">
+      <div id="demo-papers" class="grid grid-3 demo-papers">
         <div class="loading">
           <div class="spinner"></div>
         </div>
@@ -21,22 +62,22 @@
     </div>
 
     <!-- 作答区 -->
-    <div id="demo-exam-section" class="card" style="display: none;">
+    <div id="demo-exam-section" class="card demo-section hidden">
       <h3 id="demo-paper-title"></h3>
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-3);">
+      <div class="demo-split">
         <div>
-          <h4 style="margin-bottom: var(--space-2);">给定材料</h4>
-          <div id="demo-material" style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md); line-height: 1.8;"></div>
+          <h4 class="demo-pane-title">给定材料</h4>
+          <div id="demo-material" class="demo-material"></div>
         </div>
         <div>
-          <h4 style="margin-bottom: var(--space-2);">题目</h4>
-          <p id="demo-stem" style="margin-bottom: var(--space-2);"></p>
-          <p id="demo-word-limit" style="color: var(--color-text-secondary); margin-bottom: var(--space-2);"></p>
-          <textarea id="demo-answer" class="input-field" style="height: 200px; resize: vertical;" placeholder="请输入答案..."></textarea>
-          <div style="margin-top: var(--space-2); text-align: right;">
+          <h4 class="demo-pane-title">题目</h4>
+          <p id="demo-stem" class="demo-stem"></p>
+          <p id="demo-word-limit" class="demo-word-limit"></p>
+          <textarea id="demo-answer" class="input-field demo-answer" placeholder="请输入答案..."></textarea>
+          <div class="demo-count-row">
             <span>字数：<span id="demo-count">0</span></span>
           </div>
-          <button class="btn btn-primary" style="width: 100%; margin-top: var(--space-2);" onclick="submitDemo()">
+          <button class="btn btn-primary btn-block mt-2" onclick="submitDemo()">
             <i data-lucide="send"></i>
             提交批改
           </button>
@@ -45,14 +86,14 @@
     </div>
 
     <!-- 结果区 -->
-    <div id="demo-result" class="card" style="display: none;">
+    <div id="demo-result" class="card demo-section hidden">
       <h3>批改结果</h3>
-      <div style="text-align: center; margin: var(--space-4) 0;">
-        <div style="font-size: 64px; font-weight: 700; color: var(--color-primary);" id="demo-score">--</div>
+      <div class="demo-score-box">
+        <div class="demo-score" id="demo-score">--</div>
         <p>总分（满分100分）</p>
       </div>
-      <div id="demo-feedback" style="padding: var(--space-3); background: var(--color-bg); border-radius: var(--radius-md);"></div>
-      <div style="text-align: center; margin-top: var(--space-4);">
+      <div id="demo-feedback" class="demo-feedback"></div>
+      <div class="demo-actions">
         <a href="#" onclick="location.reload(); return false;" class="btn btn-secondary">重新体验</a>
         <button class="btn btn-primary" onclick="openAuthModal('register')">登录保存记录</button>
       </div>
@@ -81,9 +122,9 @@
           const safeExamType = escapeHtml(paper.exam_type);
           const safeYear = escapeHtml(paper.year);
           return `
-            <div class="card" style="cursor: pointer;" onclick="selectPaper('${safePid}', '${safeQid}')">
+            <div class="card demo-paper-card" onclick="selectPaper('${safePid}', '${safeQid}')">
               <h4>${safeTitle}</h4>
-              <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">${safeExamType} | ${safeYear}</p>
+              <p class="demo-paper-meta">${safeExamType} | ${safeYear}</p>
             </div>
           `;
         }).join('');
@@ -114,8 +155,8 @@
       document.getElementById('demo-stem').textContent = question.stem;
       document.getElementById('demo-word-limit').textContent = '字数要求：' + (question.word_limit || '未指定');
 
-      document.getElementById('demo-exam-section').style.display = 'block';
-      document.getElementById('demo-result').style.display = 'none';
+      document.getElementById('demo-exam-section').classList.remove('hidden');
+      document.getElementById('demo-result').classList.add('hidden');
 
       lucide.createIcons();
     } catch (e) {
@@ -170,14 +211,14 @@
         <ul>
           ${Object.entries(dims).map(([k, v]) => `<li>${escapeHtml(k)}：${escapeHtml(v)}分</li>`).join('')}
         </ul>
-        ${data.hit_points && data.hit_points.length > 0 ? `<p style="margin-top: var(--space-2);"><strong>命中要点：</strong>${data.hit_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
+        ${data.hit_points && data.hit_points.length > 0 ? `<p><strong>命中要点：</strong>${data.hit_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
         ${data.missing_points && data.missing_points.length > 0 ? `<p><strong>遗漏要点：</strong>${data.missing_points.map(p => escapeHtml(p)).join('、')}</p>` : ''}
-        <p style="margin-top: var(--space-2);"><strong>AI评语：</strong>${escapeHtml(data.ai_feedback || '暂无评语')}</p>
+        <p><strong>AI评语：</strong>${escapeHtml(data.ai_feedback || '暂无评语')}</p>
         ${data.improving_suggestions ? `<p><strong>改进建议：</strong>${escapeHtml(data.improving_suggestions)}</p>` : ''}
       `;
 
-      document.getElementById('demo-exam-section').style.display = 'none';
-      document.getElementById('demo-result').style.display = 'block';
+      document.getElementById('demo-exam-section').classList.add('hidden');
+      document.getElementById('demo-result').classList.remove('hidden');
     } catch (e) {
       alert('网络错误，请稍后重试');
     } finally {

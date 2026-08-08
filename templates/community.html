@@ -4,6 +4,14 @@
 {% block extra_css %}
 <style>
   .comm-container { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+  .form-group.flex1 { flex: 1; }
+  .form-group-mb3 { margin-bottom: var(--space-3); }
+  .post-actions { display: flex; gap: var(--space-2); }
+  .empty-state-lg { padding: var(--space-8); }
+  .empty-icon-lg { width: 48px; height: 48px; color: var(--color-gray-300); margin-bottom: var(--space-3); }
+  .empty-title-lg { font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-1); }
+  .empty-desc-lg { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-4); }
+  .comments-title { font-size: var(--text-sm); margin-bottom: var(--space-3); }
   .comm-header { text-align: center; margin-bottom: var(--space-8); }
   .comm-header h1 { font-size: var(--text-2xl); color: var(--color-primary); }
   .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-primary); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary); }
@@ -73,18 +81,18 @@
       <div class="create-toggle" onclick="toggleCreate()">+ 发布新帖</div>
       <div class="card create-form" id="createForm">
         <div class="form-row">
-          <div class="form-group" style="flex:1;"><label class="form-label">帖子类型</label><select class="input-field" id="postType"><option value="answer_share">晒答案</option><option value="question">求助</option><option value="discussion">讨论</option><option value="tips">备考经验</option></select></div>
-          <div class="form-group" style="flex:1;"><label class="form-label">标题</label><input type="text" class="input-field" id="postTitle" placeholder="简短描述"></div>
+          <div class="form-group flex1"><label class="form-label" for="postType">帖子类型</label><select class="input-field" id="postType"><option value="answer_share">晒答案</option><option value="question">求助</option><option value="discussion">讨论</option><option value="tips">备考经验</option></select></div>
+          <div class="form-group flex1"><label class="form-label" for="postTitle">标题</label><input type="text" class="input-field" id="postTitle" placeholder="简短描述"></div>
         </div>
-        <div class="form-group" style="margin-bottom:var(--space-3);"><label class="form-label">内容</label><textarea class="input-field" id="postContent" placeholder="分享你的经验、提出你的问题..."></textarea></div>
-        <div style="display:flex;gap:var(--space-2);">
+        <div class="form-group form-group-mb3"><label class="form-label" for="postContent">内容</label><textarea class="input-field" id="postContent" placeholder="分享你的经验、提出你的问题..."></textarea></div>
+        <div class="post-actions">
           <button class="btn btn-primary" onclick="submitPost()">发布</button>
           <button class="btn btn-secondary" onclick="toggleCreate()">取消</button>
         </div>
       </div>
     </div>
 
-    <div class="featured-section reveal" id="featuredSection" style="display:none;">
+    <div class="featured-section reveal hidden" id="featuredSection">
       <div class="section-title">精选范文</div>
       <div id="featuredList"></div>
     </div>
@@ -106,9 +114,9 @@
   </div>
 </div>
 
-<div class="detail-overlay" id="detailOverlay" style="display:none;" onclick="closeDetail(event)">
+<div class="detail-overlay hidden" id="detailOverlay" onclick="closeDetail(event)">
   <div class="detail-box" id="detailBox" onclick="event.stopPropagation()">
-    <button class="detail-close" onclick="document.getElementById('detailOverlay').style.display='none'">&times;</button>
+    <button class="detail-close" aria-label="关闭详情" onclick="document.getElementById('detailOverlay').style.display='none'">&times;</button>
     <div id="detailContent"></div>
   </div>
 </div>
@@ -142,15 +150,19 @@ async function loadPosts(page = 1) {
   const params = new URLSearchParams({page, limit: 20, sort: currentSort});
   if (currentType) params.append('type', currentType);
   const h = token ? headers() : {'Content-Type': 'application/json'};
+  const list = document.getElementById('postList');
+  // 加载中骨架屏
+  list.innerHTML = '<div class="skeleton skeleton-block mb-4"></div>' +
+    '<div class="skeleton skeleton-block mb-4"></div>' +
+    '<div class="skeleton skeleton-block"></div>';
   const res = await fetch(API + '/posts?' + params, {headers: h});
   const data = await res.json();
-  const list = document.getElementById('postList');
   const items = data.data?.items || [];
   if (!items.length) {
-    list.innerHTML = '<div class="empty-state" style="padding:var(--space-8);">' +
-      '<i data-lucide="message-circle" style="width:48px;height:48px;color:var(--color-gray-300);margin-bottom:var(--space-3);"></i>' +
-      '<p style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-1);">还没有帖子</p>' +
-      '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-4);">成为第一个分享的人吧！</p>' +
+    list.innerHTML = '<div class="empty-state empty-state-lg">' +
+      '<i data-lucide="message-circle" class="empty-icon-lg"></i>' +
+      '<p class="empty-title-lg">还没有帖子</p>' +
+      '<p class="empty-desc-lg">成为第一个分享的人吧！</p>' +
       '<button class="btn btn-primary btn-sm" onclick="toggleCreate()">发布新帖</button></div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
@@ -181,18 +193,27 @@ function toggleCreate() { const form = document.getElementById('createForm'); fo
 
 async function submitPost() {
   if (!token) { showToast('请先登录', 'error'); openAuthModal('login'); return; }
+  const btn = document.querySelector('.form-group [onclick="submitPost()"]') || event.target;
+  if (btn && (btn.disabled || btn.classList.contains('btn-loading'))) return;
+  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); }
   const post_type = document.getElementById('postType').value;
   const title = document.getElementById('postTitle').value.trim();
   const content = document.getElementById('postContent').value.trim();
-  if (!content) { showToast('请输入内容', 'error'); return; }
-  const res = await fetch(API + '/posts', { method: 'POST', headers: headers(), body: JSON.stringify({post_type, title, content}) });
-  const data = await res.json();
-  if (data.error) { showToast(data.error, 'error'); return; }
-  showToast('发布成功');
-  toggleCreate();
-  document.getElementById('postContent').value = '';
-  document.getElementById('postTitle').value = '';
-  loadPosts();
+  if (!content) { showToast('请输入内容', 'error'); if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); } return; }
+  try {
+    const res = await fetch(API + '/posts', { method: 'POST', headers: headers(), body: JSON.stringify({post_type, title, content}) });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, 'error'); return; }
+    showToast('发布成功');
+    toggleCreate();
+    document.getElementById('postContent').value = '';
+    document.getElementById('postTitle').value = '';
+    loadPosts();
+  } catch (e) {
+    showToast('发布失败：' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); }
+  }
 }
 
 let currentPostId = null;
@@ -216,7 +237,7 @@ function renderDetail(p) {
   html += '<button class="btn-like' + likedCls + '" onclick="toggleLike(' + p.post_id + ')">👍 ' + (p.is_liked ? '已赞' : '赞') + ' ' + p.like_count + '</button>';
   html += '</div>';
   html += '<div class="comment-section">';
-  html += '<h4 style="font-size:var(--text-sm);margin-bottom:var(--space-3);">评论 (' + (p.comments || []).length + ')</h4>';
+  html += '<h4 class="comments-title">评论 (' + (p.comments || []).length + ')</h4>';
   (p.comments || []).forEach(c => {
     html += '<div class="comment-item"><div class="comment-header"><span class="comment-nick">' + escapeHtml(c.nickname) + '</span><span class="comment-time">' + timeAgo(c.created_at) + '</span></div><div class="comment-content">' + escapeHtml(c.content) + '</div></div>';
   });
@@ -258,3 +279,4 @@ loadFeatured();
 loadPosts();
 </script>
 {% endblock %}
+

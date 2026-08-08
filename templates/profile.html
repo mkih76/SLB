@@ -63,7 +63,7 @@
 
     <!-- 概览面板 -->
     <div class="profile-panel active" id="panel-overview">
-      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">学习概览</h2>
+      <h2 class="profile-section-title">学习概览</h2>
 
       <!-- 统计卡片 -->
       <div class="profile-stats-grid">
@@ -88,14 +88,14 @@
       </div>
 
       <!-- 得分趋势图 -->
-      <div class="chart-container" style="margin-bottom:var(--space-5)">
+      <div class="chart-container chart-container-mb">
         <div class="chart-container-header">
           <div>
             <div class="chart-container-title">得分趋势</div>
             <div class="chart-container-subtitle">近 30 天批改得分变化</div>
           </div>
         </div>
-        <div class="chart-canvas-wrapper" style="height:240px">
+        <div class="chart-canvas-wrapper chart-canvas-h">
           <canvas id="chart-score-trend"></canvas>
         </div>
       </div>
@@ -130,17 +130,17 @@
 
     <!-- 批改记录面板 -->
     <div class="profile-panel" id="panel-history">
-      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">批改记录</h2>
+      <h2 class="profile-section-title">批改记录</h2>
       <div id="history-list">
-        <div class="skeleton skeleton-card" style="margin-bottom:12px"></div>
-        <div class="skeleton skeleton-card" style="margin-bottom:12px"></div>
+        <div class="skeleton skeleton-card skeleton-mb"></div>
+        <div class="skeleton skeleton-card skeleton-mb"></div>
         <div class="skeleton skeleton-card"></div>
       </div>
     </div>
 
     <!-- 薄弱点面板 -->
     <div class="profile-panel" id="panel-weak">
-      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">薄弱点追踪</h2>
+      <h2 class="profile-section-title">薄弱点追踪</h2>
       <div id="weak-list">
         <div class="skeleton skeleton-card"></div>
       </div>
@@ -148,7 +148,7 @@
 
     <!-- 收藏面板 -->
     <div class="profile-panel" id="panel-favorites">
-      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">我的收藏</h2>
+      <h2 class="profile-section-title">我的收藏</h2>
       <div id="favorites-list">
         <div class="skeleton skeleton-card"></div>
       </div>
@@ -156,21 +156,24 @@
 
     <!-- 设置面板 -->
     <div class="profile-panel" id="panel-settings">
-      <h2 style="font-size:var(--text-xl);margin-bottom:var(--space-5)">账号设置</h2>
+      <h2 class="profile-section-title">账号设置</h2>
       <div class="card">
         <h3 class="card-title">修改密码</h3>
-        <form id="password-form">
+        <form id="password-form" onsubmit="handlePasswordChange(event)">
           <div class="form-group">
-            <label class="form-label">当前密码</label>
-            <input type="password" name="old_password" class="input-field" required>
+            <label class="form-label" for="old_password">当前密码</label>
+            <input type="password" name="old_password" id="old_password" class="input-field" required>
+            <p id="old_password-error" class="form-error hidden" role="alert"></p>
           </div>
           <div class="form-group">
-            <label class="form-label">新密码</label>
-            <input type="password" name="new_password" class="input-field" required minlength="6">
+            <label class="form-label" for="new_password">新密码</label>
+            <input type="password" name="new_password" id="new_password" class="input-field" required minlength="6">
+            <p id="new_password-error" class="form-error hidden" role="alert"></p>
           </div>
           <div class="form-group">
-            <label class="form-label">确认新密码</label>
-            <input type="password" name="confirm_password" class="input-field" required minlength="6">
+            <label class="form-label" for="confirm_password">确认新密码</label>
+            <input type="password" name="confirm_password" id="confirm_password" class="input-field" required minlength="6">
+            <p id="confirm_password-error" class="form-error hidden" role="alert"></p>
           </div>
           <button type="submit" class="btn btn-primary">保存修改</button>
         </form>
@@ -185,6 +188,12 @@
 <style>
   .profile-panel { display: none; }
   .profile-panel.active { display: block; animation: fadeIn 200ms var(--ease-out); }
+  .profile-section-title { font-size: var(--text-xl); margin-bottom: var(--space-5); }
+  .chart-container-mb { margin-bottom: var(--space-5); }
+  .chart-canvas-h { height: 240px; }
+  .skeleton-mb { margin-bottom: 12px; }
+  .record-card { margin-bottom: 12px; }
+  .record-head { display: flex; justify-content: space-between; align-items: center; }
 </style>
 {% endblock %}
 
@@ -314,8 +323,8 @@
           return;
         }
         container.innerHTML = points.map(p => `
-          <div class="card" style="margin-bottom:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="card skeleton-mb">
+            <div class="record-head">
               <div>
                 <div class="card-title">${p.missing_key}</div>
                 <div class="text-caption">${p.topic_tag || '未分类'} · 遗漏 ${p.times_missed} 次</div>
@@ -328,6 +337,30 @@
     } catch (e) { console.error('loadWeak', e); }
   }
 
+  // 密码修改：字段级校验（后端接口暂未上线，阻止默认提交并提示）
+  function handlePasswordChange(e) {
+    e.preventDefault();
+    const setErr = (id, msg) => {
+      const input = document.getElementById(id);
+      const err = document.getElementById(id + '-error');
+      if (msg) { input.classList.add('error'); err.textContent = msg; err.classList.remove('hidden'); }
+      else { input.classList.remove('error'); err.classList.add('hidden'); }
+    };
+    const oldPwd = document.getElementById('old_password').value;
+    const newPwd = document.getElementById('new_password').value;
+    const confirmPwd = document.getElementById('confirm_password').value;
+    let valid = true;
+    if (!oldPwd) { setErr('old_password', '请输入当前密码'); valid = false; } else { setErr('old_password', ''); }
+    if (!newPwd) { setErr('new_password', '请输入新密码'); valid = false; }
+    else if (newPwd.length < 6) { setErr('new_password', '新密码至少6位'); valid = false; }
+    else { setErr('new_password', ''); }
+    if (!confirmPwd) { setErr('confirm_password', '请再次输入新密码'); valid = false; }
+    else if (newPwd !== confirmPwd) { setErr('confirm_password', '两次输入的新密码不一致'); valid = false; }
+    else { setErr('confirm_password', ''); }
+    if (!valid) return;
+    if (typeof showToast === 'function') showToast('在线修改密码功能即将上线，敬请期待', 'info');
+  }
+
   // 初始化
   loadProfile();
   loadStats();
@@ -335,3 +368,4 @@
 })();
 </script>
 {% endblock %}
+

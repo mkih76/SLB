@@ -2,58 +2,160 @@
 
 {% block title %}作答 - 申论帮{% endblock %}
 
+{% block extra_css %}
+<style>
+  .exam-page { padding: 0; }
+
+  .exam-topbar {
+    background: var(--color-bg-elevated);
+    border-bottom: 1px solid var(--color-gray-200);
+    padding: var(--space-3) var(--space-6);
+    position: sticky;
+    top: var(--navbar-height);
+    z-index: 50;
+  }
+  .exam-topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .exam-topbar-left { display: flex; align-items: center; gap: var(--space-4); }
+  .back-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .back-link:hover { color: var(--color-primary); }
+  .topbar-divider { width: 1px; height: 20px; background: var(--color-gray-200); }
+  .exam-title { font-size: var(--text-lg); font-weight: 600; margin: 0; }
+  .exam-question-info { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary); }
+
+  .exam-body { padding: var(--space-6); }
+  .exam-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-6); align-items: start; }
+  @media (min-width: 1024px) {
+    .exam-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .material-card { position: sticky; top: calc(var(--navbar-height) + 60px); max-height: calc(100vh - 120px); overflow-y: auto; }
+  .material-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+  .material-header h3 { margin: 0; font-size: var(--text-base); }
+  .material-content { line-height: 1.8; white-space: pre-wrap; font-size: var(--text-sm); color: var(--color-text); }
+
+  .question-card { margin-bottom: var(--space-4); }
+  .question-row { display: flex; align-items: start; gap: var(--space-3); }
+  .question-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .question-main { flex: 1; min-width: 0; }
+  .question-badges { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .question-stem { font-size: var(--text-sm); line-height: 1.6; color: var(--color-text); }
+  .question-limit { margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+  .ocr-card {
+    margin-bottom: var(--space-4);
+    border-style: dashed;
+    border-color: var(--color-gray-300);
+    background: var(--color-gray-50);
+  }
+  .ocr-body { text-align: center; padding: var(--space-4); }
+  .ocr-dropzone { cursor: pointer; }
+  .ocr-dropzone:hover .ocr-icon { color: var(--color-primary); }
+  .ocr-icon { width: 32px; height: 32px; color: var(--color-gray-400); margin-bottom: var(--space-2); transition: color var(--dur-fast) ease; }
+  .ocr-title { font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-1); }
+  .ocr-sub { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+  .login-hint-card {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-warning-light);
+    border-color: var(--color-warning);
+    display: none;
+  }
+  .login-hint-row { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--amber-600); }
+  .login-hint-row a { color: var(--color-primary); font-weight: 600; text-decoration: underline; }
+
+  .answer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2); }
+  .answer-label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+  .answer-counts { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); }
+  .answer-counts strong { font-weight: 600; color: var(--color-primary); }
+  .answer-textarea {
+    min-height: 280px;
+    resize: vertical;
+    font-family: var(--font-body);
+    line-height: 1.8;
+  }
+  .answer-actions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+  .answer-actions .btn-submit { flex: 1; padding: 12px 24px; font-size: var(--text-base); }
+  .answer-actions .btn-clear { padding: 12px 24px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-container" style="padding: 0;">
+<div class="page-container exam-page">
   <!-- 顶部导航 -->
-  <div style="background: var(--color-bg-elevated); border-bottom: 1px solid var(--color-gray-200); padding: var(--space-3) var(--space-6); position: sticky; top: var(--navbar-height); z-index: 50;">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center; gap: var(--space-4);">
-        <a href="/papers" style="color: var(--color-text-secondary); text-decoration: none; font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-1);">
-          <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+  <div class="exam-topbar">
+    <div class="container exam-topbar-inner">
+      <div class="exam-topbar-left">
+        <a href="/papers" class="back-link">
+          <i data-lucide="arrow-left"></i>
           返回卷库
         </a>
-        <div style="width: 1px; height: 20px; background: var(--color-gray-200);"></div>
-        <h1 id="paper-title" style="font-size: var(--text-lg); font-weight: 600; margin: 0;">加载中...</h1>
+        <div class="topbar-divider" aria-hidden="true"></div>
+        <h1 id="paper-title" class="exam-title">加载中...</h1>
       </div>
-      <div id="question-info" style="display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary);">
+      <div id="question-info" class="exam-question-info">
         <!-- 题目信息 -->
       </div>
     </div>
   </div>
 
   <!-- 主内容区 -->
-  <div class="container" style="padding: var(--space-6);">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: start;">
+  <div class="container exam-body">
+    <div class="exam-grid">
       <!-- 左侧：材料区 -->
-      <div class="card" style="position: sticky; top: calc(var(--navbar-height) + 60px); max-height: calc(100vh - 120px); overflow-y: auto;">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-gray-200);">
-          <i data-lucide="file-text" style="width: 18px; height: 18px; color: var(--color-primary);"></i>
-          <h3 style="margin: 0; font-size: var(--text-base);">给定材料</h3>
+      <div class="card material-card">
+        <div class="material-header">
+          <i data-lucide="file-text" class="text-primary"></i>
+          <h3>给定材料</h3>
         </div>
-        <div id="material-content" style="line-height: 1.8; white-space: pre-wrap; font-size: var(--text-sm); color: var(--color-text);">
+        <div id="material-content" class="material-content">
           <div class="skeleton skeleton-text"></div>
           <div class="skeleton skeleton-text"></div>
-          <div class="skeleton skeleton-text" style="width: 60%;"></div>
+          <div class="skeleton skeleton-text w-60"></div>
         </div>
       </div>
 
       <!-- 右侧：作答区 -->
       <div>
         <!-- 题目信息卡片 -->
-        <div class="card" style="margin-bottom: var(--space-4);">
-          <div style="display: flex; align-items: start; gap: var(--space-3);">
-            <div style="width: 36px; height: 36px; border-radius: var(--radius-lg); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <i data-lucide="edit-3" style="width: 18px; height: 18px;"></i>
+        <div class="card question-card">
+          <div class="question-row">
+            <div class="question-icon">
+              <i data-lucide="edit-3"></i>
             </div>
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+            <div class="question-main">
+              <div class="question-badges">
                 <span id="question-type" class="badge badge-info">题型</span>
                 <span id="question-score" class="badge badge-accent">满分</span>
               </div>
-              <p id="question-stem" style="font-size: var(--text-sm); line-height: 1.6; color: var(--color-text);">
+              <p id="question-stem" class="question-stem">
                 加载中...
               </p>
-              <div style="margin-top: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted);">
+              <div class="question-limit">
                 字数要求：<span id="word-limit">加载中...</span>
               </div>
             </div>
@@ -61,19 +163,15 @@
         </div>
 
         <!-- OCR 上传区 -->
-        <div class="card" style="margin-bottom: var(--space-4); border-style: dashed; border-color: var(--color-gray-300); background: var(--color-gray-50);">
-          <div style="text-align: center; padding: var(--space-4);">
-            <input type="file" id="ocr-input" accept="image/*" capture="camera" style="display: none;" onchange="handleOCRUpload(this)">
-            <div id="ocr-dropzone" style="cursor: pointer;" onclick="document.getElementById('ocr-input').click()">
-              <i data-lucide="camera" style="width: 32px; height: 32px; color: var(--color-gray-400); margin-bottom: var(--space-2);"></i>
-              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-1);">
-                拍照识别文字
-              </p>
-              <p style="font-size: var(--text-xs); color: var(--color-text-muted);">
-                支持拍照或上传图片，自动识别手写/印刷文字
-              </p>
+        <div class="card ocr-card">
+          <div class="ocr-body">
+            <input type="file" id="ocr-input" accept="image/*" capture="camera" class="hidden" onchange="handleOCRUpload(this)">
+            <div id="ocr-dropzone" class="ocr-dropzone" onclick="document.getElementById('ocr-input').click()">
+              <i data-lucide="camera" class="ocr-icon"></i>
+              <p class="ocr-title">拍照识别文字</p>
+              <p class="ocr-sub">支持拍照或上传图片，自动识别手写/印刷文字</p>
             </div>
-            <div id="ocr-progress" style="display: none;">
+            <div id="ocr-progress" class="hidden">
               <div class="grading-status">
                 <div class="grading-status-spinner"></div>
                 <span class="grading-status-text">正在识别文字...</span>
@@ -83,10 +181,10 @@
         </div>
 
         <!-- 未登录提示 -->
-        <div id="login-hint" class="card" style="margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--color-warning-light); border-color: var(--color-warning); display: none;">
-          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-warning);">
-            <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
-            <span>你尚未登录，答案不会保存。<a href="/login" style="color: var(--color-primary); font-weight: 600; text-decoration: underline;">登录</a>后可获得 AI 批改并保存记录</span>
+        <div id="login-hint" class="card login-hint-card">
+          <div class="login-hint-row">
+            <i data-lucide="alert-circle"></i>
+            <span>你尚未登录，答案不会保存。<a href="/login">登录</a>后可获得 AI 批改并保存记录</span>
           </div>
         </div>
 
@@ -96,10 +194,10 @@
             <input type="hidden" name="pid" value="{{ pid }}">
             <input type="hidden" name="qid" value="{{ qid }}">
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
-              <label style="font-size: var(--text-sm); font-weight: 600; color: var(--color-text);">你的答案</label>
-              <div style="display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted);">
-                <span>字数：<span id="word-count" style="font-weight: 600; color: var(--color-primary);">0</span></span>
+            <div class="answer-head">
+              <label class="answer-label" for="user-answer">你的答案</label>
+              <div class="answer-counts">
+                <span>字数：<strong id="word-count">0</strong></span>
                 <span id="word-count-hint"></span>
               </div>
             </div>
@@ -107,19 +205,18 @@
             <textarea
               id="user-answer"
               name="user_answer"
-              class="input-field"
-              style="min-height: 280px; resize: vertical; font-family: var(--font-body); line-height: 1.8;"
+              class="input-field answer-textarea"
               placeholder="请在此输入你的答案...&#10;&#10;提示：&#10;1. 分点作答，条理清晰&#10;2. 使用序号标注要点&#10;3. 注意字数要求"
               required
             ></textarea>
 
-            <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
-              <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px 24px; font-size: var(--text-base);">
-                <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+            <div class="answer-actions">
+              <button type="submit" class="btn btn-primary btn-submit">
+                <i data-lucide="send"></i>
                 提交批改
               </button>
-              <button type="button" class="btn btn-secondary" onclick="clearAnswer()" style="padding: 12px 24px;">
-                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+              <button type="button" class="btn btn-secondary btn-clear" onclick="clearAnswer()">
+                <i data-lucide="trash-2"></i>
                 清空
               </button>
             </div>
@@ -172,6 +269,7 @@
 
       // 显示登录提示
       if (!localStorage.getItem('slb_token')) {
+        document.getElementById('login-hint').classList.remove('hidden');
         document.getElementById('login-hint').style.display = 'block';
       }
     } catch (e) {
@@ -225,8 +323,8 @@
     }
 
     // 显示进度
-    document.getElementById('ocr-dropzone').style.display = 'none';
-    document.getElementById('ocr-progress').style.display = 'block';
+    document.getElementById('ocr-dropzone').classList.add('hidden');
+    document.getElementById('ocr-progress').classList.remove('hidden');
 
     try {
       const formData = new FormData();
@@ -263,8 +361,8 @@
       }
     } finally {
       // 恢复上传区
-      document.getElementById('ocr-dropzone').style.display = 'block';
-      document.getElementById('ocr-progress').style.display = 'none';
+      document.getElementById('ocr-dropzone').classList.remove('hidden');
+      document.getElementById('ocr-progress').classList.add('hidden');
       input.value = ''; // 清空 input
     }
   }
@@ -336,9 +434,9 @@
     }
 
     const btn = form.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<div class="grading-status-spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div> 提交中...';
+    btn.classList.add('btn-loading');
+    btn.textContent = '提交中...';
 
     try {
       const res = await fetch('/api/submissions', {
@@ -376,7 +474,8 @@
           SLBToast.error(data.error || '提交失败');
         }
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.classList.remove('btn-loading');
+        btn.textContent = '提交答案';
         if (typeof lucide !== 'undefined') {
           lucide.createIcons();
         }
