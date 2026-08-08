@@ -103,6 +103,11 @@ def create_submission(current_user):
 
     except Exception as e:
         # LLM 批改失败：尝试本地规则降级（scorer 内部已降级，此处兜底）
+        try:
+            with open('/tmp/grade_debug.log', 'a') as _f:
+                _f.write(f"{__import__('time').time()} SUBMIT-EXCEPT: {type(e).__name__}: {str(e)[:400]}\n")
+        except Exception:
+            pass
         from src.services.grader.scorer import grade_answer_local
         try:
             grading_result = grade_answer_local(pid, qid, question, user_answer, material)
