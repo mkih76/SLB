@@ -65,7 +65,11 @@
     </div>
 
     <div class="article-body reveal">
-      <div class="content">{{ article_content }}</div>
+      <div class="content">
+        {% for para in article_paragraphs %}
+        <p>{{ para }}</p>
+        {% endfor %}
+      </div>
     </div>
 
     <div class="article-actions reveal">

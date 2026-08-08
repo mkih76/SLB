@@ -132,17 +132,15 @@ def create_app():
         topic = topic_service.get_topic_detail(topic_id, uid)
         if not topic:
             abort(404)
-        # 正文 fallback：无 original_text 时用 summary；段落化渲染
+        # 正文 fallback：无 original_text 时用 summary；拆分为纯文本段落（模板循环渲染，autoescape 安全）
         raw = topic.get('original_text') or topic.get('summary') or '暂无正文内容'
         import re as _re
-        # 去掉 markdown 标题标记、引用块标记，按空行分段
         raw = _re.sub(r'^#{1,4}\s*', '', raw, flags=_re.M)
         raw = _re.sub(r'^>\s*', '', raw, flags=_re.M)
         paras = [p.strip() for p in raw.split('\n\n') if p.strip()]
         if not paras:
             paras = [raw]
-        article_content = '\n\n'.join(f'<p>{p.replace(chr(10), "<br>")}</p>' for p in paras)
-        return render_template('topic_detail.html', topic=topic, article_content=article_content)
+        return render_template('topic_detail.html', topic=topic, article_paragraphs=paras)
 
     @app.route("/health")
     @app.route("/api/health")
